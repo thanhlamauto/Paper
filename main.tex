@@ -57,7 +57,7 @@
 % =========================================================
 % Metadata
 % =========================================================
-\title{Disentangled Knowledge in Diffusion Transformer}
+\title{ReSync: Self-Aligned Representation Transition Consistency in Diffusion Transformers}
 
 \author{%
   Anonymous Authors \\
@@ -83,9 +83,9 @@
       \begin{minipage}[c][0.15\textheight][c]{0.92\linewidth}
         \centering
         \textbf{Architecture placeholder}\\[0.35em]
-        DSP overview:\\
+        ReSync overview:\\
         DiT hidden states,\\
-        shortcut predictor,\\
+        transition predictor,\\
         direct and bootstrap losses.
       \end{minipage}%
     }\\[-0.2em]
@@ -98,17 +98,17 @@
       \begin{minipage}[c][0.15\textheight][c]{0.94\linewidth}
         \centering
         \textbf{Training graph placeholder}\\[0.35em]
-        Baseline vs. DSP curves:\\
+        Baseline vs. ReSync curves:\\
         FID or validation loss\\
         over training iterations.
       \end{minipage}%
     }\\[-0.2em]
     \small (b) Training dynamics
   \end{minipage}
-  \captionof{figure}{\textbf{Depth Shortcut Prediction provides internal cross-depth supervision.}
-  (a) DSP learns conditional transitions between intermediate DiT hidden states.
-  (b) Placeholder for convergence curves comparing the baseline and DSP-augmented backbone.}
-  \label{fig:dsp_overview}
+  \captionof{figure}{\textbf{ReSync provides self-aligned representation transition consistency.}
+  (a) ReSync learns conditional transitions between intermediate DiT hidden states.
+  (b) Placeholder for convergence curves comparing the baseline and ReSync-augmented backbone.}
+  \label{fig:resync_overview}
 \end{minipage}
 \end{center}
 \vspace{-0.5em}
