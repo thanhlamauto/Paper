@@ -1,3 +1,4 @@
+% !TEX root = main.tex
 \documentclass{article}
 
 % =========================================================
@@ -19,7 +20,10 @@
 % =========================================================
 % Basic packages from template
 % =========================================================
-\usepackage[utf8]{inputenc}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+\fi
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{url}
@@ -68,6 +72,49 @@
 \begin{abstract}
 \input{sections/00_abstract}
 \end{abstract}
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[t]{0.39\textwidth}
+    \centering
+    \fbox{%
+      \begin{minipage}[c][0.23\textheight][c]{0.92\linewidth}
+        \centering
+        \textbf{Architecture placeholder}\\[0.5em]
+        Insert DSP overview here:\\
+        DiT hidden-state trajectory,\\
+        depth shortcut predictor,\\
+        direct supervision, and\\
+        bootstrap depth consistency.
+      \end{minipage}%
+    }
+    \caption{Model architecture.}
+    \label{fig:overview_architecture}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.56\textwidth}
+    \centering
+    \fbox{%
+      \begin{minipage}[c][0.23\textheight][c]{0.94\linewidth}
+        \centering
+        \textbf{Training graph placeholder}\\[0.5em]
+        Insert convergence plot here:\\
+        baseline vs. DSP training curves,\\
+        e.g., FID or validation loss\\
+        over training iterations.
+      \end{minipage}%
+    }
+    \caption{Training dynamics.}
+    \label{fig:overview_training}
+  \end{subfigure}
+  \caption{\textbf{Depth Shortcut Prediction improves diffusion-transformer training through internal cross-depth supervision.}
+  (a) DSP learns conditional transitions between intermediate DiT hidden states using a lightweight shortcut predictor, with direct cross-layer targets and bootstrap consistency across composed depth transitions.
+  (b) The same auxiliary signal is expected to improve training dynamics, shown as a placeholder for convergence curves comparing the baseline backbone and the DSP-augmented model.}
+  \label{fig:dsp_overview}
+\end{figure}
+
+\clearpage
+
 \input{sections/01_introduction}
 \input{sections/02_related_works}
 \input{sections/03_method}
@@ -78,7 +125,7 @@
 \bibliography{refs}
 
 \appendix
-\input{appendices/appendix_main}
+\input{figures/appendices/appendix_main}
 
 \newpage
 \input{checklist}
