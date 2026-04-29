@@ -1,45 +1,45 @@
 \section{Experiments}
 \label{sec:experiments}
 
-This section evaluates whether \emph{Depth Shortcut Prediction} (DSP) improves diffusion-transformer training by using the model's own cross-depth representation dynamics as supervision. Our experiments are organized around four questions:
+This section evaluates whether \emph{ReSync} improves diffusion-transformer training by using the model's own cross-depth representation dynamics as self-aligned transition supervision. Our experiments are organized around four questions:
 \begin{itemize}[leftmargin=*]
-    \item Which components of DSP are most important for generation quality and training efficiency? See \Cref{tab:dsp_ablation}.
-    \item Does DSP remain effective across different backbone families and model scales? See \Cref{fig:training_curves,tab:model_scaling}.
-    \item How does DSP compare with methods that rely on external representation tasks or pretrained representation encoders? See \Cref{tab:comparison_external_guidance}.
-    \item Does DSP actually improve the representation capacity of the backbone, and how strongly is this improvement correlated with generation quality? See \Cref{fig:representation_analysis}.
+    \item Which components of ReSync are most important for generation quality and training efficiency? See \Cref{tab:resync_ablation}.
+    \item Does ReSync remain effective across different backbone families and model scales? See \Cref{fig:training_curves,tab:model_scaling}.
+    \item How does ReSync compare with methods that rely on external representation tasks or pretrained representation encoders? See \Cref{tab:comparison_external_guidance}.
+    \item Does ReSync actually improve the representation capacity of the backbone, and how strongly is this improvement correlated with generation quality? See \Cref{fig:representation_analysis}.
 \end{itemize}
 
 \subsection{Experimental Setup}
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For DSP, the shortcut predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, shortcut-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{shortcut}}$, $\alpha$, EMA decay, and predictor architecture details]}.
+Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{align}}$, $\lambda_{\mathrm{cons}}$, $\lambda_{\mathrm{out}}$, EMA decay, and predictor architecture details]}.
 
 \paragraph{Evaluation.}
-We report standard image-generation metrics, including Frechet Inception Distance (FID), sFID, Inception Score (IS), precision, and recall. Unless otherwise specified, metrics are computed using $50\mathrm{K}$ generated samples and the same reference statistics as prior diffusion-transformer work. We will use a consistent evaluation implementation for all baselines and DSP variants. \textbf{[PLACEHOLDER: cite and specify the exact evaluation suite, e.g., ADM TensorFlow evaluator or another agreed protocol.]}
+We report standard image-generation metrics, including Frechet Inception Distance (FID), sFID, Inception Score (IS), precision, and recall. Unless otherwise specified, metrics are computed using $50\mathrm{K}$ generated samples and the same reference statistics as prior diffusion-transformer work. We will use a consistent evaluation implementation for all baselines and ReSync variants. \textbf{[PLACEHOLDER: cite and specify the exact evaluation suite, e.g., ADM TensorFlow evaluator or another agreed protocol.]}
 
 \paragraph{Comparison methods.}
-We compare DSP against representative generative baselines from three groups: pixel-space diffusion models, latent diffusion models with convolutional U-Net backbones, and latent diffusion models with transformer backbones. The main comparison set should include the base DiT/SiT backbone, recent acceleration or representation-guidance methods such as REPA, SRA, LayerSync, and other transformer-based diffusion baselines when available. To keep the comparison focused, we separate methods that primarily introduce new architecture designs from methods that modify the training objective or representation guidance. \textbf{[PLACEHOLDER: finalize baseline list and add citations for ADM, LDM, DiT, SiT, REPA, SRA, LayerSync, MaskDiT, TREAD, MAETok, and any architecture-focused models to exclude or discuss separately.]}
+We compare ReSync against representative generative baselines from three groups: pixel-space diffusion models, latent diffusion models with convolutional U-Net backbones, and latent diffusion models with transformer backbones. The main comparison set should include the base DiT/SiT backbone, recent acceleration or representation-guidance methods such as REPA, SRA, LayerSync, and other transformer-based diffusion baselines when available. To keep the comparison focused, we separate methods that primarily introduce new architecture designs from methods that modify the training objective or representation guidance. \textbf{[PLACEHOLDER: finalize baseline list and add citations for ADM, LDM, DiT, SiT, REPA, SRA, LayerSync, MaskDiT, TREAD, MAETok, and any architecture-focused models to exclude or discuss separately.]}
 
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each DSP design choice. The ablation should start from the same backbone trained without the shortcut objective, then add direct cross-depth prediction, direction normalization, magnitude prediction, bootstrap depth consistency, and EMA bootstrap targets. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
+We first isolate the contribution of each ReSync design choice. The ablation should start from the same backbone trained without the ReSync objective, then add direct cross-depth transition prediction, bootstrap transition consistency, EMA bootstrap targets, and optional output distillation. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
 
 \begin{table}[t]
     \centering
-    \caption{\textbf{Ablation of DSP components.} Placeholder table for measuring how each component affects generation quality and training efficiency. Lower FID/sFID is better; higher IS, precision, and recall are better.}
-    \label{tab:dsp_ablation}
+    \caption{\textbf{Ablation of ReSync components.} Placeholder table for measuring how each component affects generation quality and training efficiency. Lower FID/sFID is better; higher IS, precision, and recall are better.}
+    \label{tab:resync_ablation}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccc}
         \toprule
-        Method variant & Direct & Magnitude & Bootstrap & EMA target & FID $\downarrow$ & IS $\uparrow$ \\
+        Method variant & Align & Consistency & EMA target & Output distill. & FID $\downarrow$ & IS $\uparrow$ \\
         \midrule
         Baseline backbone & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + direct direction prediction & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + direction and magnitude & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + bootstrap consistency & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Full DSP & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + transition alignment & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + transition consistency & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + EMA target & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -47,7 +47,7 @@ We first isolate the contribution of each DSP design choice. The ablation should
 \subsection{Scaling Across Backbones and Model Sizes}
 \label{sec:scaling_experiments}
 
-Next, we evaluate whether DSP is robust to changes in model capacity and baseline choice. The expected comparison includes at least \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} variants, each trained with and without DSP under the same recipe. The key question is whether cross-depth shortcut supervision provides a consistent gain rather than only improving one specific configuration.
+Next, we evaluate whether ReSync is robust to changes in model capacity and baseline choice. The expected comparison includes at least \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} variants, each trained with and without ReSync under the same recipe. The key question is whether cross-depth transition supervision provides a consistent gain rather than only improving one specific configuration.
 
 \begin{figure}[t]
     \centering
@@ -55,27 +55,27 @@ Next, we evaluate whether DSP is robust to changes in model capacity and baselin
     \begin{minipage}[c][0.23\textheight][c]{0.88\linewidth}
         \centering
         \textbf{[PLACEHOLDER: training curves]}\\[0.5em]
-        Plot baseline vs. DSP across training iterations.\\
+        Plot baseline vs. ReSync across training iterations.\\
         Suggested axes: training iterations on the $x$-axis and FID, validation loss, or representation metric on the $y$-axis.
     \end{minipage}}
-    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline backbones and DSP-augmented backbones.}
+    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline backbones and ReSync-augmented backbones.}
     \label{fig:training_curves}
 \end{figure}
 
 \begin{table}[t]
     \centering
-    \caption{\textbf{DSP across model sizes.} Placeholder table for comparing baseline and DSP variants under matched training settings.}
+    \caption{\textbf{ReSync across model sizes.} Placeholder table for comparing baseline and ReSync variants under matched training settings.}
     \label{tab:model_scaling}
     \begin{tabular}{lcccc}
         \toprule
         Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
         \midrule
         \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{B/2} & \textbf{[TBD]} & Baseline + DSP & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{B/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline + DSP & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{L/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline + DSP & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{XL/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -83,7 +83,7 @@ Next, we evaluate whether DSP is robust to changes in model capacity and baselin
 \subsection{Comparison with Representation-Guided Training}
 \label{sec:comparison_representation_guidance}
 
-DSP is designed to provide representation guidance without an external encoder or an external representation task. We therefore compare against methods that use pretrained visual representations, self-guided internal alignment, or other representation regularizers. This comparison should report both final sample quality and training efficiency, since external encoders can improve convergence while adding additional training-time computation.
+ReSync is designed to provide representation guidance without an external encoder or an external representation task. We therefore compare against methods that use pretrained visual representations, self-guided internal alignment, or other representation regularizers. This comparison should report both final sample quality and training efficiency, since external encoders can improve convergence while adding additional training-time computation.
 
 \begin{table}[t]
     \centering
@@ -98,7 +98,7 @@ DSP is designed to provide representation guidance without an external encoder o
         REPA-style alignment & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         SRA / self-alignment & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         LayerSync-style alignment & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        DSP & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -106,7 +106,7 @@ DSP is designed to provide representation guidance without an external encoder o
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether DSP improves the backbone's intermediate representations rather than only acting as a regularizer on the final generation objective. Possible diagnostics include linear probing on frozen features, nearest-neighbor retrieval in feature space, layerwise feature similarity, and correlation between representation metrics and FID. This analysis should clarify whether better generation coincides with more predictive and more transferable intermediate features.
+Finally, we test whether ReSync improves the backbone's intermediate representations rather than only acting as a regularizer on the final generation objective. Possible diagnostics include linear probing on frozen features, nearest-neighbor retrieval in feature space, layerwise feature similarity, and correlation between representation metrics and FID. This analysis should clarify whether better generation coincides with more predictive and more transferable intermediate features.
 
 \begin{figure}[t]
     \centering
@@ -115,8 +115,8 @@ Finally, we test whether DSP improves the backbone's intermediate representation
         \centering
         \textbf{[PLACEHOLDER: representation analysis]}\\[0.5em]
         Suggested panels: layerwise probing accuracy, feature similarity across depth,\\
-        shortcut prediction error, and correlation between representation score and FID.
+        transition prediction error, and correlation between representation score and FID.
     \end{minipage}}
-    \caption{\textbf{Representation diagnostics for DSP.} Placeholder for measuring whether cross-depth shortcut supervision improves intermediate feature quality and whether those improvements correlate with generation quality.}
+    \caption{\textbf{Representation diagnostics for ReSync.} Placeholder for measuring whether cross-depth transition supervision improves intermediate feature quality and whether those improvements correlate with generation quality.}
     \label{fig:representation_analysis}
 \end{figure}
