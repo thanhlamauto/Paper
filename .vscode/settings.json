@@ -1,0 +1,25 @@
+{
+  "latex-workshop.latex.recipe.default": "tectonic",
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "tectonic",
+      "tools": [
+        "tectonic"
+      ]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "tectonic",
+      "command": "tectonic",
+      "args": [
+        "--synctex",
+        "--keep-logs",
+        "--keep-intermediates",
+        "%DOC%.tex"
+      ]
+    }
+  ],
+  "latex-workshop.linting.chktex.enabled": false,
+  "latex.linter.enabled": false
+}
