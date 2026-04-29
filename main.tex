@@ -1,0 +1,86 @@
+\documentclass{article}
+
+% =========================================================
+% NeurIPS 2026 style
+% =========================================================
+
+% Submission (anonymous, with line numbers):
+\usepackage{neurips_2026}
+
+% Camera-ready:
+% \usepackage[main, final]{neurips_2026}
+
+% Preprint / arXiv:
+% \usepackage[preprint]{neurips_2026}
+
+% If natbib conflicts:
+% \usepackage[nonatbib]{neurips_2026}
+
+% =========================================================
+% Basic packages from template
+% =========================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+% =========================================================
+% Recommended math / figure / table packages
+% =========================================================
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+
+% Optional but useful
+\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+
+% =========================================================
+% Macros
+% =========================================================
+\input{macros}
+
+% =========================================================
+% Metadata
+% =========================================================
+\title{Disentangled Knowledge in Diffusion Transformer}
+
+\author{%
+  Anonymous Authors \\
+  Anonymous Institution \\
+  Anonymous Email
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+\input{sections/01_introduction}
+\input{sections/02_related_works}
+\input{sections/03_method}
+\input{sections/04_experiments}
+\input{sections/05_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\input{appendices/appendix_main}
+
+\newpage
+\input{checklist}
+
+\end{document}
