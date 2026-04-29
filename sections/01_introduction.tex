@@ -14,11 +14,9 @@ Our method is designed primarily as a representation learning objective. By supe
 
 Our main contributions are as follows:
 \begin{itemize}
-    \item We introduce ReSync, a self-supervised representation learning objective that uses self-aligned cross-depth transition prediction as internal guidance for diffusion transformers.
+    \item We introduce ReSync, a self-supervised representation learning framework that uses internal cross-depth consistency to improve diffusion transformers.
 
-    \item We replace direct layer matching with a lightweight transition predictor, allowing alignment to be mediated by a learned representation transform rather than by forcing two layers to become identical.
+    \item We formulate cross-depth consistency as learned transition prediction across hidden states, enabling general alignment without manually specifying target layers or forcing different depths to share identical representations.
 
-    \item We incorporate bootstrap transition consistency, encouraging learned transitions to be compositional across transformer depth rather than only fitting isolated layer pairs.
-
-    \item We add optional output distillation for skipped-depth execution, connecting hidden-state prediction to the final generation output and enabling layer-skipping inference as an auxiliary benefit.
+    \item We propose an output-distillation objective for skipped-depth training, aligning the diffusion output predicted from skipped hidden states with the output of the full-depth model to enable layer-skipping inference as an auxiliary benefit.
 \end{itemize}
