@@ -73,45 +73,45 @@
 \input{sections/00_abstract}
 \end{abstract}
 
-\begin{figure}[!htbp]
+\vspace{-0.5em}
+\begin{center}
+\begin{minipage}{\textwidth}
   \centering
-  \begin{subfigure}[t]{0.39\textwidth}
+  \begin{minipage}[t]{0.39\textwidth}
     \centering
     \fbox{%
-      \begin{minipage}[c][0.23\textheight][c]{0.92\linewidth}
+      \begin{minipage}[c][0.15\textheight][c]{0.92\linewidth}
         \centering
-        \textbf{Architecture placeholder}\\[0.5em]
-        Insert DSP overview here:\\
-        DiT hidden-state trajectory,\\
-        depth shortcut predictor,\\
-        direct supervision, and\\
-        bootstrap depth consistency.
+        \textbf{Architecture placeholder}\\[0.35em]
+        DSP overview:\\
+        DiT hidden states,\\
+        shortcut predictor,\\
+        direct and bootstrap losses.
       \end{minipage}%
-    }
-    \caption{Model architecture.}
-    \label{fig:overview_architecture}
-  \end{subfigure}
+    }\\[-0.2em]
+    \small (a) Model architecture
+  \end{minipage}
   \hfill
-  \begin{subfigure}[t]{0.56\textwidth}
+  \begin{minipage}[t]{0.56\textwidth}
     \centering
     \fbox{%
-      \begin{minipage}[c][0.23\textheight][c]{0.94\linewidth}
+      \begin{minipage}[c][0.15\textheight][c]{0.94\linewidth}
         \centering
-        \textbf{Training graph placeholder}\\[0.5em]
-        Insert convergence plot here:\\
-        baseline vs. DSP training curves,\\
-        e.g., FID or validation loss\\
+        \textbf{Training graph placeholder}\\[0.35em]
+        Baseline vs. DSP curves:\\
+        FID or validation loss\\
         over training iterations.
       \end{minipage}%
-    }
-    \caption{Training dynamics.}
-    \label{fig:overview_training}
-  \end{subfigure}
-  \caption{\textbf{Depth Shortcut Prediction improves diffusion-transformer training through internal cross-depth supervision.}
-  (a) DSP learns conditional transitions between intermediate DiT hidden states using a lightweight shortcut predictor, with direct cross-layer targets and bootstrap consistency across composed depth transitions.
-  (b) The same auxiliary signal is expected to improve training dynamics, shown as a placeholder for convergence curves comparing the baseline backbone and the DSP-augmented model.}
+    }\\[-0.2em]
+    \small (b) Training dynamics
+  \end{minipage}
+  \captionof{figure}{\textbf{Depth Shortcut Prediction provides internal cross-depth supervision.}
+  (a) DSP learns conditional transitions between intermediate DiT hidden states.
+  (b) Placeholder for convergence curves comparing the baseline and DSP-augmented backbone.}
   \label{fig:dsp_overview}
-\end{figure}
+\end{minipage}
+\end{center}
+\vspace{-0.5em}
 
 \clearpage
 
