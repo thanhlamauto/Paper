@@ -13,7 +13,7 @@ This section evaluates whether \emph{ReSync} improves diffusion-transformer trai
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{ReSync}}$, $\alpha$, EMA decay, and predictor architecture details]}.
+Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{align}}$, $\lambda_{\mathrm{cons}}$, $\lambda_{\mathrm{out}}$, EMA decay, and predictor architecture details]}.
 
 \paragraph{Evaluation.}
 We report standard image-generation metrics, including Frechet Inception Distance (FID), sFID, Inception Score (IS), precision, and recall. Unless otherwise specified, metrics are computed using $50\mathrm{K}$ generated samples and the same reference statistics as prior diffusion-transformer work. We will use a consistent evaluation implementation for all baselines and ReSync variants. \textbf{[PLACEHOLDER: cite and specify the exact evaluation suite, e.g., ADM TensorFlow evaluator or another agreed protocol.]}
@@ -24,7 +24,7 @@ We compare ReSync against representative generative baselines from three groups:
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice. The ablation should start from the same backbone trained without the ReSync objective, then add direct cross-depth transition prediction, direction normalization, magnitude prediction, bootstrap transition consistency, and EMA bootstrap targets. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
+We first isolate the contribution of each ReSync design choice. The ablation should start from the same backbone trained without the ReSync objective, then add direct cross-depth transition prediction, bootstrap transition consistency, EMA bootstrap targets, and optional output distillation. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
 
 \begin{table}[t]
     \centering
@@ -33,12 +33,12 @@ We first isolate the contribution of each ReSync design choice. The ablation sho
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccc}
         \toprule
-        Method variant & Direct & Magnitude & Bootstrap & EMA target & FID $\downarrow$ & IS $\uparrow$ \\
+        Method variant & Align & Consistency & EMA target & Output distill. & FID $\downarrow$ & IS $\uparrow$ \\
         \midrule
         Baseline backbone & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + direct direction prediction & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + direction and magnitude & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + bootstrap consistency & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + transition alignment & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + transition consistency & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + EMA target & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
         Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
