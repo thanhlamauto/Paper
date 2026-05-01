@@ -22,7 +22,7 @@ During the same forward pass, the transformer exposes hidden states $h_0(t),\ldo
 
 \subsection{ReSync: Learning Internal Transitions}
 
-Representation alignment methods usually choose a source representation and a target representation, optionally insert a projection head, and then minimize a similarity loss. REPA uses external targets, while SRA and LayerSync show that useful targets can also come from the diffusion model itself~\citep{yu2024repa,jiang2025sra,haghighi2026layersync}. Our motivation is that the repeated use of projection heads suggests a practical limitation of direct coordinate-level matching: hidden states from different layers or noise levels may live in statistically different spaces. A projection head may partially adapt between these spaces, but when it is tied to a fixed pair it remains a local solution.
+Representation alignment methods usually choose a source representation and a target representation, optionally insert a projection head, and then minimize a similarity loss. REPA uses external targets, while SRA and LayerSync show that useful targets can also come from the diffusion model itself~\citep{yu2024repa,jiang2025sra,haghighi2026layersync}. Projection heads can be viewed as practical adapters for matching different representation spaces, but when an adapter is tied to a fixed pair it remains a local solution.
 
 ReSync turns this local adapter into a shared transition model. For two layers $a<b$, we predict the later hidden state from the earlier one as
 \begin{equation}
