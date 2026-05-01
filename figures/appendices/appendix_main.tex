@@ -1,0 +1,119 @@
+\section{Layer Statistics and Projection Motivation}
+\label{app:layer_statistics_projection}
+
+This appendix contains the diagnostic experiments used to evaluate the projection-as-transition motivation. These analyses are intentionally kept outside the main paper: the main text focuses on the method and generation results, while the appendix tests whether projection heads mitigate statistical mismatch and whether DiT activations contain layout-recoverable spatial information. We do not claim explicit semantic layout unless it is supported by agreement with external perceptual proxies.
+
+\subsection{Diagnostic Protocol}
+\label{app:diagnostic_protocol}
+
+Unless otherwise stated, all diagnostics should be computed on the same checkpoints, dataset split, resolution, VAE, and layer sampling scheme used for the main experiments in \Cref{sec:experiments}. The recommended comparison set is:
+\begin{itemize}[leftmargin=*]
+    \item baseline DiT/SiT backbone without auxiliary representation guidance;
+    \item LayerSync-style direct cosine alignment;
+    \item LayerSync with a small projection head;
+    \item LayerSync with a large projection head;
+    \item pair-specific projector trained for selected layer pairs;
+    \item ReSync with a shared conditional transition predictor.
+\end{itemize}
+For each method, report the layer pairs, timestep ranges, projection-head architecture, loss weights, and whether an EMA target is used. This mirrors the appendix style of self-representation alignment work, where implementation details and sensitivity studies are separated from the main result tables.
+
+\subsection{Layerwise Statistical Mismatch}
+\label{app:layerwise_statistical_mismatch}
+
+The goal of this diagnostic is to test whether direct alignment is difficult because different layers may occupy statistically different representation spaces. For each hidden state, compute RMS activation, channelwise variance, stable rank, cosine similarity, and linear CKA across layer pairs. Results should be reported both by absolute layer index and by layer distance. If distant layer pairs show larger shifts in scale, variance, rank, or similarity structure, this would support the hypothesis that a projection or transition module can reduce feature-space mismatch before the alignment signal is applied to the backbone.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: layerwise statistical mismatch]}\\[0.5em]
+        Panels: RMS activation, variance, stable rank, cosine similarity, and CKA.\\
+        Axes: layer index and layer distance; curves for baseline, LayerSync variants, and ReSync.
+    \end{minipage}}
+    \caption{\textbf{Layerwise statistical mismatch.} Placeholder for measuring how representation statistics change across depth and timestep. These diagnostics test whether distant layers differ in scale, variance, spectral concentration, or similarity structure before applying alignment.}
+    \label{fig:appendix_layerwise_statistics}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Projection Capacity and Layer Gap}
+\label{app:projection_capacity_layer_gap}
+
+This ablation tests whether projection heads act as useful adapters or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. If projection heads mitigate mismatch, we expect a small projection head to improve generation quality and reduce alignment difficulty while still transmitting a meaningful gradient to the diffusion backbone. An overly expressive projection may reduce alignment loss without improving FID, which would suggest that it solves the auxiliary task locally rather than improving the model's internal representations.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: projection capacity ablation]}\\[0.5em]
+        Compare no projection, small projection, medium projection, and large projection.\\
+        Report FID, alignment loss, backbone gradient norm from auxiliary loss, and training cost.
+    \end{minipage}}
+    \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether a small projection head improves alignment by reducing feature-space mismatch, while an overly expressive head may absorb the auxiliary loss without providing a useful training signal to the backbone.}
+    \label{fig:appendix_projection_capacity}
+\end{figure}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Near vs. far layer alignment.} Placeholder for evaluating whether projection heads and ReSync become more important as the aligned layer gap increases.}
+    \label{tab:appendix_near_far_alignment}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        Method & Layer gap & Projection / transition & FID $\downarrow$ & Alignment loss $\downarrow$ & Consistency error $\downarrow$ \\
+        \midrule
+        Direct alignment & Near & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        Direct alignment & Far & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        Projection-augmented alignment & Near & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        Projection-augmented alignment & Far & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        Pair-specific projector & Far & Per-pair projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+\FloatBarrier
+
+\subsection{Layout-Recoverable Spatial Information}
+\label{app:layout_recoverable_information}
+
+Raw cosine similarity and CKA do not fully measure whether two activations preserve the same spatial layout. We therefore treat layout as a recoverable object extracted from activation maps rather than as raw feature equality. The planned probes are PCA explained variance, stable rank, spatial-normalization before/after maps, region partitions from activation clusters, boundary maps from activation energy or principal components, and agreement with perceptual proxies such as image edges, object masks, or DINO partitions. We will treat a layer as containing layout-recoverable spatial information only if spatial normalization exposes activation-induced regions or boundaries that align with these proxies more strongly than raw activations do.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: layout-recoverable spatial information]}\\[0.5em]
+        Panels: PCA explained variance, stable rank, raw PCA maps, spatial-normalized PCA maps,\\
+        boundary agreement, region partition agreement, and DINO/mask proxy agreement.
+    \end{minipage}}
+    \caption{\textbf{Layout-recoverable spatial information.} Placeholder for testing whether low-rank internal activations contain spatial structure that is not fully captured by raw cosine similarity or CKA. We interpret positive proxy agreement as layout-recoverable information rather than explicit semantic layout.}
+    \label{fig:appendix_layout_recoverable}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Transition Generalization}
+\label{app:transition_generalization}
+
+This diagnostic distinguishes a shared transition model from a collection of pair-specific projection heads. Train the transition predictor on a subset of layer and timestep pairs, then evaluate prediction and composition error on held-out pairs. The expected evidence for ReSync is not only lower pairwise prediction error, but also lower compositional error when a long transition is decomposed into shorter transitions. This would support the interpretation that ReSync learns reusable internal representation dynamics rather than a local adapter for a single target.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether ReSync generalizes across unseen layer and timestep pairs better than pair-specific projectors.}
+    \label{tab:appendix_transition_generalization}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccc}
+        \toprule
+        Method & Held-out layer error $\downarrow$ & Held-out timestep error $\downarrow$ & Composition error $\downarrow$ & FID $\downarrow$ \\
+        \midrule
+        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
+\end{table}

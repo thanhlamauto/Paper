@@ -5,6 +5,8 @@
 % NeurIPS 2026 style
 % =========================================================
 
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+
 % Submission (anonymous, with line numbers):
 \usepackage{neurips_2026}
 
@@ -45,6 +47,7 @@
 \usepackage{siunitx}
 \usepackage{enumitem}
 \usepackage{wrapfig}
+\usepackage{placeins}
 
 % Optional but useful
 \usepackage[nameinlink,capitalize,noabbrev]{cleveref}
@@ -77,38 +80,50 @@
 \begin{center}
 \begin{minipage}{\textwidth}
   \centering
-  \begin{minipage}[t]{0.39\textwidth}
+  \begin{minipage}[t]{0.31\textwidth}
     \centering
     \fbox{%
-      \begin{minipage}[c][0.15\textheight][c]{0.92\linewidth}
+      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
         \centering
-        \textbf{Architecture placeholder}\\[0.35em]
-        ReSync overview:\\
-        DiT hidden states,\\
-        transition predictor,\\
-        consistency and skip losses.
+        \textbf{REPA / SRA}\\[0.35em]
+        Source features\\
+        $\rightarrow$ projection head\\
+        $\rightarrow$ target space
       \end{minipage}%
     }\\[-0.2em]
-    \small (a) Model architecture
+    \small (a) Projection as adapter
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.56\textwidth}
+  \begin{minipage}[t]{0.31\textwidth}
     \centering
     \fbox{%
-      \begin{minipage}[c][0.15\textheight][c]{0.94\linewidth}
+      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
         \centering
-        \textbf{Training graph placeholder}\\[0.35em]
-        Baseline vs. ReSync curves:\\
-        FID or validation loss\\
-        over training iterations.
+        \textbf{LayerSync}\\[0.35em]
+        Direct cosine alignment\\
+        between selected\\
+        internal layers
       \end{minipage}%
     }\\[-0.2em]
-    \small (b) Training dynamics
+    \small (b) Direct self-alignment
   \end{minipage}
-  \captionof{figure}{\textbf{ReSync provides self-aligned representation transition consistency.}
-  (a) ReSync learns conditional transitions between intermediate DiT hidden states.
-  (b) Placeholder for convergence curves comparing the baseline and ReSync-augmented backbone.}
-  \label{fig:resync_overview}
+  \hfill
+  \begin{minipage}[t]{0.31\textwidth}
+    \centering
+    \fbox{%
+      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
+        \centering
+        \textbf{ReSync}\\[0.35em]
+        Shared conditional\\
+        transition predictor\\
+        with composition checks
+      \end{minipage}%
+    }\\[-0.2em]
+    \small (c) Projection as transition
+  \end{minipage}
+  \captionof{figure}{\textbf{Projection-as-transition motivation.}
+  REPA- and SRA-style methods use projection heads when aligning potentially mismatched representation spaces, while LayerSync directly aligns selected internal layers. ReSync motivates treating the projection module as a small shared transition model for reusable layer- and timestep-conditioned representation dynamics.}
+  \label{fig:projection_as_transition}
 \end{minipage}
 \end{center}
 \vspace{-0.5em}
@@ -121,7 +136,7 @@
 \input{sections/04_experiments}
 \input{sections/05_conclusion}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{unsrtnat}
 \bibliography{refs}
 
 \appendix
