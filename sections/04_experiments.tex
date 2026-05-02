@@ -6,21 +6,22 @@ This section evaluates ReSync as a mechanistic hypothesis: if internal guidance 
     \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
     \item Which ReSync components are responsible for the gain, including timestep conditioning of depth transitions and compositional consistency? See \Cref{tab:resync_ablation}.
     \item Does the transition predictor learn reusable internal dynamics? See \Cref{tab:transition_diagnostics}.
-    \item Is the benefit different from adding a local projection head? See \Cref{tab:projection_transition_ablation}.
+    \item Does projection reduce raw layer mismatch rather than merely adding local capacity? See \Cref{tab:projection_transition_ablation,fig:projection_stitching_diagnostics}.
     \item As an exploratory ablation, can predicted hidden states support skipped-depth prediction? See \Cref{tab:skip_prediction}.
 \end{itemize}
 
-\subsection{Experimental Setup}
+\subsection{Image Generation}
+\label{sec:image_generation}
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by SiT baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{pred}}$, $\beta_{\mathrm{cons}}$, $\beta_{\mathrm{out}}$, EMA decay, and predictor architecture details]}.
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. ReSync trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are left as explicit placeholders: \textbf{[PLACEHOLDER: architecture table, $\lambda_{\mathrm{pred}}$, $\beta_{\mathrm{cons}}$, $\beta_{\mathrm{out}}$, EMA decay, predictor architecture, number of iterations, and hardware]}.
 
 \paragraph{Evaluation.}
-We report standard image-generation metrics, including Frechet Inception Distance (FID), sFID, Inception Score (IS), precision, and recall. Unless otherwise specified, metrics are computed using $50\mathrm{K}$ generated samples and the same reference statistics as prior diffusion-transformer work. We will use a consistent evaluation implementation for all baselines and ReSync variants. \textbf{[PLACEHOLDER: cite and specify the exact evaluation suite, e.g., ADM TensorFlow evaluator or another agreed protocol.]}
+We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all ReSync variants and baselines. \textbf{[PLACEHOLDER: specify the exact evaluator, reference statistics, classifier-free guidance setting, sampling steps, and whether sFID is reported in the main table or appendix]}.
 
 \paragraph{Comparison methods.}
-We compare ReSync against representative generative baselines from three groups: pixel-space diffusion models, latent diffusion models with convolutional U-Net backbones, and latent diffusion models with transformer backbones. The main comparison set should include the base DiT/SiT backbone, recent acceleration or representation-guidance methods such as REPA, SRA, LayerSync, and other transformer-based diffusion baselines when available. To keep the comparison focused, we separate methods that primarily introduce new architecture designs from methods that modify the training objective or representation guidance. \textbf{[PLACEHOLDER: finalize baseline list and add citations for ADM, LDM, DiT, SiT, REPA, SRA, LayerSync, MaskDiT, TREAD, MAETok, and any architecture-focused models to exclude or discuss separately.]}
+Our main comparisons are against the base SiT/DiT backbone and recent representation-regularized training methods. For self-contained guidance, we compare with Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For externally guided training, we compare with REPA~\citep{yu2024repa} and REED~\citep{wang2025flexible}. For completeness, we also report representative image-generation baselines: pixel-space diffusion models including ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, Simple Diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}; latent diffusion and transformer-based models including LDM~\citep{rombach2022ldm}, U-ViT-H/2~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2-XL/2~\citep{gao2023mdtv2}, MaskDiT~\citep{zheng2023fast}, SD-DiT~\citep{zhu2024sddit}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}; and autoregressive or predictive-generation baselines such as VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}. \textbf{[PLACEHOLDER: move detailed baseline descriptions and parameter matching protocol to appendix]}.
 
 \subsection{Ablation Study}
 \label{sec:ablation_study}
@@ -179,6 +180,19 @@ Because ReSync predicts future hidden states, it provides a natural way to test 
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. In the main paper, we report compact transition diagnostics and generation results. Detailed diagnostics for projection capacity, near-versus-far layer alignment, layerwise statistics, and layout-recoverable spatial information are deferred to \Cref{app:layer_statistics_projection}, following the common practice of placing extensive ablations and analysis in the appendix.
+Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. To keep the main analysis focused, we use three representative diagnostics. Activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: projection-stitching diagnostics]}\\[0.5em]
+        Panels: activation RMS/token norm across layers; raw CKA vs. projected CKA;\\
+        DINO pseudo-mask IoU or Boundary-F1 for raw, projected, and target activations.
+    \end{minipage}}
+    \caption{\textbf{Projection-stitching diagnostics.} Main-paper placeholder for testing the Claim~1 hypothesis without overloading the analysis. RMS/token norm tests statistical mismatch, projected CKA tests whether the predictor bridges representation geometry, and DINO-derived mask or boundary agreement tests whether the recovered signal is consistent with spatial layout proxies.}
+    \label{fig:projection_stitching_diagnostics}
+\end{figure}
 
 \FloatBarrier

@@ -1,7 +1,7 @@
 \section{Layer Statistics and Projection Motivation}
 \label{app:layer_statistics_projection}
 
-This appendix contains the diagnostic experiments used to evaluate the projection-as-transition motivation. These analyses are intentionally kept outside the main paper: the main text focuses on the method and generation results, while the appendix tests whether projection heads mitigate statistical mismatch and whether DiT activations contain layout-recoverable spatial information. We do not claim explicit semantic layout unless it is supported by agreement with external perceptual proxies.
+This appendix contains the diagnostic experiments used to evaluate the projection-as-transition motivation. These analyses are intentionally kept outside the main paper: the main text focuses on the method and generation results, while the appendix tests whether projection heads mitigate statistical mismatch and whether DiT activations contain layout-recoverable spatial information. We use the main paper diagnostics only as evidence for a hypothesis, not as proof that all layers explicitly encode the same semantic layout.
 
 \subsection{Diagnostic Protocol}
 \label{app:diagnostic_protocol}
@@ -17,10 +17,12 @@ Unless otherwise stated, all diagnostics should be computed on the same checkpoi
 \end{itemize}
 For each method, report the layer pairs, timestep ranges, projection-head architecture, loss weights, and whether an EMA target is used. This mirrors the appendix style of self-representation alignment work, where implementation details and sensitivity studies are separated from the main result tables.
 
+The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, raw-versus-projected CKA for representation stitching, and DINO-derived pseudo-mask or boundary agreement for spatial-layout recovery. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, and temporal CKA heatmaps.
+
 \subsection{Layerwise Statistical Mismatch}
 \label{app:layerwise_statistical_mismatch}
 
-The goal of this diagnostic is to test whether direct alignment is difficult because different layers may occupy statistically different representation spaces. For each hidden state, compute RMS activation, channelwise variance, stable rank, cosine similarity, and linear CKA across layer pairs. Results should be reported both by absolute layer index and by layer distance. If distant layer pairs show larger shifts in scale, variance, rank, or similarity structure, this would support the hypothesis that a projection or transition module can reduce feature-space mismatch before the alignment signal is applied to the backbone.
+The goal of this diagnostic is to test whether direct alignment is difficult because different layers may occupy statistically different representation spaces. For each hidden state, compute RMS activation, token norm, channelwise variance, stable rank, effective rank, cosine similarity, SVCCA, and linear CKA across layer pairs. Results should be reported both by absolute layer index and by layer distance. If distant layer pairs show larger shifts in scale, variance, rank, or similarity structure, this would support the hypothesis that a projection or transition module can reduce feature-space mismatch before the alignment signal is applied to the backbone.
 
 \begin{figure}[!htbp]
     \centering
@@ -80,7 +82,7 @@ This ablation tests whether projection heads act as useful adapters or simply ab
 \subsection{Layout-Recoverable Spatial Information}
 \label{app:layout_recoverable_information}
 
-Raw cosine similarity and CKA do not fully measure whether two activations preserve the same spatial layout. We therefore treat layout as a recoverable object extracted from activation maps rather than as raw feature equality. The planned probes are PCA explained variance, stable rank, spatial-normalization before/after maps, region partitions from activation clusters, boundary maps from activation energy or principal components, and agreement with perceptual proxies such as image edges, object masks, or DINO partitions. We will treat a layer as containing layout-recoverable spatial information only if spatial normalization exposes activation-induced regions or boundaries that align with these proxies more strongly than raw activations do.
+Raw cosine similarity and CKA do not fully measure whether two activations preserve the same spatial layout. Affinity-based similarity to DINO features is also only a weak proxy, since it remains a second-order representation-similarity measure and can still be affected by feature anisotropy or rank structure. We therefore treat layout as a recoverable spatial object extracted from activation maps rather than as raw feature equality. The main probes should convert activations into spatial partitions or boundaries and compare them with external perceptual proxies, such as DINO-derived pseudo masks, image edges, or object masks when available. We will treat a layer as containing layout-recoverable spatial information only if projected or spatial-normalized activations improve pseudo-mask IoU, Boundary-F1, or region agreement relative to raw activations and pass same-image versus different-image or token-shuffle controls.
 
 \begin{figure}[!htbp]
     \centering
@@ -89,9 +91,9 @@ Raw cosine similarity and CKA do not fully measure whether two activations prese
         \centering
         \textbf{[PLACEHOLDER: layout-recoverable spatial information]}\\[0.5em]
         Panels: PCA explained variance, stable rank, raw PCA maps, spatial-normalized PCA maps,\\
-        boundary agreement, region partition agreement, and DINO/mask proxy agreement.
+        DINO pseudo-mask IoU, Boundary-F1, region agreement, and same/different-image controls.
     \end{minipage}}
-    \caption{\textbf{Layout-recoverable spatial information.} Placeholder for testing whether low-rank internal activations contain spatial structure that is not fully captured by raw cosine similarity or CKA. We interpret positive proxy agreement as layout-recoverable information rather than explicit semantic layout.}
+    \caption{\textbf{Layout-recoverable spatial information.} Placeholder for testing whether internal activations contain spatial structure that is not fully captured by raw cosine similarity or CKA. We interpret positive pseudo-mask and boundary agreement as evidence for layout-recoverable information rather than explicit semantic layout.}
     \label{fig:appendix_layout_recoverable}
 \end{figure}
 
