@@ -1,12 +1,13 @@
 \section{Experiments}
 \label{sec:experiments}
 
-This section evaluates ReSync as a mechanistic hypothesis: if internal guidance is more useful when it models representation evolution across depth, then transition prediction and compositional consistency should improve generation while producing measurable gains in transition-level diagnostics. Following this view, our experiments are organized around five questions:
+This section evaluates ReSync as a mechanistic hypothesis: if internal guidance is more useful when it models representation evolution across depth, then transition prediction and compositional consistency should improve generation while producing measurable gains in transition-level diagnostics. Following this view, our experiments are organized around six questions:
 \begin{itemize}[leftmargin=*]
-    \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
+    \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg,tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
     \item Which ReSync components are responsible for the gain, including timestep conditioning of depth transitions and compositional consistency? See \Cref{tab:resync_ablation}.
     \item Does the transition predictor learn reusable internal dynamics? See \Cref{tab:transition_diagnostics}.
     \item Does projection reduce raw layer mismatch rather than merely adding local capacity? See \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation,tab:projection_transition_ablation}.
+    \item Does the method transfer beyond image generation to text-conditioned human motion? See \Cref{tab:humanml3d_results}.
     \item As an exploratory ablation, can predicted hidden states support skipped-depth prediction? See \Cref{tab:skip_prediction}.
 \end{itemize}
 
@@ -15,57 +16,200 @@ This section evaluates ReSync as a mechanistic hypothesis: if internal guidance 
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. ReSync trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are left as explicit placeholders: \textbf{[PLACEHOLDER: architecture table, $\lambda_{\mathrm{pred}}$, $\beta_{\mathrm{cons}}$, $\beta_{\mathrm{out}}$, EMA decay, predictor architecture, number of iterations, and hardware]}.
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. ReSync trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
 
 \paragraph{Evaluation.}
-We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all ReSync variants and baselines. \textbf{[PLACEHOLDER: specify the exact evaluator, reference statistics, classifier-free guidance setting, sampling steps, and whether sFID is reported in the main table or appendix]}.
+We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all ReSync variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}. \textbf{[PLACEHOLDER: specify the exact evaluator, reference statistics, classifier-free guidance setting, sampling steps, and whether sFID is reported in the main table or appendix]}.
 
 \paragraph{Comparison methods.}
 Our main comparisons are against the base SiT/DiT backbone and recent representation-regularized training methods. For self-contained guidance, we compare with Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For externally guided training, we compare with REPA~\citep{yu2024repa} and REED~\citep{wang2025flexible}. For completeness, we also report representative image-generation baselines: pixel-space diffusion models including ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, Simple Diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}; latent diffusion and transformer-based models including LDM~\citep{rombach2022ldm}, U-ViT-H/2~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2-XL/2~\citep{gao2023mdtv2}, MaskDiT~\citep{zheng2023fast}, SD-DiT~\citep{zhu2024sddit}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}; and autoregressive or predictive-generation baselines such as VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}. \textbf{[PLACEHOLDER: move detailed baseline descriptions and parameter matching protocol to appendix]}.
 
+\paragraph{Results.}
+\Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. We reserve the numerical entries for final runs and reproduced baselines; the result summary should state both final sample quality and training-budget efficiency once the table is filled. \textbf{[PLACEHOLDER: summarize no-CFG FID gains, CFG system-level comparison, and whether ReSync narrows the gap to externally guided methods such as REPA/REED]}.
+
+\begin{table}[!htbp]
+    \centering
+    \begin{minipage}[t]{0.45\textwidth}
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \captionof{table}{\textbf{FID comparisons of class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used. Numerical entries are placeholders.}
+        \label{tab:imagenet_no_cfg}
+        \vspace{0.35em}
+        \scriptsize
+        \setlength{\tabcolsep}{2.1pt}
+        \renewcommand{\arraystretch}{0.78}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+            \toprule
+            Model & \#Params & Epochs & FID $\downarrow$ \\
+            \midrule
+            \texttt{SiT-B/2} & 130M & 80 & \textbf{[TBD]} \\
+            \quad + Dispersive & 130M & 80 & \textbf{[TBD]} \\
+            \quad + LayerSync & 130M & 80 & \textbf{[TBD]} \\
+            \quad + ReSync & 130M & 80 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-L/2} & 458M & 80 & \textbf{[TBD]} \\
+            \quad + Dispersive & 458M & 80 & \textbf{[TBD]} \\
+            \quad + LayerSync & 458M & 80 & \textbf{[TBD]} \\
+            \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-XL/2} & 675M & 80 & \textbf{[TBD]} \\
+            \quad + Dispersive & 675M & 80 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 80 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-XL/2} & 675M & 200 & \textbf{[TBD]} \\
+            \quad + Dispersive & 675M & 200 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 200 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-XL/2} & 675M & 400 & \textbf{[TBD]} \\
+            \quad + Dispersive & 675M & 400 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 400 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 400 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-XL/2} & 675M & 800 & \textbf{[TBD]} \\
+            \quad + Dispersive & 675M & 800 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 800 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 800 & \textbf{[TBD]} \\
+            \midrule
+            \texttt{SiT-XL/2} (SDE) & 675M & 1400 & \textbf{[TBD]} \\
+            \quad + Dispersive & 675M & $\geq$1200 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 800 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 800 & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.51\textwidth}
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} Models with additional CFG scheduling~\citep{kynkaanniemi2024guidance} are marked with an asterisk (*).}
+        \label{tab:imagenet_cfg}
+        \vspace{0.35em}
+        \scriptsize
+        \setlength{\tabcolsep}{1.8pt}
+        \renewcommand{\arraystretch}{0.80}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+            \toprule
+            Model & Epochs & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            \midrule
+            \multicolumn{6}{@{}l}{\textit{Pixel diffusion}} \\
+            ADM-U & 400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            VDM++ & 560 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            Simple diffusion & 800 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            CDM & 2160 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            \midrule
+            \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
+            VAR-d20 & 350 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            D-JEPA-L & 480 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \midrule
+            \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
+            LDM-4 & 200 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \midrule
+            \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
+            U-ViT-H/2 & 240 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            DiffiT* & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            MDTv2-XL/2* & 1080 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \midrule
+            \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
+            MaskDiT & 1600 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            SD-DiT & 480 & \textbf{[TBD]} & -- & -- & -- \\
+            DiT-XL/2 & 1400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            SRA* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            SiT-XL/2 & 1400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + REPA & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + REPA* & 800 & \textbf{[TBD]} & -- & -- & -- \\
+            \quad + REED & 200 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + Dispersive & $\geq$1200 & \textbf{[TBD]} & -- & -- & -- \\
+            \quad + LayerSync & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + LayerSync* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReSync & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReSync* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+\end{table}
+
+\subsection{Text-Conditional Human Motion Generation}
+\label{sec:human_motion_generation}
+
+To test whether ReSync transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
+
+\paragraph{Implementation details.}
+We follow the MDM setup~\citep{tevet2022mdm} and use a transformer backbone with the same training budget for the baseline and ReSync variant. The main comparison trains MDM with and without ReSync for $600\mathrm{K}$ iterations. \textbf{[PLACEHOLDER: specify exact backbone depth, selected transition layers, predictor size, loss weights, batch size, and evaluation checkpoint]}.
+
+\paragraph{Evaluation metrics.}
+We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in \Cref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
+
+\paragraph{Results.}
+\Cref{tab:humanml3d_results} reports the HumanML3D comparison. The result summary should emphasize whether the same mismatch-filtering transition objective improves a smaller, non-image transformer without changing the generative task. \textbf{[PLACEHOLDER: summarize FID and R-Precision improvements once results are available]}.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Quantitative results for text-conditional human motion generation on HumanML3D.} Numerical entries are placeholders until final evaluation.}
+    \label{tab:humanml3d_results}
+    \small
+    \setlength{\tabcolsep}{8pt}
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular}{@{}lccc@{}}
+        \toprule
+        Method & Iter. & FID $\downarrow$ & R-Precision $\uparrow$ \\
+        \midrule
+        MDM & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + ReSync (Ours) & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\FloatBarrier
+
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. Output distillation is reported separately as an exploratory skip-related variant. This study tests whether the gain is explained by a single alignment loss or by the combination of grounded prediction and compositional depth-transition learning.
+We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. We then compare against projection-based controls to test whether the gain comes from merely adding adapter capacity or from learning a reusable transition model. Detailed layer-pair, timestep, and predictor-capacity sweeps are moved to \Cref{app:resync_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Ablation of ReSync components.} Placeholder table for measuring how each component affects generation quality and training efficiency. Lower FID/sFID is better; higher IS, precision, and recall are better.}
-    \label{tab:resync_ablation}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccccc}
-        \toprule
-        Method variant & Transition & Time cond. & Consistency & EMA target & FID $\downarrow$ & IS $\uparrow$ \\
-        \midrule
-        Baseline backbone & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + layer transition & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + timestep-conditioned transition & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + compositional consistency & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}}
-\end{table}
-
-We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding adapter capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync using the original selected layers, projection-augmented LayerSync on weak or all source layers, pair-specific projectors, and the shared conditional ReSync predictor. The LayerSync-with-projector variants directly test whether projection can make layers useful even when direct alignment is brittle, while the ReSync row tests whether the same idea benefits from a shared conditional transition model.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Projection and transition ablation.} Placeholder table for testing whether ReSync improves over local projection-based alignment variants. Lower FID, alignment loss, and transition consistency error are better; higher IS is better.}
-    \label{tab:projection_transition_ablation}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccccc}
-        \toprule
-        Method variant & FID $\downarrow$ & IS $\uparrow$ & Training cost & Alignment loss $\downarrow$ & Consistency error $\downarrow$ \\
-        \midrule
-        LayerSync direct cosine & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + small projection head (selected layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + small projection head (weak layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + small projection head (all source layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + large projection head (selected layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync shared conditional transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}}
+    \begin{minipage}[t]{0.48\textwidth}
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \captionof{table}{\textbf{Ablation of ReSync components.} Lower FID is better; higher IS is better.}
+        \label{tab:resync_ablation}
+        \vspace{0.25em}
+        \scriptsize
+        \setlength{\tabcolsep}{2.5pt}
+        \renewcommand{\arraystretch}{0.88}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+            \toprule
+            Variant & Trans. & Time & Comp. & FID $\downarrow$ & IS $\uparrow$ \\
+            \midrule
+            Baseline & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + transition & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + time cond. & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + composition & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Full ReSync & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \captionof{table}{\textbf{Projection and transition controls.} These controls separate adapter capacity from transition learning.}
+        \label{tab:projection_transition_ablation}
+        \vspace{0.25em}
+        \scriptsize
+        \setlength{\tabcolsep}{2.0pt}
+        \renewcommand{\arraystretch}{0.88}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+            \toprule
+            Method & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+            \midrule
+            Direct cosine & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+            Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+            Large projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+            Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
 \end{table}
 
 \FloatBarrier
@@ -182,6 +326,6 @@ Because ReSync predicts future hidden states, it provides a natural way to test 
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main motivating diagnostics are summarized in \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation}: activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}.
+Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main motivating diagnostics are summarized in \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation}: activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}; measurement definitions and reporting conventions are given in \Cref{app:metric_definitions}.
 
 \FloatBarrier
