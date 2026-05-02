@@ -3,10 +3,10 @@
 
 This section evaluates whether \emph{ReSync} improves diffusion-transformer training by using the model's own cross-depth representation dynamics as self-aligned transition supervision. Our experiments are organized around four questions:
 \begin{itemize}[leftmargin=*]
-    \item Which components of ReSync are most important for generation quality and training efficiency? See \Cref{tab:resync_ablation}.
+    \item Which components of ReSync are most important for generation quality and training efficiency? See \Cref{tab:resync_ablation,tab:projection_transition_ablation}.
     \item Does ReSync remain effective across different backbone families and model scales? See \Cref{fig:training_curves,tab:model_scaling}.
     \item How does ReSync compare with methods that rely on external representation tasks or pretrained representation encoders? See \Cref{tab:comparison_external_guidance}.
-    \item Does ReSync actually improve the representation capacity of the backbone, and how strongly is this improvement correlated with generation quality? See \Cref{fig:representation_analysis}.
+    \item Can projection heads mitigate layer-statistic mismatch, and do the learned transitions preserve layout-recoverable spatial structure? We leave detailed diagnostics to \Cref{app:layer_statistics_projection}.
 \end{itemize}
 
 \subsection{Experimental Setup}
@@ -26,7 +26,7 @@ We compare ReSync against representative generative baselines from three groups:
 
 We first isolate the contribution of each ReSync design choice. The ablation should start from the same backbone trained without the ReSync objective, then add direct cross-depth transition prediction, bootstrap transition consistency, EMA bootstrap targets, and optional output distillation. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
 
-\begin{table}[t]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Ablation of ReSync components.} Placeholder table for measuring how each component affects generation quality and training efficiency. Lower FID/sFID is better; higher IS, precision, and recall are better.}
     \label{tab:resync_ablation}
@@ -44,12 +44,34 @@ We first isolate the contribution of each ReSync design choice. The ablation sho
     \end{tabular}}
 \end{table}
 
+We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding projection capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync, pair-specific projectors, and the shared conditional ReSync predictor. This ablation is intended to separate three effects: possible mitigation of feature-space mismatch, the capacity of the projection module, and compositional consistency across multiple layer and timestep pairs.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Projection and transition ablation.} Placeholder table for testing whether projection heads can mitigate statistical mismatch and whether a shared conditional transition model provides additional benefit. Lower FID, alignment loss, and transition consistency error are better; higher IS is better.}
+    \label{tab:projection_transition_ablation}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        Method variant & FID $\downarrow$ & IS $\uparrow$ & Training cost & Alignment loss $\downarrow$ & Consistency error $\downarrow$ \\
+        \midrule
+        LayerSync direct cosine & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + small projection head & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + large projection head & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync shared conditional transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+\FloatBarrier
+
 \subsection{Scaling Across Backbones and Model Sizes}
 \label{sec:scaling_experiments}
 
 Next, we evaluate whether ReSync is robust to changes in model capacity and baseline choice. The expected comparison includes at least \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} variants, each trained with and without ReSync under the same recipe. The key question is whether cross-depth transition supervision provides a consistent gain rather than only improving one specific configuration.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \fbox{%
     \begin{minipage}[c][0.23\textheight][c]{0.88\linewidth}
@@ -62,7 +84,7 @@ Next, we evaluate whether ReSync is robust to changes in model capacity and base
     \label{fig:training_curves}
 \end{figure}
 
-\begin{table}[t]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{ReSync across model sizes.} Placeholder table for comparing baseline and ReSync variants under matched training settings.}
     \label{tab:model_scaling}
@@ -80,12 +102,14 @@ Next, we evaluate whether ReSync is robust to changes in model capacity and base
     \end{tabular}
 \end{table}
 
+\FloatBarrier
+
 \subsection{Comparison with Representation-Guided Training}
 \label{sec:comparison_representation_guidance}
 
 ReSync is designed to provide representation guidance without an external encoder or an external representation task. We therefore compare against methods that use pretrained visual representations, self-guided internal alignment, or other representation regularizers. This comparison should report both final sample quality and training efficiency, since external encoders can improve convergence while adding additional training-time computation.
 
-\begin{table}[t]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Comparison with representation-guided diffusion training.} Placeholder table for methods using external encoders, external representation tasks, or internal self-guidance.}
     \label{tab:comparison_external_guidance}
@@ -103,20 +127,11 @@ ReSync is designed to provide representation guidance without an external encode
     \end{tabular}}
 \end{table}
 
+\FloatBarrier
+
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync improves the backbone's intermediate representations rather than only acting as a regularizer on the final generation objective. Possible diagnostics include linear probing on frozen features, nearest-neighbor retrieval in feature space, layerwise feature similarity, and correlation between representation metrics and FID. This analysis should clarify whether better generation coincides with more predictive and more transferable intermediate features.
+Finally, we test whether ReSync improves the backbone's intermediate representations rather than only acting as a regularizer on the final generation objective. In the main paper, we report the compact generation and ablation results above. Detailed diagnostics for projection capacity, near-versus-far layer alignment, layerwise statistics, and layout-recoverable spatial information are deferred to \Cref{app:layer_statistics_projection}, following the common practice of placing extensive ablations and analysis in the appendix.
 
-\begin{figure}[t]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.88\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: representation analysis]}\\[0.5em]
-        Suggested panels: layerwise probing accuracy, feature similarity across depth,\\
-        transition prediction error, and correlation between representation score and FID.
-    \end{minipage}}
-    \caption{\textbf{Representation diagnostics for ReSync.} Placeholder for measuring whether cross-depth transition supervision improves intermediate feature quality and whether those improvements correlate with generation quality.}
-    \label{fig:representation_analysis}
-\end{figure}
+\FloatBarrier
