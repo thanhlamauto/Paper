@@ -3,22 +3,24 @@
 
 \subsection{Preliminaries}
 
-We first recall the flow-matching formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\sim\mathcal{U}(0,1)$, a stochastic interpolant defines the noisy latent
+We adopt the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}, which provides a common view of flow-based and diffusion-based generative models. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
 \begin{equation}
 x_t=\alpha_t x_0+\sigma_t\epsilon ,
 \label{eq:stochastic_interpolant}
 \end{equation}
-where $\alpha_t$ and $\sigma_t$ specify the interpolation schedule. The corresponding velocity target is
-$u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon$. A diffusion transformer $v_\zeta$ predicts this velocity from $(x_t,t,c)$ and is optimized by
+where $\alpha_t$ and $\sigma_t$ control the mixture of data and noise. The schedule is chosen so that the path connects clean data to a tractable noise distribution, and generation follows the learned dynamics in the reverse direction. The instantaneous velocity of this path is
+\[
+u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon .
+\]
+A diffusion transformer $v_\zeta$ receives the noisy latent $x_t$, timestep $t$, and optional condition $c$, and is trained to predict this velocity by minimizing
 \begin{equation}
 \mathcal{L}_{\mathrm{FM}}
 =
-\mathbb{E}\left[
+\mathbb{E}_{x_0,\epsilon,t,c}\left[
 \left\|v_\zeta(x_t,t,c)-u_t\right\|_2^2
 \right].
 \label{eq:flow_matching_loss}
 \end{equation}
-For an $L$-block transformer, let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the activation after block $\ell$ at timestep $t$. ReSync uses these already-computed activations as internal supervision, sampling layer pairs $a<b$ for prediction and triples $a<b<c$ for compositional consistency. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient.
 
 \subsection{From Alignment to Transition Learning}
 
@@ -28,14 +30,14 @@ ReSync keeps the same self-contained setting but changes the supervision from ma
 
 \subsection{ReSync Transition Prediction}
 
-For a source layer $a$ and a target layer $b>a$, ReSync predicts the target activation from the source activation at the same denoising timestep:
+Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the model processes $(x_t,t,c)$. For a source layer $a$ and a target layer $b>a$, ReSync predicts the target activation from the source activation at the same denoising timestep:
 \begin{equation}
 T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
 \qquad
 \hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across sampled layer pairs and conditioned on the denoising timestep. Thus, the projection-like module is no longer a local adapter for one selected pair, but an amortized transition model reused throughout the depth trajectory. We train it with the grounded prediction loss
+The predictor is shared across sampled layer pairs and conditioned on the denoising timestep. Thus, the projection-like module is no longer a local adapter for one selected pair, but an amortized transition model reused throughout the depth trajectory. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. We train the predictor with
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
