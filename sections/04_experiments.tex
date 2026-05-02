@@ -1,19 +1,20 @@
 \section{Experiments}
 \label{sec:experiments}
 
-This section evaluates whether \emph{ReSync} improves diffusion-transformer training by using the model's own cross-depth representation dynamics as self-aligned transition supervision. Our experiments are organized around four questions:
+This section evaluates ReSync as a mechanistic hypothesis: if internal guidance is more useful when it models representation evolution across depth, then transition prediction and compositional consistency should improve generation while producing measurable gains in transition-level diagnostics. Following this view, our experiments are organized around five questions:
 \begin{itemize}[leftmargin=*]
-    \item Which components of ReSync are most important for generation quality and training efficiency? See \Cref{tab:resync_ablation,tab:projection_transition_ablation}.
-    \item Does ReSync remain effective across different backbone families and model scales? See \Cref{fig:training_curves,tab:model_scaling}.
-    \item How does ReSync compare with methods that rely on external representation tasks or pretrained representation encoders? See \Cref{tab:comparison_external_guidance}.
-    \item Can projection heads mitigate layer-statistic mismatch, and do the learned transitions preserve layout-recoverable spatial structure? We leave detailed diagnostics to \Cref{app:layer_statistics_projection}.
+    \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
+    \item Which ReSync components are responsible for the gain, including timestep conditioning of depth transitions and compositional consistency? See \Cref{tab:resync_ablation}.
+    \item Does the transition predictor learn reusable internal dynamics? See \Cref{tab:transition_diagnostics}.
+    \item Is the benefit different from adding a local projection head? See \Cref{tab:projection_transition_ablation}.
+    \item As an exploratory ablation, can predicted hidden states support skipped-depth prediction? See \Cref{tab:skip_prediction}.
 \end{itemize}
 
 \subsection{Experimental Setup}
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{align}}$, $\lambda_{\mathrm{cons}}$, $\lambda_{\mathrm{out}}$, EMA decay, and predictor architecture details]}.
+Unless otherwise stated, we follow the standard latent diffusion-transformer training recipe used by DiT and SiT-style baselines~\citep{ma2024sit}. Models are trained with AdamW using a constant learning rate of $10^{-4}$, no weight decay, and a batch size of $256$. Images are encoded into latent space using the Stable Diffusion VAE, and we evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} model configurations with patch size $2$. For ReSync, the transition predictor is trained jointly with the backbone using the auxiliary objective in \Cref{eq:total_loss}. We leave dataset-specific details, training length, transition-pair sampling, EMA decay, loss weights, and compute budget as explicit placeholders: \textbf{[PLACEHOLDER: dataset, resolution, number of iterations, hardware, $\lambda_{\mathrm{pred}}$, $\beta_{\mathrm{cons}}$, $\beta_{\mathrm{out}}$, EMA decay, and predictor architecture details]}.
 
 \paragraph{Evaluation.}
 We report standard image-generation metrics, including Frechet Inception Distance (FID), sFID, Inception Score (IS), precision, and recall. Unless otherwise specified, metrics are computed using $50\mathrm{K}$ generated samples and the same reference statistics as prior diffusion-transformer work. We will use a consistent evaluation implementation for all baselines and ReSync variants. \textbf{[PLACEHOLDER: cite and specify the exact evaluation suite, e.g., ADM TensorFlow evaluator or another agreed protocol.]}
@@ -24,7 +25,7 @@ We compare ReSync against representative generative baselines from three groups:
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice. The ablation should start from the same backbone trained without the ReSync objective, then add direct cross-depth transition prediction, bootstrap transition consistency, EMA bootstrap targets, and optional output distillation. This study tests whether the benefit comes from a single alignment loss or from modeling cross-layer transitions as a compositional prediction problem.
+We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. Output distillation is reported separately as an exploratory skip-related variant. This study tests whether the gain is explained by a single alignment loss or by the combination of grounded prediction and compositional depth-transition learning.
 
 \begin{table}[!htbp]
     \centering
@@ -33,22 +34,22 @@ We first isolate the contribution of each ReSync design choice. The ablation sho
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccc}
         \toprule
-        Method variant & Align & Consistency & EMA target & Output distill. & FID $\downarrow$ & IS $\uparrow$ \\
+        Method variant & Transition & Time cond. & Consistency & EMA target & FID $\downarrow$ & IS $\uparrow$ \\
         \midrule
         Baseline backbone & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + transition alignment & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + transition consistency & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + EMA target & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + layer transition & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + timestep-conditioned transition & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + compositional consistency & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
         Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
 
-We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding projection capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync, pair-specific projectors, and the shared conditional ReSync predictor. This ablation is intended to separate three effects: possible mitigation of feature-space mismatch, the capacity of the projection module, and compositional consistency across multiple layer and timestep pairs.
+We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding adapter capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync, pair-specific projectors, and the shared conditional ReSync predictor. This ablation separates local feature adaptation from shared transition learning.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Projection and transition ablation.} Placeholder table for testing whether projection heads can mitigate statistical mismatch and whether a shared conditional transition model provides additional benefit. Lower FID, alignment loss, and transition consistency error are better; higher IS is better.}
+    \caption{\textbf{Projection and transition ablation.} Placeholder table for testing whether ReSync improves over local projection-based alignment variants. Lower FID, alignment loss, and transition consistency error are better; higher IS is better.}
     \label{tab:projection_transition_ablation}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccccc}
@@ -60,6 +61,29 @@ We also compare ReSync against simpler projection-based variants to test whether
         LayerSync + large projection head & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         ReSync shared conditional transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+\FloatBarrier
+
+\subsection{Transition Diagnostics}
+\label{sec:transition_diagnostics}
+
+Generation metrics alone cannot show whether ReSync is using the intended mechanism. We therefore measure whether the learned predictor behaves like a reusable depth-transition model. The main diagnostics are transition prediction error on sampled layer pairs, held-out prediction error on unseen layer pairs, compositional error between direct and composed transitions, and the relationship between these errors and generation quality. We report cross-timestep prediction only as a preliminary diagnostic because it requires additional target activations. These measurements do not prove a causal mechanism, but they test whether the empirical gains are consistent with the transition-learning interpretation.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Transition-level diagnostics.} Placeholder table for testing whether ReSync learns reusable depth transitions. Lower prediction and compositional errors are better; stronger correlation with generation metrics would support the interpretation that transition quality is related to sample quality.}
+    \label{tab:transition_diagnostics}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        Method variant & Train error $\downarrow$ & Held-out layer $\downarrow$ & Comp. error $\downarrow$ & FID $\downarrow$ & Error--FID corr. \\
+        \midrule
+        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -129,9 +153,32 @@ ReSync is designed to provide representation guidance without an external encode
 
 \FloatBarrier
 
+\subsection{Skipped-Depth Prediction}
+\label{sec:skip_prediction}
+
+Because ReSync predicts future hidden states, it provides a natural way to test whether the learned representation is useful beyond a hidden-state similarity loss. We evaluate skipped-depth prediction by replacing a block interval with the predicted hidden state and then resuming the remaining backbone. The primary measurements are output error against the full model, generation quality under skipped execution, and wall-clock speed. We treat this as an auxiliary capability rather than the central claim.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Skipped-depth prediction.} Placeholder table for evaluating whether predicted hidden states can support optional layer skipping.}
+    \label{tab:skip_prediction}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        Variant & Skipped blocks & Output error $\downarrow$ & FID $\downarrow$ & Speedup $\uparrow$ & Notes \\
+        \midrule
+        Full backbone & 0 & -- & \textbf{[TBD]} & $1.0\times$ & -- \\
+        ReSync without output distillation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync with output distillation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+\FloatBarrier
+
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync improves the backbone's intermediate representations rather than only acting as a regularizer on the final generation objective. In the main paper, we report the compact generation and ablation results above. Detailed diagnostics for projection capacity, near-versus-far layer alignment, layerwise statistics, and layout-recoverable spatial information are deferred to \Cref{app:layer_statistics_projection}, following the common practice of placing extensive ablations and analysis in the appendix.
+Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. In the main paper, we report compact transition diagnostics and generation results. Detailed diagnostics for projection capacity, near-versus-far layer alignment, layerwise statistics, and layout-recoverable spatial information are deferred to \Cref{app:layer_statistics_projection}, following the common practice of placing extensive ablations and analysis in the appendix.
 
 \FloatBarrier

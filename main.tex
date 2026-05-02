@@ -49,6 +49,9 @@
 \usepackage{wrapfig}
 \usepackage{placeins}
 
+% Avoid vertically stretched pages when forcing a new page after the teaser figure.
+\raggedbottom
+
 % Optional but useful
 \usepackage[nameinlink,capitalize,noabbrev]{cleveref}
 
@@ -90,7 +93,7 @@
         $\rightarrow$ projection head\\
         $\rightarrow$ target space
       \end{minipage}%
-    }\\[-0.2em]
+    }\\[0.35em]
     \small (a) Projection as adapter
   \end{minipage}
   \hfill
@@ -104,7 +107,7 @@
         between selected\\
         internal layers
       \end{minipage}%
-    }\\[-0.2em]
+    }\\[0.35em]
     \small (b) Direct self-alignment
   \end{minipage}
   \hfill
@@ -118,9 +121,10 @@
         transition predictor\\
         with composition checks
       \end{minipage}%
-    }\\[-0.2em]
+    }\\[0.35em]
     \small (c) Projection as transition
   \end{minipage}
+  \vspace{0.45em}
   \captionof{figure}{\textbf{Projection-as-transition motivation.}
   REPA- and SRA-style methods use projection heads when aligning potentially mismatched representation spaces, while LayerSync directly aligns selected internal layers. ReSync motivates treating the projection module as a small shared transition model for reusable layer- and timestep-conditioned representation dynamics.}
   \label{fig:projection_as_transition}
@@ -139,10 +143,12 @@
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
 
-\appendix
-\input{figures/appendices/appendix_main}
-
 \newpage
 \input{checklist}
+
+\newpage
+\appendix
+\section*{Appendix}
+\input{figures/appendices/appendix_main}
 
 \end{document}
