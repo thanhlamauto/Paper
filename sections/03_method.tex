@@ -37,7 +37,7 @@ A_a^t
 \Delta_i^t=A_{i+1}^t-A_i^t .
 \label{eq:residual_transition_view}
 \end{equation}
-For completeness, \Cref{app:residual_transition_derivation} derives this identity for a DiT-style residual transformer stack. Thus, direct alignment between $A_a^t$ and $A_b^t$ implicitly asks an earlier layer to match a representation after several additional transformations. This concern is consistent with projection-based alignment designs in prior work: REPA uses a projection head before matching diffusion features to external representations, and SRA also uses projection when aligning heterogeneous internal states, motivated by the need for a softer interface between representation spaces~\citep{yu2024repa,jiang2025sra}. We take this design choice as a hypothesis to test rather than as a settled explanation. A properly conditioned interface may do more than match dimensions or distill an intermediate target; it may recover the predictable component of the target activation while filtering layer-specific variation that would make raw matching brittle. The resulting auxiliary signal can then be passed back to weaker source layers in a cleaner form, creating the kind of virtuous cycle sought by internal self-alignment methods: earlier layers become more predictive, and their improved states provide better inputs for subsequent transition learning. This does not imply that every layer contains the same information. Rather, it suggests that layers that look weak under direct alignment may still contain useful recoverable signal once the representation mismatch is reduced.
+For completeness, \Cref{app:residual_transition_derivation} derives this identity for a DiT-style residual transformer stack. Thus, direct alignment between $A_a^t$ and $A_b^t$ implicitly asks an earlier layer to match a representation after several additional transformations. This concern is consistent with projection-based alignment designs in prior work: REPA uses a projection head before matching diffusion features to external representations, and SRA also uses projection when aligning heterogeneous internal states, motivated by the need for a softer interface between representation spaces~\citep{yu2024repa,jiang2025sra}. We take this design choice as a hypothesis to test rather than as a settled explanation. A properly conditioned interface may do more than match dimensions or distill an intermediate target; it may recover the predictable component of the target activation while filtering layer-specific variation that would make raw matching brittle. The resulting auxiliary signal can then be passed back to weaker source layers in a cleaner form, extending the LayerSync view that improving weak layers can in turn support stronger later representations~\citep{haghighi2026layersync}. This does not imply that every layer contains the same information. Rather, it suggests that layers that look weak under direct alignment may still contain useful recoverable signal once the representation mismatch is reduced.
 
 We evaluate this hypothesis with two compact observations in the main paper. First, we measure whether raw layer activations are statistically and representationally mismatched, and whether a projection head reduces this mismatch. Second, because higher CKA alone does not certify perceptual layout, we separately test whether projected activations recover spatial partitions or boundaries that agree with DINO-derived pseudo masks. Full statistics, cosine and SVCCA, rank spectra, temporal heatmaps, and additional controls are deferred to \Cref{app:layer_statistics_projection}.
 
@@ -123,18 +123,9 @@ The choice of transition pairs plays a role analogous to layer selection in dire
 
 We also avoid relying on the final decoder-like blocks as the dominant targets. Prior analyses of diffusion representations indicate that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as predictor-design choices rather than fixed assumptions. Finally, the predictor itself is kept lightweight and shared across pairs through layer and timestep conditioning. This design keeps the method self-contained while testing whether one compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
 
-\subsection{Objective and Extensions}
+\subsection{Objective}
 
-The main method uses same-timestep depth transitions because both source and target activations are available in one forward pass. More generally, the same predictor can be viewed as an intrinsic internal representation consistency function over the layer--time grid. In this extended form, it maps an activation from source layer $a$ and timestep $t$ to target layer $b$ and timestep $s$:
-\begin{equation}
-T_{a,t\to b,s}(A)\equiv T_\psi^{\mathrm{time}}(A,a,b,t,s),
-\qquad
-\hat A_b^s=T_{a,t\to b,s}(A_a^t).
-\label{eq:cross_timestep_predictor}
-\end{equation}
-This layer--time extension requires target activations at another timestep $s$, so we report it only as a preliminary diagnostic rather than the main training recipe.
-
-We also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
+The main training objective combines the prediction and compositional consistency losses above with the base flow-matching objective. For exploratory skipped-depth ablations, we also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
 \begin{equation}
 \hat y_{\mathrm{skip}}
 =
