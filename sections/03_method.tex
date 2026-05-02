@@ -3,73 +3,109 @@
 
 \subsection{Preliminaries}
 
-We describe ReSync on top of a diffusion-transformer backbone trained with a standard diffusion or flow-matching objective. For concreteness, we use the stochastic-interpolant formulation of SiT~\citep{ma2024sit}. Given data $x_0$, noise $\epsilon$, and timestep $t$, the model observes
+We first recall the flow-matching formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\sim\mathcal{U}(0,1)$, a stochastic interpolant defines the noisy latent
 \begin{equation}
-x_t=\alpha_t x_0+\sigma_t\epsilon .
+x_t=\alpha_t x_0+\sigma_t\epsilon ,
 \label{eq:stochastic_interpolant}
 \end{equation}
-Let $u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon$ be the corresponding velocity target. The backbone $f_\zeta$ and output head $v_\zeta$ are trained with
+where $\alpha_t$ and $\sigma_t$ specify the interpolation schedule. The corresponding velocity target is
+$u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon$. A diffusion transformer $v_\zeta$ predicts this velocity from $(x_t,t,c)$ and is optimized by
 \begin{equation}
-\mathcal{L}_{\mathrm{gen}}
+\mathcal{L}_{\mathrm{FM}}
 =
-\mathbb{E}_{x_0,\epsilon,t}
-\left[
+\mathbb{E}\left[
 \left\|v_\zeta(x_t,t,c)-u_t\right\|_2^2
 \right].
 \label{eq:flow_matching_loss}
 \end{equation}
-During the same forward pass, the transformer exposes hidden states $h_0(t),\ldots,h_L(t)$, where $h_\ell(t)$ denotes the representation after block $\ell$. ReSync adds training-time losses on these states. The sampling network is unchanged unless the optional layer-skipping branch is enabled.
+For an $L$-block transformer, let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the activation after block $\ell$ at timestep $t$. ReSync uses these already-computed activations as internal supervision, sampling layer pairs $a<b$ for prediction and triples $a<b<c$ for compositional consistency. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient.
 
-\subsection{ReSync: Learning Internal Transitions}
+\subsection{From Alignment to Transition Learning}
 
-Representation alignment methods usually choose a source representation and a target representation, optionally insert a projection head, and then minimize a similarity loss. REPA uses external targets, while SRA and LayerSync show that useful targets can also come from the diffusion model itself~\citep{yu2024repa,jiang2025sra,haghighi2026layersync}. Projection heads can be viewed as practical adapters for matching different representation spaces, but when an adapter is tied to a fixed pair it remains a local solution.
+Prior work suggests that diffusion representations are highly non-uniform across depth: some intermediate blocks carry more useful semantic information, while the last blocks increasingly specialize toward decoding back to the latent space~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. Existing self-contained methods use this structure by selecting internal activations and matching or regularizing them directly~\citep{jiang2025sra,haghighi2026layersync}. This gives useful guidance, but it still treats representations as static objects to be made similar.
 
-ReSync turns this local adapter into a shared transition model. For two layers $a<b$, we predict the later hidden state from the earlier one as
+ReSync keeps the same self-contained setting but changes the supervision from matching activations to learning transitions between them. The goal is not to make an early block reproduce a later block in the same raw feature space. Instead, we ask whether the earlier activation contains enough information for a small conditional predictor to recover the predictable part of the later activation. This gives earlier layers a directed learning signal while allowing different depths to preserve their own computational roles.
+
+\subsection{ReSync Transition Prediction}
+
+For a source layer $a$ and a target layer $b>a$, ReSync predicts the target activation from the source activation at the same denoising timestep:
 \begin{equation}
-\hat h_b(t)=T_\psi(h_a(t);a,b,t),
+T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
+\qquad
+\hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-where $T_\psi$ is a lightweight predictor conditioned on the source layer, target layer, and timestep. The same predictor is reused across sampled layer pairs, so the auxiliary task is not simply to fit one projection head for one target. Instead, it asks the model to learn reusable changes between internal representation spaces. A cross-timestep variant can replace the target $h_b(t)$ with a cleaner or noisier state from the same sample, following the spirit of SRA; we keep the same-timestep form as the main objective for clarity and lower training cost.
-
-\subsection{Grounded and Compositional Objectives}
-
-The grounded transition loss uses the real target hidden state as a detached supervision signal:
+The predictor is shared across sampled layer pairs and conditioned on the denoising timestep. Thus, the projection-like module is no longer a local adapter for one selected pair, but an amortized transition model reused throughout the depth trajectory. We train it with the grounded prediction loss
 \begin{equation}
-\mathcal{L}_{\mathrm{align}}
+\mathcal{L}_{\mathrm{pred}}
 =
-\mathbb{E}_{a<b,t}
-\left[
-d\left(T_\psi(h_a(t);a,b,t),\mathrm{sg}(h_b(t))\right)
-\right],
+\mathbb{E}\left[
+d\left(\hat A_{b\mid a}^t,\mathrm{sg}(A_b^t)\right)
+\right].
 \label{eq:align_loss}
 \end{equation}
-where $\mathrm{sg}(\cdot)$ denotes stop-gradient and $d$ is a tokenwise distance, cosine distance by default. This term provides the same kind of internal guidance as self-alignment, but the source layer is not forced to match the target layer in raw feature coordinates.
+The target activation is detached. This prevents the auxiliary loss from symmetrically pulling both layers together and makes the predictor responsible for bridging the source and target representations.
 
-Grounded prediction alone could still be solved by pair-specific shortcuts. ReSync therefore requires transitions to compose across depth. For layers $a<b<c$, the transition obtained by going through $b$ should agree with the direct transition from $a$ to $c$. We implement this with an EMA copy $\overline{T}_\psi$ as the bootstrap target:
+\subsection{Compositional Consistency}
+
+The prediction loss alone can still behave like a collection of independent projection heads. To encourage a reusable internal transition rule, ReSync adds a compositional constraint. A long transition should agree with the composition of two shorter transitions:
+\begin{equation}
+\hat A_{c\mid a}^t
+\approx
+\hat A_{c\mid b\mid a}^t .
+\label{eq:transition_composition}
+\end{equation}
+where $\hat A_{c\mid a}^t$ is the direct long transition and $\hat A_{c\mid b\mid a}^t$ is obtained by applying the transitions $a\to b$ and then $b\to c$. In the loss, we detach the source activation and use an EMA copy $\bar T$ to form a stable composed target. Let
+\begin{equation}
+\tilde A_a^t=\mathrm{sg}(A_a^t),
+\qquad
+\bar A_{b\mid a}^t=\bar T_{a\to b}^{\,t}(\tilde A_a^t),
+\qquad
+\bar A_{c\mid b\mid a}^t
+=
+\bar T_{b\to c}^{\,t}(\bar A_{b\mid a}^t).
+\label{eq:composed_target}
+\end{equation}
+The consistency objective is then simply
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}
 =
-\mathbb{E}_{a<b<c,t}
-\left[
-d\left(
-T_\psi(T_\psi(h_a(t);a,b,t);b,c,t),
-\mathrm{sg}\left(\overline{T}_\psi(h_a(t);a,c,t)\right)
-\right)
+\mathbb{E}\left[
+d\left(T_{a\to c}^t(\tilde A_a^t),\mathrm{sg}(\bar A_{c\mid b\mid a}^t)\right)
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-This consistency term is the key distinction from a collection of projection heads. It couples short and long transitions, encouraging a shared internal dynamics rather than independent alignment rules for isolated layer pairs.
+This coupling is the main mechanism that distinguishes ReSync from pairwise self-alignment: the same predictor must explain local and longer-range changes along the depth trajectory.
 
-\subsection{Optional Output Distillation and Training Objective}
+\subsection{Transition Pair and Predictor Design}
 
-ReSync can also be used to test layer-skipping behavior. Given a predicted state $\hat h_b(t)$, we resume the remaining blocks and output head $F_{b+1:L}$:
+The choice of transition pairs plays a role analogous to layer selection in direct self-alignment. ReSync uses a shared predictor, so we avoid designing a separate head for each source--target pair. Instead, we sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. In practice, we use a mixture of short and medium gaps and ablate this sampling strategy in the experiments.
+
+We also avoid relying on the final decoder-like blocks as the dominant targets. Prior analyses of diffusion representations indicate that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as predictor-design choices rather than fixed assumptions. Finally, the predictor itself is kept lightweight and shared across pairs through layer and timestep conditioning. This design keeps the method self-contained while testing whether one compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
+
+\subsection{Objective and Extensions}
+
+The main method uses same-timestep depth transitions because both source and target activations are available in one forward pass. More generally, the same predictor can be viewed as an intrinsic internal representation consistency function over the layer--time grid. In this extended form, it maps an activation from source layer $a$ and timestep $t$ to target layer $b$ and timestep $s$:
+\begin{equation}
+T_{a,t\to b,s}(A)\equiv T_\psi^{\mathrm{time}}(A,a,b,t,s),
+\qquad
+\hat A_b^s=T_{a,t\to b,s}(A_a^t).
+\label{eq:cross_timestep_predictor}
+\end{equation}
+This layer--time extension requires target activations at another timestep $s$, so we report it only as a preliminary diagnostic rather than the main training recipe.
+
+We also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
 \begin{equation}
 \hat y_{\mathrm{skip}}
 =
-F_{b+1:L}(\hat h_b(t),t,c).
+F_{\zeta,b:L}(\hat A_b^t,t,c),
+\qquad
+\hat y_{\mathrm{full}}
+=
+F_{\zeta,b:L}(A_b^t,t,c),
 \label{eq:skip_output}
 \end{equation}
-The skipped output is matched to the full model output,
+and match the resulting output to the full computation:
 \begin{equation}
 \mathcal{L}_{\mathrm{out}}
 =
@@ -80,19 +116,26 @@ The skipped output is matched to the full model output,
 \right\|_2^2 .
 \label{eq:output_distillation_loss}
 \end{equation}
-We treat this term as optional; the main claim of ReSync is representation regularization through transition prediction and compositional consistency.
+This term is not required for the main method. We use it only as an ablation to make the predictor more robust to its own errors and to encourage predicted activations to preserve information useful for the final velocity prediction.
 
-The final objective is
+We collect the auxiliary terms into a single predictor objective,
+\begin{equation}
+\mathcal{L}_{\mathrm{predictor}}
+=
+\mathcal{L}_{\mathrm{pred}}
++
+\beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
++
+\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}} .
+\label{eq:predictor_loss}
+\end{equation}
+The resulting training objective is
 \begin{equation}
 \mathcal{L}
 =
-\mathcal{L}_{\mathrm{gen}}
+\mathcal{L}_{\mathrm{FM}}
 +
-\lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{align}}
-+
-\lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
-+
-\lambda_{\mathrm{out}}\mathcal{L}_{\mathrm{out}} .
+\lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{predictor}} .
 \label{eq:total_loss}
 \end{equation}
-When $\lambda_{\mathrm{out}}=0$, ReSync is purely a training-time self-distillation objective and adds no inference-time computation.
+In all main experiments, $\beta_{\mathrm{out}}=0$, so ReSync is purely a training-time representation regularizer and adds no inference-time cost.
