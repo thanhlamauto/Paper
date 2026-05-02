@@ -1,9 +1,49 @@
-\section{Experimental Details and Ablations}
+\section{ReSync Algorithm and Compute}
+\label{app:resync_algorithm_compute}
+
+This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's learned transition predictor and compositional loss. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
+
+Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the transition predictor maps source activations to target-layer predictions, and the auxiliary objective combines prediction and composition losses. The predictor is removed for ordinary sampling, so inference cost is unchanged unless the optional skipped-depth ablation is enabled.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}{0.92\linewidth}
+    \small
+    \textbf{Algorithm: ReSync training step.}
+    \begin{enumerate}[leftmargin=*,topsep=0.25em,itemsep=0.15em]
+        \item Sample data, class condition, noise, timestep, and valid layer tuple $(a,b,c)$.
+        \item Run the DiT/SiT backbone and cache activations $A_a^t,A_b^t,A_c^t$.
+        \item Predict $\hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t)$ and $\hat A_{c\mid a}^t=T_{a\to c}^t(A_a^t)$.
+        \item Form the EMA-composed target $\bar A_{c\mid b\mid a}^t=\bar T_{b\to c}^t(\bar T_{a\to b}^t(\mathrm{sg}(A_a^t)))$.
+        \item Optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{pred}}(\mathcal{L}_{\mathrm{pred}}+\beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}})$; enable $\mathcal{L}_{\mathrm{out}}$ only for skipped-depth ablations.
+    \end{enumerate}
+    \end{minipage}}
+    \caption{\textbf{ReSync algorithm summary.} Placeholder algorithm box matching the appendix style of self-alignment methods while exposing ReSync-specific transition and composition steps.}
+    \label{fig:appendix_resync_algorithm}
+\end{figure}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Compute and parameter overhead.} Placeholder table for reporting training-time overhead relative to the backbone and related internal-guidance baselines.}
+    \label{tab:appendix_compute_overhead}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{lcccc}
+        \toprule
+        Method & Extra params & Extra forward cost & Extra activation memory & Inference cost \\
+        \midrule
+        Baseline & -- & -- & -- & $1.0\times$ \\
+        Dispersive Loss & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
+        LayerSync-style alignment & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
+        ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
+        ReSync skip ablation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{ImageNet Experimental Details}
 \label{app:experimental_details}
-
-This appendix follows the same organizational principle as LayerSync: the main paper reports the compact result tables and the appendix separates implementation details, baseline protocol, and sensitivity studies. For ReSync, the split is slightly different because the method has a learned transition predictor and a compositional loss; therefore we report predictor architecture, transition-pair sampling, timestep conditioning, and consistency controls explicitly.
-
-\subsection{ImageNet Protocol and Baseline Matching}
 \label{app:baseline_protocol}
 
 All ImageNet experiments should use the same VAE, data preprocessing, sampler family, number of sampling steps, classifier-free guidance setting, and reference statistics within each table. No-CFG results in \Cref{tab:imagenet_no_cfg} should use the ODE-based Heun sampler unless the row is explicitly marked as an SDE run. CFG results in \Cref{tab:imagenet_cfg} should state the guidance scale, whether interval guidance is used, and whether the row uses an additional CFG schedule~\citep{ho2022classifier,kynkaanniemi2024guidance}. When comparing to external-representation methods such as REPA and REED, we report whether the external encoder is used during training, whether it is frozen, and whether the compute cost includes teacher forward passes.
@@ -21,6 +61,66 @@ All ImageNet experiments should use the same VAE, data preprocessing, sampler fa
         \Cref{tab:imagenet_no_cfg} & \texttt{B/2}, \texttt{L/2}, \texttt{XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & Heun / Euler & \textbf{[TBD]} & -- \\
         \Cref{tab:imagenet_cfg} & \texttt{XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         Ablations & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Baseline Descriptions and Parameter Matching}
+\label{app:baseline_descriptions}
+
+The system-level ImageNet table compares ReSync against several families of methods: pixel-space diffusion models, autoregressive image generators, U-Net latent diffusion models, transformer-based latent diffusion models, externally guided representation-alignment methods, and self-contained internal regularizers. For each baseline, the final paper should state the source of the reported number, parameter count when available, training budget, sampler, CFG setting, and whether the result is reproduced or copied from the original paper.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Baseline accounting protocol.} Placeholder table for documenting how each baseline in the main comparison is matched or sourced.}
+    \label{tab:appendix_baseline_accounting}
+    \scriptsize
+    \setlength{\tabcolsep}{2.5pt}
+    \begin{tabular}{lccccc}
+        \toprule
+        Family & Examples & Source & Param match & Budget match & Notes \\
+        \midrule
+        Pixel diffusion & ADM, VDM++, CDM & \textbf{[TBD]} & -- & -- & \textbf{[TBD]} \\
+        Autoregressive & VAR, D-JEPA & \textbf{[TBD]} & \textbf{[TBD]} & -- & \textbf{[TBD]} \\
+        Latent diffusion & LDM, U-ViT, DiT, SiT & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        External guidance & REPA, REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & teacher cost \\
+        Internal guidance & Dispersive, SRA, LayerSync & \textbf{[TBD]} & \checkmark & \checkmark & self-contained \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{SiT Architecture Details}
+\label{app:sit_architecture_details}
+
+Following the LayerSync appendix, we report the model-size details for the SiT backbones used in the ImageNet experiments. This table should be kept consistent with the official SiT configurations and the parameter counts used in \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg}.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: SiT block and ReSync attachment]}\\[0.5em]
+        Left: DiT/SiT residual block with AdaLN, MSA, MLP, and gated residual paths.\\
+        Right: cached source activation $A_a^t$, target activation $A_b^t$,\\
+        shared transition predictor $T_{a\to b}^t$, and EMA-composed consistency target.
+    \end{minipage}}
+    \caption{\textbf{SiT architecture and ReSync attachment.} Schematic placeholder for the backbone block and the training-only ReSync predictor. This should be redrawn for ReSync rather than copied from prior work.}
+    \label{fig:appendix_sit_resync_architecture}
+\end{figure}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{SiT backbone details.} Placeholder table for backbone architecture details used in the main ImageNet experiments.}
+    \label{tab:appendix_sit_architecture}
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \begin{tabular}{lccccc}
+        \toprule
+        Backbone & Layers & Hidden dim. & Heads & Patch size & Params \\
+        \midrule
+        \texttt{SiT-B/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 130M \\
+        \texttt{SiT-L/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 458M \\
+        \texttt{SiT-XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 675M \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -47,7 +147,7 @@ The transition predictor is trained jointly with the backbone and is discarded a
     \end{tabular}}
 \end{table}
 
-\subsection{ReSync Ablation Protocols}
+\section{ReSync Ablation Protocols}
 \label{app:resync_ablation_protocols}
 
 The main ablation tables answer two questions: which ReSync components matter, and whether a learned transition model improves over local projection capacity. The appendix should additionally report the sensitivity studies that are too detailed for the main paper.
@@ -116,7 +216,7 @@ To rule out the possibility that ReSync merely adds auxiliary capacity or change
     \end{tabular}
 \end{table}
 
-\subsection{HumanML3D Details}
+\section{HumanML3D Experimental Details}
 \label{app:humanml3d_details}
 
 HumanML3D contains text descriptions paired with 3D human-motion sequences~\citep{guo2022generating}. Following MDM~\citep{tevet2022mdm}, the main comparison should use the same data split, text encoder, motion representation, diffusion schedule, and evaluator for the baseline and ReSync. The paper should state the selected transition pair or pair distribution, because compact motion backbones have fewer layers than the ImageNet SiT models.
@@ -137,7 +237,25 @@ HumanML3D contains text descriptions paired with 3D human-motion sequences~\cite
     \end{tabular}
 \end{table}
 
-\section{Layer Statistics and Projection Motivation}
+\section{Qualitative Examples}
+\label{app:qualitative_examples}
+
+Qualitative examples should use matched noise, sampler, guidance, and training checkpoints across baseline, Dispersive, LayerSync-style alignment, and ReSync. These examples are supplementary and should not replace quantitative metrics; their purpose is to reveal failure modes, texture or layout changes, and whether improvements are visible under the same random seed.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: qualitative ImageNet samples]}\\[0.5em]
+        Rows: baseline, Dispersive, LayerSync-style alignment, ReSync.\\
+        Columns: matched class labels and identical initial noise.
+    \end{minipage}}
+    \caption{\textbf{Qualitative ImageNet comparison.} Placeholder for matched-seed samples used only as supplementary visual evidence.}
+    \label{fig:appendix_qualitative_samples}
+\end{figure}
+
+\section{Evaluation Metrics and Representation Diagnostics}
 \label{app:layer_statistics_projection}
 
 This appendix contains the diagnostic experiments used to evaluate the projection-as-transition motivation. These analyses are intentionally kept outside the main paper: the main text focuses on the method and generation results, while the appendix tests whether projection heads mitigate statistical mismatch and whether DiT activations contain layout-recoverable spatial information. We use the main paper diagnostics only as evidence for a hypothesis, not as proof that all layers explicitly encode the same semantic layout.
