@@ -6,7 +6,7 @@ This section evaluates ReSync as a mechanistic hypothesis: if internal guidance 
     \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
     \item Which ReSync components are responsible for the gain, including timestep conditioning of depth transitions and compositional consistency? See \Cref{tab:resync_ablation}.
     \item Does the transition predictor learn reusable internal dynamics? See \Cref{tab:transition_diagnostics}.
-    \item Does projection reduce raw layer mismatch rather than merely adding local capacity? See \Cref{tab:projection_transition_ablation,fig:projection_stitching_diagnostics}.
+    \item Does projection reduce raw layer mismatch rather than merely adding local capacity? See \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation,tab:projection_transition_ablation}.
     \item As an exploratory ablation, can predicted hidden states support skipped-depth prediction? See \Cref{tab:skip_prediction}.
 \end{itemize}
 
@@ -46,7 +46,7 @@ We first isolate the contribution of each ReSync design choice. The ablation sta
     \end{tabular}}
 \end{table}
 
-We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding adapter capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync, pair-specific projectors, and the shared conditional ReSync predictor. This ablation separates local feature adaptation from shared transition learning.
+We also compare ReSync against simpler projection-based variants to test whether the benefit comes from adding adapter capacity or from learning a reusable transition model. In particular, we evaluate direct LayerSync-style cosine alignment, projection-augmented LayerSync using the original selected layers, projection-augmented LayerSync on weak or all source layers, pair-specific projectors, and the shared conditional ReSync predictor. The LayerSync-with-projector variants directly test whether projection can make layers useful even when direct alignment is brittle, while the ReSync row tests whether the same idea benefits from a shared conditional transition model.
 
 \begin{table}[!htbp]
     \centering
@@ -58,8 +58,10 @@ We also compare ReSync against simpler projection-based variants to test whether
         Method variant & FID $\downarrow$ & IS $\uparrow$ & Training cost & Alignment loss $\downarrow$ & Consistency error $\downarrow$ \\
         \midrule
         LayerSync direct cosine & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + small projection head & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        LayerSync + large projection head & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + small projection head (selected layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + small projection head (weak layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + small projection head (all source layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
+        LayerSync + large projection head (selected layers) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         ReSync shared conditional transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
@@ -180,19 +182,6 @@ Because ReSync predicts future hidden states, it provides a natural way to test 
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. To keep the main analysis focused, we use three representative diagnostics. Activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: projection-stitching diagnostics]}\\[0.5em]
-        Panels: activation RMS/token norm across layers; raw CKA vs. projected CKA;\\
-        DINO pseudo-mask IoU or Boundary-F1 for raw, projected, and target activations.
-    \end{minipage}}
-    \caption{\textbf{Projection-stitching diagnostics.} Main-paper placeholder for testing the Claim~1 hypothesis without overloading the analysis. RMS/token norm tests statistical mismatch, projected CKA tests whether the predictor bridges representation geometry, and DINO-derived mask or boundary agreement tests whether the recovered signal is consistent with spatial layout proxies.}
-    \label{fig:projection_stitching_diagnostics}
-\end{figure}
+Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main motivating diagnostics are summarized in \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation}: activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}.
 
 \FloatBarrier

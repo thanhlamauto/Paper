@@ -19,6 +19,62 @@ For each method, report the layer pairs, timestep ranges, projection-head archit
 
 The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, raw-versus-projected CKA for representation stitching, and DINO-derived pseudo-mask or boundary agreement for spatial-layout recovery. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, and temporal CKA heatmaps.
 
+\subsection{Residual Transition Identity}
+\label{app:residual_transition_derivation}
+
+We derive \Cref{eq:residual_transition_view} for a DiT/SiT-style transformer stack with residual connections. Let $A_i^t$ be the activation after block $i$ at denoising timestep $t$. A complete transformer block can be written in residual form as
+\begin{equation}
+A_{i+1}^t
+=
+B_i(A_i^t,t,c)
+=
+A_i^t
++
+R_i(A_i^t,t,c),
+\label{eq:appendix_residual_block}
+\end{equation}
+where $R_i$ denotes the full residual update of block $i$, including the timestep/class-conditioned normalization, self-attention, MLP, modulation, and gating used by DiT-style blocks. This notation is only a grouping of the operations inside the block; it does not require $R_i$ to be linear.
+
+If the block is written with two residual branches, the same form still holds. For example,
+\begin{equation}
+U_i^t=A_i^t+R_i^{\mathrm{attn}}(A_i^t,t,c),
+\qquad
+A_{i+1}^t=U_i^t+R_i^{\mathrm{mlp}}(U_i^t,t,c),
+\label{eq:appendix_two_branch_block}
+\end{equation}
+so the complete block update is
+\begin{equation}
+R_i(A_i^t,t,c)
+=
+R_i^{\mathrm{attn}}(A_i^t,t,c)
++
+R_i^{\mathrm{mlp}}(U_i^t,t,c).
+\label{eq:appendix_combined_update}
+\end{equation}
+For any two layers $a<b$, summing the residual differences gives the telescoping identity
+\begin{equation}
+\begin{aligned}
+A_b^t-A_a^t
+&=
+\sum_{i=a}^{b-1}\left(A_{i+1}^t-A_i^t\right)  \\
+&=
+\sum_{i=a}^{b-1}R_i(A_i^t,t,c).
+\end{aligned}
+\label{eq:appendix_telescoping}
+\end{equation}
+Equivalently,
+\begin{equation}
+A_b^t
+=
+A_a^t
++
+\sum_{i=a}^{b-1}\Delta_i^t,
+\qquad
+\Delta_i^t=A_{i+1}^t-A_i^t,
+\label{eq:appendix_residual_transition_view}
+\end{equation}
+which is the identity used in \Cref{eq:residual_transition_view}. The identity is purely algebraic: it motivates why a later activation includes accumulated computation beyond the source activation, but it does not by itself prove that the accumulated update is easy to predict or semantically meaningful.
+
 \subsection{Layerwise Statistical Mismatch}
 \label{app:layerwise_statistical_mismatch}
 
