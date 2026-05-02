@@ -1,14 +1,11 @@
 \section{Experiments}
 \label{sec:experiments}
 
-This section evaluates ReSync as a mechanistic hypothesis: if internal guidance is more useful when it models representation evolution across depth, then transition prediction and compositional consistency should improve generation while producing measurable gains in transition-level diagnostics. Following this view, our experiments are organized around six questions:
+This section evaluates ReSync as a mechanistic hypothesis: if internal guidance is more useful when it models representation evolution across depth, then transition prediction and compositional consistency should improve generation while producing measurable gains in transition-level diagnostics. We organize the experiments around three questions:
 \begin{itemize}[leftmargin=*]
-    \item Does ReSync improve generation quality under matched training budgets? See \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg,tab:comparison_external_guidance,fig:training_curves,tab:model_scaling}.
-    \item Which ReSync components are responsible for the gain, including timestep conditioning of depth transitions and compositional consistency? See \Cref{tab:resync_ablation}.
-    \item Does the transition predictor learn reusable internal dynamics? See \Cref{tab:transition_diagnostics}.
-    \item Does projection reduce raw layer mismatch rather than merely adding local capacity? See \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation,tab:projection_transition_ablation}.
-    \item Does the method transfer beyond image generation to text-conditioned human motion? See \Cref{tab:humanml3d_results}.
-    \item As an exploratory ablation, can predicted hidden states support skipped-depth prediction? See \Cref{tab:skip_prediction}.
+    \item Does ReSync improve generation quality across domains under matched budgets?
+    \item How do ReSync representations and transition diagnostics compare with internal-alignment baselines?
+    \item Can the learned predictor be used for exploratory skipped-depth execution?
 \end{itemize}
 
 \subsection{Image Generation}
@@ -81,7 +78,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
     \hfill
     \begin{minipage}[t]{0.51\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} Models with additional CFG scheduling~\citep{kynkaanniemi2024guidance} are marked with an asterisk (*).}
+        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} Numerical entries are placeholders.}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
         \scriptsize
@@ -92,37 +89,31 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             Model & Epochs & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Pixel diffusion}} \\
-            ADM-U & 400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            VDM++ & 560 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
-            Simple diffusion & 800 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
-            CDM & 2160 & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            ADM-U & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            VDM++ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            Simple diffusion & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            CDM & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
-            VAR-d20 & 350 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            D-JEPA-L & 480 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            VAR-d20 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            D-JEPA-L & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 200 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            LDM-4 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
-            U-ViT-H/2 & 240 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            DiffiT* & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            MDTv2-XL/2* & 1080 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            U-ViT-H/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            MaskDiT & 1600 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            SD-DiT & 480 & \textbf{[TBD]} & -- & -- & -- \\
-            DiT-XL/2 & 1400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            SRA* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            SiT-XL/2 & 1400 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + REPA & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + REPA* & 800 & \textbf{[TBD]} & -- & -- & -- \\
-            \quad + REED & 200 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + Dispersive & $\geq$1200 & \textbf{[TBD]} & -- & -- & -- \\
-            \quad + LayerSync & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + LayerSync* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + ReSync & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + ReSync* & 800 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            MaskDiT & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            SD-DiT & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
+            DiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            SiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + REPA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
+            \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
