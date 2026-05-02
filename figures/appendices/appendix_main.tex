@@ -267,14 +267,15 @@ Unless otherwise stated, all diagnostics should be computed on the same checkpoi
 \begin{itemize}[leftmargin=*]
     \item baseline DiT/SiT backbone without auxiliary representation guidance;
     \item LayerSync-style direct cosine alignment;
-    \item LayerSync with a small projection head;
-    \item LayerSync with a large projection head;
+    \item LayerSync-style alignment with a small projection head;
+    \item weak-layer direct alignment and weak-layer projected alignment;
+    \item all-layer projected alignment;
     \item pair-specific projector trained for selected layer pairs;
     \item ReSync with a shared conditional transition predictor.
 \end{itemize}
-For each method, report the layer pairs, timestep ranges, projection-head architecture, loss weights, and whether an EMA target is used. This mirrors the appendix style of self-representation alignment work, where implementation details and sensitivity studies are separated from the main result tables.
+For each method, report the layer pairs, timestep ranges, projection-head architecture, loss weights, and whether an EMA target is used. When using source groups, define them by block index for a backbone with $L$ blocks, for example $\mathcal{S}_{\mathrm{early}}=\{1,\dots,\lfloor0.2L\rfloor\}$, $\mathcal{S}_{\mathrm{mid}}=\{\lfloor0.4L\rfloor,\dots,\lfloor0.6L\rfloor\}$, and $\mathcal{S}_{\mathrm{late}}=\{\lceil0.8L\rceil,\dots,L\}$. This mirrors the appendix style of self-representation alignment work, where implementation details and sensitivity studies are separated from the main result tables.
 
-The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, raw-versus-projected CKA for representation stitching, and DINO-derived pseudo-mask or boundary agreement for spatial-layout recovery. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, and temporal CKA heatmaps.
+The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, raw-versus-projected CKA for representation stitching, and generation metrics for direct versus projected self-alignment. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, spatial-layout probes, temporal CKA heatmaps, and gradient-alignment diagnostics.
 
 \subsection{Metric and Measurement Definitions}
 \label{app:metric_definitions}
@@ -299,7 +300,25 @@ where lower is better. IS is $\exp(\mathbb{E}_x[\operatorname{KL}(p(y|x)\|p(y))]
 For HumanML3D, FID uses the same Frechet form but computes the mean and covariance from motion-evaluator embeddings rather than image Inception embeddings. R-Precision measures text-motion retrieval accuracy: for each generated motion and its text prompt, the evaluator ranks the matching text among distractor texts by embedding similarity, and the score is the fraction of examples where the correct text appears in the top $R$ retrieved candidates. We report top-3 R-Precision unless otherwise stated.
 
 \paragraph{Activation scale and spectrum.}
-The activation RMS is $\sqrt{(MC)^{-1}\sum_{m,c}X_{m,c}^2}$. The token norm is $M^{-1}\sum_m\|X_{m,:}\|_2$; when comparing models with different channel counts, we report the normalized token norm $M^{-1}\sum_m\|X_{m,:}\|_2/\sqrt{C}$. Channelwise variance is the mean variance of each channel across the flattened token set. If $s_1\geq \cdots \geq s_r$ are singular values of $X_c$, stable rank is $\|X_c\|_F^2/s_1^2$, and effective rank is $\exp(-\sum_i p_i\log p_i)$ with $p_i=s_i/\sum_j s_j$. Higher rank indicates less spectral concentration.
+The activation RMS is $\sqrt{(MC)^{-1}\sum_{m,c}X_{m,c}^2}$. The token norm is $M^{-1}\sum_m\|X_{m,:}\|_2$; when comparing models with different channel counts, we report the normalized token norm $M^{-1}\sum_m\|X_{m,:}\|_2/\sqrt{C}$. Channelwise variance is the mean variance of each channel across the flattened token set. For spectrum diagnostics, we first z-normalize each channel,
+\begin{equation}
+Z_{m,c}
+=
+\frac{X_{m,c}-\mu_c}{\sigma_c+\varepsilon},
+\qquad
+\mu_c=\frac{1}{M}\sum_{m=1}^{M}X_{m,c},
+\qquad
+\sigma_c^2=\frac{1}{M}\sum_{m=1}^{M}(X_{m,c}-\mu_c)^2 .
+\end{equation}
+If $s_1\geq \cdots \geq s_r$ are singular values of $Z$, stable rank is
+\begin{equation}
+\operatorname{srank}(Z)
+=
+\frac{\|Z\|_F^2}{\|Z\|_2^2}
+=
+\frac{\sum_i s_i^2}{s_1^2},
+\end{equation}
+and effective rank is $\exp(-\sum_i p_i\log p_i)$ with $p_i=s_i/\sum_j s_j$. The z-normalization removes per-channel scale shifts, so rank diagnostics reflect spectral concentration of the representation rather than raw activation magnitude. Higher rank indicates less spectral concentration.
 
 \paragraph{Representation similarity.}
 Tokenwise cosine similarity is
@@ -318,7 +337,25 @@ and tokenwise cosine distance is $1-\operatorname{cos}(X,Y)$. Linear CKA is
 \frac{\|X_c^{\top}Y_c\|_F^2}
 {\|X_c^{\top}X_c\|_F\|Y_c^{\top}Y_c\|_F+\varepsilon},
 \end{equation}
-following the representation-similarity convention of \citet{kornblith2019similarity}; related transformer-representation analyses also use CKA-style diagnostics~\citep{raghu2021visiontransformers}. SVCCA is reported as the mean canonical correlation after projecting $X_c$ and $Y_c$ onto their leading singular subspaces; the retained variance threshold or retained component count should be stated with each result. Affinity error compares pairwise token relations rather than raw features: after row-normalizing activations, form $S_X=\tilde X\tilde X^\top$ and $S_Y=\tilde Y\tilde Y^\top$, then report $\|S_X-S_Y\|_F/M$ or its centered correlation equivalent. Lower affinity error or higher affinity correlation indicates more similar token geometry.
+following the representation-similarity convention of \citet{kornblith2019similarity}; related transformer-representation analyses also use CKA-style diagnostics~\citep{raghu2021visiontransformers}. SVCCA is reported as the mean canonical correlation after projecting $X_c$ and $Y_c$ onto their leading singular subspaces; the retained variance threshold or retained component count should be stated with each result. Affinity error compares pairwise token relations rather than raw features: after row-normalizing activations, form $S_X=\tilde X\tilde X^\top$ and $S_Y=\tilde Y\tilde Y^\top$, then report $\|S_X-S_Y\|_F/M$ or its centered correlation equivalent. Lower affinity error or higher affinity correlation indicates more similar token geometry. Temporal CKA uses the same definition while holding the layer fixed and varying the denoising timestep, for example $\operatorname{CKA}(A_\ell^t,A_\ell^s)$. We report it as a heatmap over $(t,s)$ for selected layers and as a local-neighborhood average for nearby timesteps. This diagnostic supports the broader transition-prediction view but is not part of the main same-timestep ReSync objective.
+
+\paragraph{Gradient-alignment diagnostics.}
+To test whether projection reduces conflict with the generative objective, compute
+\begin{equation}
+\operatorname{gradcos}
+=
+\frac{
+\left\langle
+\nabla_\theta\mathcal{L}_{\mathrm{FM}},
+\nabla_\theta\mathcal{L}_{\mathrm{aux}}
+\right\rangle
+}{
+\|\nabla_\theta\mathcal{L}_{\mathrm{FM}}\|_2
+\|\nabla_\theta\mathcal{L}_{\mathrm{aux}}\|_2
++\varepsilon
+},
+\end{equation}
+where $\mathcal{L}_{\mathrm{aux}}$ is direct alignment, projected alignment, or ReSync. The parameter subset $\theta$ should be stated explicitly, such as source blocks only, all transformer blocks, or shared embeddings. Report the mean and confidence interval over matched batches, timesteps, layer pairs, and checkpoints; higher values indicate less conflicting auxiliary gradients.
 
 \paragraph{Spatial-layout probes.}
 Pseudo-mask IoU compares a mask or partition recovered from model activations with a reference partition, such as a DINO-derived pseudo mask. For binary masks, $\operatorname{IoU}(P,Q)=|P\cap Q|/|P\cup Q|$; for multiple regions, we report mean best-matched IoU and state the matching rule. Boundary-F1 compares predicted and reference boundary pixels with a fixed tolerance radius $\tau$: precision is the fraction of predicted boundary pixels matched to a reference boundary, recall is the fraction of reference boundary pixels matched by a prediction, and $\operatorname{Boundary\mbox{-}F1}=2PR/(P+R+\varepsilon)$. Same-image, different-image, and token-shuffle controls use the same metric but replace the reference or spatial ordering to test whether the score reflects image-specific layout rather than feature anisotropy.
@@ -353,7 +390,7 @@ Whenever a metric is not a named benchmark with an explicit citation, the table 
 \subsection{Residual Transition Identity}
 \label{app:residual_transition_derivation}
 
-We derive \Cref{eq:residual_transition_view} for a DiT/SiT-style transformer stack~\citep{vaswani2017attention,peebles2023scalable,ma2024sit}. The purpose is only to justify the residual-view notation used in the main text. It is not an additional architectural assumption.
+For completeness, we state the residual-transition identity for a DiT/SiT-style transformer stack~\citep{vaswani2017attention,peebles2023scalable,ma2024sit}. The purpose is only to clarify the transition notation used in the appendix diagnostics. It is not an additional architectural assumption.
 
 \begin{figure}[!htbp]
     \centering
@@ -424,7 +461,7 @@ A_a^t
 \end{aligned}
 \label{eq:appendix_telescoping}
 \end{equation}
-This is the identity used in \Cref{eq:residual_transition_view}. It is a telescoping decomposition of a residual transformer stack: a later activation equals an earlier activation plus the computation accumulated by intervening blocks. The identity is purely algebraic and does not by itself prove that the accumulated update is easy to predict or semantically meaningful.
+This telescoping decomposition shows that a later activation equals an earlier activation plus the computation accumulated by intervening blocks. The identity is purely algebraic and does not by itself prove that the accumulated update is easy to predict or semantically meaningful.
 
 \subsection{Layerwise Statistical Mismatch}
 \label{app:layerwise_statistical_mismatch}

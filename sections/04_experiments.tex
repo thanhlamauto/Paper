@@ -146,7 +146,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. We then compare against projection-based controls to test whether the gain comes from merely adding adapter capacity or from learning a reusable transition model. Detailed layer-pair, timestep, and predictor-capacity sweeps are moved to \Cref{app:resync_ablation_protocols}.
+We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. We then compare direct and projected self-alignment controls to test whether projection acts as a useful transition interface rather than merely adding adapter capacity. Detailed layer-pair, timestep, and predictor-capacity sweeps are moved to \Cref{app:resync_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
@@ -173,22 +173,22 @@ We first isolate the contribution of each ReSync design choice. The ablation sta
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{Projection and transition controls.} These controls separate adapter capacity from transition learning.}
+        \captionof{table}{\textbf{Projection interfaces for self-alignment.} These controls test whether projection improves direct internal alignment, especially for weak source layers.}
         \label{tab:projection_transition_ablation}
         \vspace{0.25em}
         \scriptsize
-        \setlength{\tabcolsep}{2.0pt}
+        \setlength{\tabcolsep}{1.5pt}
         \renewcommand{\arraystretch}{0.88}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
             \toprule
-            Method & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+            Method & Source & Proj. & FID $\downarrow$ & CKA $\uparrow$ \\
             \midrule
-            Direct cosine & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-            Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-            Large projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-            Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Baseline & -- & -- & \textbf{[TBD]} & -- \\
+            LayerSync-style & selected & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + projector & selected & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Weak-layer align. & weak & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Weak-layer + proj. & weak & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            All-layer + proj. & all & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -285,7 +285,7 @@ ReSync is designed to provide representation guidance without an external encode
 \subsection{Skipped-Depth Prediction}
 \label{sec:skip_prediction}
 
-Because ReSync predicts future hidden states, it provides a natural way to test whether the learned representation is useful beyond a hidden-state similarity loss. We evaluate skipped-depth prediction by replacing a block interval with the predicted hidden state and then resuming the remaining backbone. The primary measurements are output error against the full model, generation quality under skipped execution, and wall-clock speed. We treat this as an auxiliary capability rather than the central claim.
+Because ReSync predicts later-layer hidden states, it provides a natural way to test whether the learned representation is useful beyond a hidden-state similarity loss. We evaluate skipped-depth prediction by replacing a block interval with the predicted hidden state and then resuming the remaining backbone. The primary measurements are output error against the full model, generation quality under skipped execution, and wall-clock speed. We treat this as an auxiliary capability rather than the central claim.
 
 \begin{table}[!htbp]
     \centering
@@ -308,6 +308,6 @@ Because ReSync predicts future hidden states, it provides a natural way to test 
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main motivating diagnostics are summarized in \Cref{fig:projection_mismatch_observation,fig:projection_layout_observation}: activation RMS or token norm measures statistical mismatch across layers; raw and projected CKA measure whether the predictor bridges representational mismatch; and DINO-derived pseudo-mask or boundary agreement tests whether projected states recover spatial partitions beyond feature-space similarity. We treat affinity-based similarity, cosine similarity, SVCCA, rank spectra, and full temporal heatmaps as supplementary diagnostics in \Cref{app:layer_statistics_projection}; measurement definitions and reporting conventions are given in \Cref{app:metric_definitions}.
+Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main diagnostics follow \Cref{fig:sit_xl_layer_statistics}: activation RMS or token norm measures statistical mismatch across layers, while CKA measures representational mismatch. We treat spatial-layout checks, affinity-based similarity, cosine similarity, SVCCA, rank spectra, temporal CKA heatmaps, and gradient-alignment diagnostics as supplementary diagnostics in \Cref{app:layer_statistics_projection}; measurement definitions and reporting conventions are given in \Cref{app:metric_definitions}.
 
 \FloatBarrier
