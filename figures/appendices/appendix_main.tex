@@ -509,20 +509,20 @@ Raw cosine similarity and CKA do not fully measure whether two activations prese
 \subsection{Transition Generalization}
 \label{app:transition_generalization}
 
-This diagnostic distinguishes a shared depth-transition model from a collection of pair-specific projection heads. Train the transition predictor on a subset of layer pairs, then evaluate prediction and composition error on held-out layer pairs at the same denoising timestep. As a preliminary extension, also test cross-timestep prediction on a small model when additional target activations are available. The expected evidence for ReSync is not only lower pairwise prediction error, but also lower compositional error when a long depth transition is decomposed into shorter transitions. This would support the interpretation that ReSync learns reusable internal representation dynamics rather than a local adapter for a single target.
+This diagnostic distinguishes a shared depth-transition model from a collection of pair-specific projection heads. Train the transition predictor on a subset of layer pairs, then evaluate prediction and composition error on held-out layer pairs at the same denoising timestep. The expected evidence for ReSync is not only lower pairwise prediction error, but also lower compositional error when a long depth transition is decomposed into shorter transitions. This would support the interpretation that ReSync learns reusable internal representation dynamics rather than a local adapter for a single target.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether ReSync generalizes across unseen layer pairs better than pair-specific projectors, with cross-timestep prediction reported only as a preliminary extension.}
+    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether ReSync generalizes across unseen layer pairs better than pair-specific projectors.}
     \label{tab:appendix_transition_generalization}
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccc}
+    \begin{tabular}{lccc}
         \toprule
-        Method & Held-out layer error $\downarrow$ & Prelim. cross-time error $\downarrow$ & Composition error $\downarrow$ & FID $\downarrow$ \\
+        Method & Held-out layer error $\downarrow$ & Composition error $\downarrow$ & FID $\downarrow$ \\
         \midrule
-        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}

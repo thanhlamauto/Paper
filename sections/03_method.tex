@@ -123,18 +123,9 @@ The choice of transition pairs plays a role analogous to layer selection in dire
 
 We also avoid relying on the final decoder-like blocks as the dominant targets. Prior analyses of diffusion representations indicate that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as predictor-design choices rather than fixed assumptions. Finally, the predictor itself is kept lightweight and shared across pairs through layer and timestep conditioning. This design keeps the method self-contained while testing whether one compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
 
-\subsection{Objective and Extensions}
+\subsection{Objective}
 
-The main method uses same-timestep depth transitions because both source and target activations are available in one forward pass. More generally, the same predictor can be viewed as an intrinsic internal representation consistency function over the layer--time grid. In this extended form, it maps an activation from source layer $a$ and timestep $t$ to target layer $b$ and timestep $s$:
-\begin{equation}
-T_{a,t\to b,s}(A)\equiv T_\psi^{\mathrm{time}}(A,a,b,t,s),
-\qquad
-\hat A_b^s=T_{a,t\to b,s}(A_a^t).
-\label{eq:cross_timestep_predictor}
-\end{equation}
-This layer--time extension requires target activations at another timestep $s$, so we report it only as a preliminary diagnostic rather than the main training recipe.
-
-We also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
+The main training objective combines the prediction and compositional consistency losses above with the base flow-matching objective. For exploratory skipped-depth ablations, we also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
 \begin{equation}
 \hat y_{\mathrm{skip}}
 =
