@@ -34,6 +34,9 @@
 \usepackage{nicefrac}
 \usepackage{microtype}
 \usepackage{xcolor}
+% preamble cần có
+\usepackage{graphicx}
+\usepackage{caption}
 
 % =========================================================
 % Recommended math / figure / table packages
@@ -79,58 +82,52 @@
 \input{sections/00_abstract}
 \end{abstract}
 
-\vspace{-0.5em}
+\vspace{-0.75em}
 \begin{center}
-\begin{minipage}{\textwidth}
   \centering
-  \begin{minipage}[t]{0.31\textwidth}
+
+  \newcommand{\panelimg}[1]{%
+    \makebox[\linewidth][c]{%
+      \includegraphics[
+        width=\linewidth,
+        height=0.18\textheight,
+        keepaspectratio
+      ]{#1}%
+    }%
+  }
+
+  \begin{minipage}[t]{0.325\linewidth}
     \centering
-    \fbox{%
-      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
-        \centering
-        \textbf{REPA / SRA}\\[0.35em]
-        Source features\\
-        $\rightarrow$ projection head\\
-        $\rightarrow$ target space
-      \end{minipage}%
-    }\\[0.35em]
-    \small (a) Projection as adapter
+    \panelimg{figures/sra.png}
+    
+    \vspace{0.25em}
+    {\small\textbf{(a) Projection as adapter}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.31\textwidth}
+  \begin{minipage}[t]{0.325\linewidth}
     \centering
-    \fbox{%
-      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
-        \centering
-        \textbf{LayerSync}\\[0.35em]
-        Direct cosine alignment\\
-        between selected\\
-        internal layers
-      \end{minipage}%
-    }\\[0.35em]
-    \small (b) Direct self-alignment
+    \panelimg{figures/layersync.png}
+    
+    \vspace{0.25em}
+    {\small\textbf{(b) Direct self-alignment}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.31\textwidth}
+  \begin{minipage}[t]{0.325\linewidth}
     \centering
-    \fbox{%
-      \begin{minipage}[c][0.14\textheight][c]{0.92\linewidth}
-        \centering
-        \textbf{ReSync}\\[0.35em]
-        Shared conditional\\
-        transition predictor\\
-        with composition checks
-      \end{minipage}%
-    }\\[0.35em]
-    \small (c) Projection as transition
+    \panelimg{figures/resync.png}
+    
+    \vspace{0.25em}
+    {\small\textbf{(c) Projection as transition}}
   \end{minipage}
-  \vspace{0.45em}
+
+  \vspace{0.6em}
   \captionof{figure}{\textbf{Projection-as-transition motivation.}
-  REPA- and SRA-style methods use projection heads when aligning potentially mismatched representation spaces, while LayerSync directly aligns selected internal layers. ReSync motivates treating the projection module as a small shared transition model for reusable layer- and timestep-conditioned representation dynamics.}
+  \textbf{Left:} REPA- and SRA-style methods use projection heads to align potentially mismatched representation spaces.
+  \textbf{Middle:} LayerSync directly aligns selected internal layers.
+  \textbf{Right:} ReSync treats the projection module as a small shared transition model for reusable layer- and timestep-conditioned representation dynamics.}
   \label{fig:projection_as_transition}
-\end{minipage}
 \end{center}
-\vspace{-0.5em}
+\vspace{-0.75em}
 
 \clearpage
 
