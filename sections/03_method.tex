@@ -57,14 +57,12 @@ We evaluate this hypothesis with two compact observations in the main paper. Fir
 
 \begin{figure}[!htbp]
     \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: projected activations recover spatial-layout proxies]}\\[0.5em]
-        Panels: raw weak-layer PCA, projected weak-layer PCA, target-layer PCA;\\
-        DINO pseudo-mask IoU or Boundary-F1; same-image, different-image, and token-shuffle controls.
-    \end{minipage}}
-    \caption{\textbf{Recoverable spatial evidence.} Placeholder for testing whether the recovered signal is consistent with spatial layout proxies. We interpret positive mask or boundary agreement as evidence for layout-recoverable information, not as proof that raw activations explicitly encode semantic layout.}
+    \includegraphics[
+        width=0.9\linewidth,
+        height=0.22\textheight,
+        keepaspectratio
+    ]{figures/pca_rank.png}
+    \caption{\textbf{Recoverable spatial evidence.} We test whether the recovered signal is consistent with spatial layout proxies. We interpret positive mask or boundary agreement as evidence for layout-recoverable information, not as proof that raw activations explicitly encode semantic layout.}
     \label{fig:projection_layout_observation}
 \end{figure}
 
