@@ -1,16 +1,16 @@
 \section{ReSync Algorithm and Compute}
 \label{app:resync_algorithm_compute}
 
-This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's learned transition predictor and compositional loss. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
+This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's shared self-alignment interface and compositional loss. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
 
-Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the transition predictor maps source activations to target-layer predictions, and the auxiliary objective combines prediction, composition, output-consistency, and weak layer-diversity losses. The predictor is removed for ordinary sampling, so inference cost is unchanged.
+Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the predictor maps source activations into target-layer coordinates, and the auxiliary objective combines prediction, composition, output-consistency, and weak layer-diversity losses. The predictor is small, typically about 5--10\% of the backbone parameters in our configurations, and is removed for ordinary sampling, so inference cost is unchanged.
 
 \begin{figure}[!htbp]
     \centering
     \fbox{%
     \begin{minipage}{0.92\linewidth}
     \small
-    \textbf{Algorithm: ReSync training step.}
+    \textbf{Training.}
     \begin{enumerate}[leftmargin=*,topsep=0.25em,itemsep=0.15em]
         \item Sample data, class condition, noise, timestep, and valid layer tuple $(a,b,c)$.
         \item Run the DiT/SiT backbone and cache activations $A_a^t,A_b^t,A_c^t$.
@@ -18,8 +18,10 @@ Algorithmically, ReSync adds a lightweight auxiliary branch during training. The
         \item Form the EMA-composed target $\bar A_{c\mid b\mid a}^t=\bar T_{b\to c}^t(\bar T_{a\to b}^t(\mathrm{sg}(A_a^t)))$.
         \item Compute $\mathcal{L}_{\mathrm{div}}$ on sampled layer states and optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}}$.
     \end{enumerate}
+    \vspace{0.25em}
+    \textbf{Standard inference.} Discard $T_\psi$ and run the original backbone with the same sampler and guidance settings as the baseline. Inference-time skipped-depth execution is evaluated separately as an extension.
     \end{minipage}}
-    \caption{\textbf{ReSync algorithm summary.} Placeholder algorithm box matching the appendix style of self-alignment methods while exposing ReSync-specific transition and composition steps.}
+    \caption{\textbf{ReSync training and inference summary.} Placeholder algorithm box matching the appendix style of self-alignment methods while exposing ReSync-specific transition, composition, and standard sampling steps.}
     \label{fig:appendix_resync_algorithm}
 \end{figure}
 
@@ -36,10 +38,39 @@ Algorithmically, ReSync adds a lightweight auxiliary branch during training. The
         Baseline & -- & -- & -- & $1.0\times$ \\
         Dispersive Loss & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
         LayerSync-style alignment & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
-        ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
+        ReSync & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
         ReSync skip ablation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
+\end{table}
+
+\subsection{Transition Pair and Predictor Design}
+\label{app:transition_pair_predictor_design}
+
+The choice of transition pairs plays the same practical role as layer selection in direct self-alignment, but ReSync uses one shared predictor rather than a separate head for each source--target pair. We therefore sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. Unless otherwise stated, the main runs use a mixture of short and medium gaps; the gap distribution is ablated in \Cref{app:resync_ablation_protocols}.
+
+We also avoid making the final decoder-like blocks the dominant targets. Prior analyses of diffusion representations show that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as hyperparameters. The predictor is kept lightweight and shared across pairs through layer and timestep conditioning, so the method tests whether a compact module can expose reusable internal supervision instead of memorizing pair-specific alignments.
+
+\subsection{ReSync Hyperparameters}
+\label{app:resync_hyperparameters}
+
+The transition predictor is trained jointly with the backbone and is discarded during ordinary sampling. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, output-consistency weight, and diversity weight. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{ReSync hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
+    \label{tab:appendix_resync_hparams}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccccccccc}
+        \toprule
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\beta_{\mathrm{out}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
+        \midrule
+        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Output/diversity ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}}
 \end{table}
 
 \section{ImageNet Experimental Details}
@@ -125,35 +156,6 @@ Following the LayerSync appendix, we report the model-size details for the SiT b
     \end{tabular}
 \end{table}
 
-\subsection{Transition Pair and Predictor Design}
-\label{app:transition_pair_predictor_design}
-
-The choice of transition pairs plays the same practical role as layer selection in direct self-alignment, but ReSync uses one shared predictor rather than a separate head for each source--target pair. We therefore sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. Unless otherwise stated, the main runs use a mixture of short and medium gaps; the gap distribution is ablated in \Cref{app:resync_ablation_protocols}.
-
-We also avoid making the final decoder-like blocks the dominant targets. Prior analyses of diffusion representations show that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as hyperparameters. The predictor is kept lightweight and shared across pairs through layer and timestep conditioning, so the method tests whether a compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
-
-\subsection{ReSync Hyperparameters}
-\label{app:resync_hyperparameters}
-
-The transition predictor is trained jointly with the backbone and is discarded during ordinary sampling. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, output-consistency weight, and diversity weight. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{ReSync hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
-    \label{tab:appendix_resync_hparams}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccccccccc}
-        \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\beta_{\mathrm{out}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
-        \midrule
-        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Output/diversity ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}}
-\end{table}
-
 \section{ReSync Ablation Protocols}
 \label{app:resync_ablation_protocols}
 
@@ -223,6 +225,42 @@ To rule out the possibility that ReSync merely adds auxiliary capacity or change
     \end{tabular}
 \end{table}
 
+\subsection{Scaling Across Backbones and Model Sizes}
+\label{app:scaling_experiments}
+
+This appendix check evaluates whether ReSync is robust to changes in model capacity and baseline choice. The expected comparison includes \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} variants, each trained with and without ReSync under the same recipe. The key question is whether cross-depth transition supervision provides a consistent gain rather than only improving one specific configuration.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.23\textheight][c]{0.88\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: training curves]}\\[0.5em]
+        Plot baseline vs. ReSync across training iterations.\\
+        Suggested axes: training iterations on the $x$-axis and FID, validation loss, or representation metric on the $y$-axis.
+    \end{minipage}}
+    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline backbones and ReSync-augmented backbones.}
+    \label{fig:appendix_training_curves}
+\end{figure}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{ReSync across model sizes.} Placeholder table for comparing baseline and ReSync variants under matched training settings.}
+    \label{tab:appendix_model_scaling}
+    \begin{tabular}{lcccc}
+        \toprule
+        Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
+        \midrule
+        \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{B/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{L/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{XL/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 \section{HumanML3D Experimental Details}
 \label{app:humanml3d_details}
 
@@ -243,24 +281,6 @@ HumanML3D contains text descriptions paired with 3D human-motion sequences~\cite
         \bottomrule
     \end{tabular}
 \end{table}
-
-\section{Qualitative Examples}
-\label{app:qualitative_examples}
-
-Qualitative examples should use matched noise, sampler, guidance, and training checkpoints across baseline, Dispersive, LayerSync-style alignment, and ReSync. These examples are supplementary and should not replace quantitative metrics; their purpose is to reveal failure modes, texture or layout changes, and whether improvements are visible under the same random seed.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: qualitative ImageNet samples]}\\[0.5em]
-        Rows: baseline, Dispersive, LayerSync-style alignment, ReSync.\\
-        Columns: matched class labels and identical initial noise.
-    \end{minipage}}
-    \caption{\textbf{Qualitative ImageNet comparison.} Placeholder for matched-seed samples used only as supplementary visual evidence.}
-    \label{fig:appendix_qualitative_samples}
-\end{figure}
 
 \section{Evaluation Metrics and Representation Diagnostics}
 \label{app:layer_statistics_projection}
@@ -493,7 +513,7 @@ The goal of this diagnostic is to test whether direct alignment is difficult bec
 \subsection{Projection Capacity and Layer Gap}
 \label{app:projection_capacity_layer_gap}
 
-This ablation tests whether projection heads act as useful adapters or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. If projection heads mitigate mismatch, we expect a small projection head to improve generation quality and reduce alignment difficulty while still transmitting a meaningful gradient to the diffusion backbone. An overly expressive projection may reduce alignment loss without improving FID, which would suggest that it solves the auxiliary task locally rather than improving the model's internal representations.
+This ablation tests whether projection heads extract useful recoverable signal or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. If projection heads mitigate mismatch while exposing useful information, we expect a small projection head to improve generation quality and reduce alignment difficulty while still transmitting a meaningful gradient to the diffusion backbone. An overly expressive projection may reduce alignment loss without improving FID, which would suggest that it solves the auxiliary task locally rather than improving the model's internal representations.
 
 \begin{figure}[!htbp]
     \centering
@@ -504,7 +524,7 @@ This ablation tests whether projection heads act as useful adapters or simply ab
         Compare no projection, small projection, medium projection, and large projection.\\
         Report FID, alignment loss, backbone gradient norm from auxiliary loss, and training cost.
     \end{minipage}}
-    \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether a small projection head improves alignment by reducing feature-space mismatch, while an overly expressive head may absorb the auxiliary loss without providing a useful training signal to the backbone.}
+    \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether a small projection head extracts useful recoverable signal and reduces feature-space mismatch, while an overly expressive head may absorb the auxiliary loss without providing a useful training signal to the backbone.}
     \label{fig:appendix_projection_capacity}
 \end{figure}
 
@@ -553,7 +573,7 @@ Raw cosine similarity and CKA do not fully measure whether two activations prese
 \subsection{Transition Generalization}
 \label{app:transition_generalization}
 
-This diagnostic distinguishes a shared depth-transition model from a collection of pair-specific projection heads. Train the transition predictor on a subset of layer pairs, then evaluate prediction and composition error on held-out layer pairs at the same denoising timestep. The expected evidence for ReSync is not only lower pairwise prediction error, but also lower compositional error when a long depth transition is decomposed into shorter transitions. This would support the interpretation that ReSync learns reusable internal representation dynamics rather than a local adapter for a single target.
+This diagnostic distinguishes a shared self-alignment interface from a collection of pair-specific projection heads. Train the transition predictor on a subset of layer pairs, then evaluate prediction and composition error on held-out layer pairs at the same denoising timestep. The expected evidence for ReSync is not only lower pairwise prediction error, but also lower compositional error when a long depth transition is decomposed into shorter transitions. This would support the interpretation that ReSync exposes reusable internal supervision rather than learning a local adapter for a single target.
 
 \begin{table}[!htbp]
     \centering
@@ -570,3 +590,21 @@ This diagnostic distinguishes a shared depth-transition model from a collection 
         \bottomrule
     \end{tabular}}
 \end{table}
+
+\section{Qualitative Examples}
+\label{app:qualitative_examples}
+
+Qualitative examples should use matched noise, sampler, guidance, and training checkpoints across baseline, Dispersive, LayerSync-style alignment, and ReSync. These examples are supplementary and should not replace quantitative metrics; their purpose is to reveal failure modes, texture or layout changes, and whether improvements are visible under the same random seed.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
+        \centering
+        \textbf{[PLACEHOLDER: qualitative ImageNet samples]}\\[0.5em]
+        Rows: baseline, Dispersive, LayerSync-style alignment, ReSync.\\
+        Columns: matched class labels and identical initial noise.
+    \end{minipage}}
+    \caption{\textbf{Qualitative ImageNet comparison.} Placeholder for matched-seed samples used only as supplementary visual evidence.}
+    \label{fig:appendix_qualitative_samples}
+\end{figure}
