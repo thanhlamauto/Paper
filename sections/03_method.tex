@@ -22,7 +22,7 @@ A diffusion transformer $v_\zeta$ receives the noisy latent $x_t$, timestep $t$,
 \label{eq:flow_matching_loss}
 \end{equation}
 
-\subsection{From Projection Heads to Transition Prediction}
+\subsection{From Projection Interfaces to Self-Alignment}
 
 \paragraph{Representation hierarchy.}
 Diffusion transformers do not expose a uniform stack of interchangeable hidden states. Prior analyses show that intermediate layers differ in semantic quality, with useful features often peaking before the final decoder-like blocks~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We observe the same pattern in a pretrained SiT-XL/2: activation scale drifts across depth, while CKA to DINOv2 varies substantially by layer (\Cref{fig:sit_xl_layer_statistics}). The first effect reflects a statistical mismatch between raw layer states, consistent with signal-propagation and Transformer normalization analyses~\citep{glorot2010understanding,he2015delving,schoenholz2017deep,liu2020understandingtransformers}; the second reflects a representation hierarchy.
@@ -69,7 +69,7 @@ LayerSync exploits the hierarchy by aligning weaker layers to richer internal on
 \end{wraptable}
 
 \paragraph{Signal filtering.}
-The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a transformer architecture with residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns an implicit internal mapping whose residual $P_{a\to b}(A_a^t)-A_a^t$ approximates knowledge added by later blocks. The interface can therefore extract the recoverable component of a source activation, distill information between representation spaces, and filter the auxiliary signal before it updates the flow-matching model. We test this view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
+The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a transformer architecture with residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns the recoverable part of this accumulated update in the target layer's coordinates. The interface can therefore extract useful supervision from a source activation, distill information between representation spaces, and filter the auxiliary signal before it updates the flow-matching model. We test this view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
 
 \paragraph{Recoverable layout.}
 The recoverable signal may include spatial structure, not only global semantics. iREPA shows that preserving spatial structure in REPA targets can matter beyond global classification strength~\citep{singh2025irepa}. We therefore use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact qualitative check: low stable rank means a few principal directions explain much of the variation, making PCA maps informative about coarse layout~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}. We treat layout recovery as a hypothesis rather than a primary claim.
@@ -87,14 +87,14 @@ The recoverable signal may include spatial structure, not only global semantics.
 
 \subsection{ReSync: Self-Aligned Transition Consistency}
 
-ReSync is designed to use the backbone's depth trajectory as a source of self-supervision. Instead of selecting a small set of teacher layers or training a separate adapter for each pair, it samples transitions across the valid layer range and trains one conditional predictor between internal representation spaces. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the diffusion transformer processes $(x_t,t,c)$. For a source layer $a$ and a later target layer $b$, ReSync predicts the target representation from the source representation at the same denoising timestep:
+ReSync turns the projection-interface view into an amortized self-alignment objective. Instead of selecting a small set of teacher layers or training a separate adapter for each pair, it samples transitions across the valid layer range so that useful signals from many internal states can supervise many source layers. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the diffusion transformer processes $(x_t,t,c)$. For a source layer $a$ and a later target layer $b$, ReSync predicts the target representation from the source representation at the same denoising timestep:
 \begin{equation}
 T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
 \qquad
 \hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across layer pairs and conditioned on $(a,b,t)$, making it an amortized transition model rather than a collection of pair-specific heads. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a transformer architecture with residual blocks, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
+The predictor is shared across pairs and conditioned on $(a,b,t)$, making the interface amortized rather than pair-specific. It learns an implicit internal mapping from $A_a^t$ to the target-layer coordinates of $A_b^t$. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d$ is tokenwise cosine distance; and $\mathrm{sg}$ denotes stop-gradient. The self-alignment loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
@@ -132,7 +132,7 @@ d\left(T_{a\to c}^t(\tilde A_a^t),\mathrm{sg}(\bar A_{c\mid b\mid a}^t)\right)
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local transitions and longer-range transitions sampled throughout the model, making ReSync a consistent internal representation-transition objective rather than a collection of independent matching losses. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
+This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local and longer-range transitions sampled throughout the model, making ReSync a consistent interface for reusing internal guidance rather than a collection of fixed-pair matching losses. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
 State-level prediction can still be satisfied by activations that are locally close to the target but brittle under the remaining backbone. We therefore require predicted activations to remain compatible with downstream computation. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. Given a predicted target activation, we compute
 \begin{equation}
@@ -169,6 +169,9 @@ To preserve functional separation between blocks, we add a lightweight diversity
 \label{eq:diversity_loss}
 \end{equation}
 It penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged; no-diversity ablations isolate its effect.
+
+\paragraph{Gradient routing.}
+We route gradients according to the role of each term. $\mathcal{L}_{\mathrm{pred}}$ updates both the transition predictor and the source-side backbone activations, while the target activation is stopped. $\mathcal{L}_{\mathrm{cons}}$ updates only the online predictor because both the source activation and the EMA-composed target are detached. $\mathcal{L}_{\mathrm{out}}$ updates the predictor and the active backbone suffix through the predicted branch, while the full-state branch is stopped. $\mathcal{L}_{\mathrm{div}}$ is applied only to backbone activations and does not update the transition predictor.
 
 \subsection{Objective}
 
