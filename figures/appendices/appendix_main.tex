@@ -3,7 +3,7 @@
 
 This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's learned transition predictor and compositional loss. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
 
-Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the transition predictor maps source activations to target-layer predictions, and the auxiliary objective combines prediction and composition losses. The predictor is removed for ordinary sampling, so inference cost is unchanged unless the optional skipped-depth ablation is enabled.
+Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the transition predictor maps source activations to target-layer predictions, and the auxiliary objective combines prediction, composition, output-consistency, and weak layer-diversity losses. The predictor is removed for ordinary sampling, so inference cost is unchanged.
 
 \begin{figure}[!htbp]
     \centering
@@ -16,7 +16,7 @@ Algorithmically, ReSync adds a lightweight auxiliary branch during training. The
         \item Run the DiT/SiT backbone and cache activations $A_a^t,A_b^t,A_c^t$.
         \item Predict $\hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t)$ and $\hat A_{c\mid a}^t=T_{a\to c}^t(A_a^t)$.
         \item Form the EMA-composed target $\bar A_{c\mid b\mid a}^t=\bar T_{b\to c}^t(\bar T_{a\to b}^t(\mathrm{sg}(A_a^t)))$.
-        \item Optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{pred}}(\mathcal{L}_{\mathrm{pred}}+\beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}})$; enable $\mathcal{L}_{\mathrm{out}}$ only for skipped-depth ablations.
+        \item Compute $\mathcal{L}_{\mathrm{div}}$ on sampled layer states and optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}}$.
     \end{enumerate}
     \end{minipage}}
     \caption{\textbf{ReSync algorithm summary.} Placeholder algorithm box matching the appendix style of self-alignment methods while exposing ReSync-specific transition and composition steps.}
@@ -125,24 +125,31 @@ Following the LayerSync appendix, we report the model-size details for the SiT b
     \end{tabular}
 \end{table}
 
+\subsection{Transition Pair and Predictor Design}
+\label{app:transition_pair_predictor_design}
+
+The choice of transition pairs plays the same practical role as layer selection in direct self-alignment, but ReSync uses one shared predictor rather than a separate head for each source--target pair. We therefore sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. Unless otherwise stated, the main runs use a mixture of short and medium gaps; the gap distribution is ablated in \Cref{app:resync_ablation_protocols}.
+
+We also avoid making the final decoder-like blocks the dominant targets. Prior analyses of diffusion representations show that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as hyperparameters. The predictor is kept lightweight and shared across pairs through layer and timestep conditioning, so the method tests whether a compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
+
 \subsection{ReSync Hyperparameters}
 \label{app:resync_hyperparameters}
 
-The transition predictor is trained jointly with the backbone and is discarded at inference time unless a skip-depth ablation explicitly uses it. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, and whether output distillation is enabled. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
+The transition predictor is trained jointly with the backbone and is discarded during ordinary sampling. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, output-consistency weight, and diversity weight. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
 
 \begin{table}[!htbp]
     \centering
     \caption{\textbf{ReSync hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
     \label{tab:appendix_resync_hparams}
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccccccccc}
+    \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\beta_{\mathrm{cons}}$ & $\beta_{\mathrm{out}}$ & EMA decay & Target detach & Extra cost \\
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\beta_{\mathrm{out}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
         \midrule
-        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & 0 & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & 0 & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Skip-depth ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 0 & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Output/diversity ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}

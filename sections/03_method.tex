@@ -94,7 +94,7 @@ T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
 \hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across layer pairs and conditioned on $(a,b,t)$. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a residual stack, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
+The predictor is shared across layer pairs and conditioned on $(a,b,t)$, making it an amortized transition model rather than a collection of pair-specific heads. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a residual stack, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
@@ -105,7 +105,7 @@ d\left(\hat A_{b\mid a}^t,\mathrm{sg}(A_b^t)\right)
 \end{equation}
 The target activation is detached, so supervision flows through the transition interface while avoiding symmetric collapse between source and target states.
 
-Prediction alone can still behave like a set of unrelated adapters. To avoid this, ReSync imposes path consistency. For a triplet $a<b<c$, the direct transition should agree with the composition of two shorter transitions:
+An amortized predictor trained only with pairwise targets can still behave like a set of unrelated adapters. To couple its predictions into a single internal transition rule, ReSync imposes path consistency. For a triplet $a<b<c$, the direct transition should agree with the composition of two shorter transitions:
 \begin{equation}
 \hat A_{c\mid a}^t
 \approx
@@ -132,58 +132,66 @@ d\left(T_{a\to c}^t(\tilde A_a^t),\mathrm{sg}(\bar A_{c\mid b\mid a}^t)\right)
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local transitions and longer-range transitions sampled throughout the model, making ReSync a consistent internal representation-transition objective rather than a collection of independent matching losses.
+This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local transitions and longer-range transitions sampled throughout the model, making ReSync a consistent internal representation-transition objective rather than a collection of independent matching losses. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
-\subsection{Transition Pair and Predictor Design}
-
-The choice of transition pairs plays a role analogous to layer selection in direct self-alignment. ReSync uses a shared predictor, so we avoid designing a separate head for each source--target pair. Instead, we sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. In practice, we use a mixture of short and medium gaps and ablate this sampling strategy in the experiments.
-
-We also avoid relying on the final decoder-like blocks as the dominant targets. Prior analyses of diffusion representations indicate that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as predictor-design choices rather than fixed assumptions. Finally, the predictor itself is kept lightweight and shared across pairs through layer and timestep conditioning. This design keeps the method self-contained while testing whether one compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
-
-\subsection{Objective}
-
-The main training objective combines the prediction and compositional consistency losses above with the base flow-matching objective. For exploratory skipped-depth ablations, we also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
+State-level prediction can still be satisfied by activations that are locally close to the target but brittle under the remaining backbone. We therefore require predicted activations to remain compatible with downstream computation. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. Given a predicted target activation, we compute
 \begin{equation}
-\hat y_{\mathrm{skip}}
+o_{\mathrm{pred}}
 =
 F_{\zeta,b:L}(\hat A_b^t,t,c),
 \qquad
-\hat y_{\mathrm{full}}
+o_{\mathrm{full}}
 =
 F_{\zeta,b:L}(A_b^t,t,c),
-\label{eq:skip_output}
+\label{eq:output_consistency_forward}
 \end{equation}
-and match the resulting output to the full computation:
+and enforce output consistency with the full-state branch:
 \begin{equation}
 \mathcal{L}_{\mathrm{out}}
 =
 \left\|
-\hat y_{\mathrm{skip}}
+o_{\mathrm{pred}}
 -
-\mathrm{sg}(\hat y_{\mathrm{full}})
+\mathrm{sg}(o_{\mathrm{full}})
 \right\|_2^2 .
-\label{eq:output_distillation_loss}
+\label{eq:output_consistency_loss}
 \end{equation}
-This term is not required for the main method. We use it only as an ablation to make the predictor more robust to its own errors and to encourage predicted activations to preserve information useful for the final velocity prediction.
+This term is not an external teacher loss: both branches use the same backbone suffix, and the full-state branch is detached. It penalizes predictions that match the target activation locally but drift away from the representation manifold needed by the remaining blocks, making the transition predictor more robust to its own errors.
 
-We collect the auxiliary terms into a single predictor objective,
+The transition and output-consistency terms intentionally couple representations across depth. If weighted too strongly, however, such coupling can reduce the functional separation between blocks. Motivated by DiverseDiT, which identifies block-wise representation diversity as beneficial for DiT training~\citep{yang2026diversedit}, we add a lightweight cosine-squared diversity regularizer:
 \begin{equation}
-\mathcal{L}_{\mathrm{predictor}}
+\mathcal{L}_{\mathrm{div}}
+=
+\mathbb{E}_{a<b,t}
+\left[
+\operatorname{cos}^2(A_a^t,A_b^t)
+\right].
+\label{eq:diversity_loss}
+\end{equation}
+This term penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged. We use it as a balancing regularizer and report no-diversity ablations to isolate its effect.
+
+\subsection{Objective}
+
+ReSync is added to the flow-matching objective as an internal regularizer. It combines transition prediction, path consistency, output consistency, and weak layer diversity:
+\begin{equation}
+\mathcal{L}_{\mathrm{ReSync}}
 =
 \mathcal{L}_{\mathrm{pred}}
 +
 \beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
 +
-\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}} .
-\label{eq:predictor_loss}
+\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}}
++
+\beta_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
+\label{eq:resync_loss}
 \end{equation}
-The resulting training objective is
+The final training objective is
 \begin{equation}
 \mathcal{L}
 =
 \mathcal{L}_{\mathrm{FM}}
 +
-\lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{predictor}} .
+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}} .
 \label{eq:total_loss}
 \end{equation}
-In all main experiments, $\beta_{\mathrm{out}}=0$, so ReSync is purely a training-time representation regularizer and adds no inference-time cost.
+During standard sampling, the transition predictor is discarded and the backbone is evaluated normally, so ReSync adds no inference-time cost.

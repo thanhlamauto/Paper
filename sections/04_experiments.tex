@@ -146,7 +146,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \subsection{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, and EMA bootstrap targets. We then compare direct and projected self-alignment controls to test whether projection acts as a useful transition interface rather than merely adding adapter capacity. Detailed layer-pair, timestep, and predictor-capacity sweeps are moved to \Cref{app:resync_ablation_protocols}.
+We first isolate the contribution of each ReSync design choice. The ablation starts from the same backbone trained without ReSync, then adds layer-conditioned transition prediction, timestep conditioning, compositional consistency, output consistency, and the weak diversity term. We report the no-diversity variant separately to verify that the transition objective itself improves convergence and sample quality, rather than attributing the gains solely to cosine-squared repulsion. We then compare direct and projected self-alignment controls to test whether projection acts as a useful transition interface rather than merely adding adapter capacity. Detailed layer-pair, timestep, and predictor-capacity sweeps are moved to \Cref{app:resync_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
@@ -158,15 +158,16 @@ We first isolate the contribution of each ReSync design choice. The ablation sta
         \scriptsize
         \setlength{\tabcolsep}{2.5pt}
         \renewcommand{\arraystretch}{0.88}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
             \toprule
-            Variant & Trans. & Time & Comp. & FID $\downarrow$ & IS $\uparrow$ \\
+            Variant & Trans. & Time & Comp. & Extra & FID $\downarrow$ & IS $\uparrow$ \\
             \midrule
-            Baseline & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            + transition & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            + time cond. & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            + composition & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Full ReSync & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Baseline & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + transition & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + time cond. & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + composition & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+            + output cons. & \checkmark & \checkmark & \checkmark & out & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Full ReSync & \checkmark & \checkmark & \checkmark & out+div & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -297,8 +298,8 @@ Because ReSync predicts later-layer hidden states, it provides a natural way to 
         Variant & Skipped blocks & Output error $\downarrow$ & FID $\downarrow$ & Speedup $\uparrow$ & Notes \\
         \midrule
         Full backbone & 0 & -- & \textbf{[TBD]} & $1.0\times$ & -- \\
-        ReSync without output distillation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync with output distillation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync without output consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReSync with output consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
