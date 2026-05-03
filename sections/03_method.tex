@@ -24,58 +24,77 @@ A diffusion transformer $v_\zeta$ receives the noisy latent $x_t$, timestep $t$,
 
 \subsection{From Projection Heads to Transition Prediction}
 
-Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the model processes $(x_t,t,c)$. Prior work suggests that diffusion representations are highly non-uniform across depth: some intermediate blocks carry more useful semantic information, while the last blocks increasingly specialize toward decoding back to the latent space~\citep{mukhopadhyay2024,kim2025,stracke2025,an2025inductive,haghighi2026layersync}. Existing self-contained methods use this structure by selecting internal activations and matching or regularizing them directly~\citep{jiang2025sra,haghighi2026layersync}. This gives useful guidance, but it treats representations as states to be made similar rather than as points connected by the computation of the intervening blocks.
+\paragraph{Representation hierarchy.}
+Diffusion transformers do not expose a uniform stack of interchangeable hidden states. Prior analyses show that intermediate layers differ in semantic quality, with useful features often peaking before the final decoder-like blocks~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We observe the same pattern in a pretrained SiT-XL/2: activation scale drifts across depth, while CKA to DINOv2 varies substantially by layer (\Cref{fig:sit_xl_layer_statistics}). The first effect reflects a statistical mismatch between raw layer states, consistent with signal-propagation and Transformer normalization analyses~\citep{glorot2010understanding,he2015delving,schoenholz2017deep,liu2020understandingtransformers}; the second reflects a representation hierarchy.
 
-This distinction matters in a residual transformer. For two layers $a<b$, the target activation contains the source activation plus the accumulated updates of the blocks between them:
-\begin{equation}
-A_b^t
-=
-A_a^t
-+
-\sum_{i=a}^{b-1}\Delta_i^t,
-\qquad
-\Delta_i^t=A_{i+1}^t-A_i^t .
-\label{eq:residual_transition_view}
-\end{equation}
-For completeness, \Cref{app:residual_transition_derivation} derives this identity for a DiT-style residual transformer stack. Thus, direct alignment between $A_a^t$ and $A_b^t$ implicitly asks an earlier layer to match a representation after several additional transformations. This concern is consistent with projection-based alignment designs in prior work: REPA uses a projection head before matching diffusion features to external representations, and SRA also uses projection when aligning heterogeneous internal states, motivated by the need for a softer interface between representation spaces~\citep{yu2024repa,jiang2025sra}. We take this design choice as a hypothesis to test rather than as a settled explanation. A properly conditioned interface may do more than match dimensions or distill an intermediate target; it may recover the predictable component of the target activation while filtering layer-specific variation that would make raw matching brittle. The resulting auxiliary signal can then be passed back to weaker source layers in a cleaner form, extending the LayerSync view that improving weak layers can in turn support stronger later representations~\citep{haghighi2026layersync}. This does not imply that every layer contains the same information. Rather, it suggests that layers that look weak under direct alignment may still contain useful recoverable signal once the representation mismatch is reduced.
-
-We evaluate this hypothesis with two compact observations in the main paper. First, we measure whether raw layer activations are statistically and representationally mismatched, and whether a projection head reduces this mismatch. Second, because higher CKA alone does not certify perceptual layout, we separately test whether projected activations recover spatial partitions or boundaries that agree with DINO-derived pseudo masks. Full statistics, cosine and SVCCA, rank spectra, temporal heatmaps, and additional controls are deferred to \Cref{app:layer_statistics_projection}.
-
-\begin{figure}[!htbp]
+\begin{wrapfigure}{r}{0.50\linewidth}
+    \vspace{-1.0em}
     \centering
+    \captionsetup{font=scriptsize,justification=raggedright,singlelinecheck=false}
     \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
+    \begin{minipage}[c][0.12\textheight][c]{0.94\linewidth}
         \centering
-        \textbf{[PLACEHOLDER: projection reduces raw layer mismatch]}\\[0.5em]
-        Panels: residual-transition schematic; activation RMS/token norm across layers;\\
-        raw CKA versus projected CKA; LayerSync direct alignment versus LayerSync + projector\\
-        on selected, weak, and all source layers.
+        \scriptsize
+        \textbf{[PLACEHOLDER: SiT-XL/2 layer statistics]}\\[0.35em]
+        RMS by block; CKA to DINOv2 averaged over timesteps.
     \end{minipage}}
-    \caption{\textbf{Projection as a learned mismatch filter.} Placeholder for the first observation supporting the transition view. Direct alignment compares raw activations that may differ in scale and representation geometry; projected alignment tests whether a lightweight interface can reduce this mismatch before passing a cleaner guidance signal to earlier layers.}
-    \label{fig:projection_mismatch_observation}
-\end{figure}
+    \caption{\textbf{Layer statistics.} Activation RMS and DINOv2 CKA vary across SiT-XL/2 depth.}
+    \label{fig:sit_xl_layer_statistics}
+    \vspace{-1.0em}
+\end{wrapfigure}
+
+\paragraph{Projection as interface.}
+LayerSync exploits the hierarchy by aligning weaker layers to richer internal ones~\citep{haghighi2026layersync}, but direct alignment also assumes that source and target activations are comparable in raw coordinates. This makes layer choice a coupled problem: a poor source layer may be semantically weak, statistically mismatched, or both. REPA and SRA avoid raw matching by inserting projection heads before matching external or internal targets~\citep{yu2024repa,jiang2025sra}. We isolate this design choice in \Cref{tab:layersync_projector_probe}.
+
+\begin{wraptable}{r}{0.42\linewidth}
+    \vspace{-0.8em}
+    \centering
+    \captionsetup{font=scriptsize,justification=raggedright,singlelinecheck=false}
+    \caption{\textbf{Projected self-alignment probe.} Target, timestep range, and loss are fixed; only the source interface changes. \textit{Selected} uses LayerSync's source layers; \textit{weak} uses earlier layers.}
+    \label{tab:layersync_projector_probe}
+    \scriptsize
+    \setlength{\tabcolsep}{2.0pt}
+    \renewcommand{\arraystretch}{0.78}
+    \begin{tabular}{@{}lccc@{}}
+        \toprule
+        Source & Proj. & FID $\downarrow$ & CKA $\uparrow$ \\
+        \midrule
+        selected & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        selected & small & \textbf{[TBD]} & \textbf{[TBD]} \\
+        weak & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        weak & small & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-1.0em}
+\end{wraptable}
+
+\paragraph{Signal filtering.}
+The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a residual transformer, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns an implicit internal mapping whose residual $P_{a\to b}(A_a^t)-A_a^t$ approximates knowledge added by later blocks. The interface can therefore distill information between representation spaces and filter the auxiliary signal before it updates the flow-matching model. We test the filtering view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
+
+\paragraph{Recoverable layout.}
+The recoverable signal may include spatial structure, not only global semantics. iREPA shows that preserving spatial structure in REPA targets can matter beyond global classification strength~\citep{singh2025irepa}. We therefore use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact qualitative check: low stable rank means a few principal directions explain much of the variation, making PCA maps informative about coarse layout~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}. We treat layout recovery as a hypothesis rather than a primary claim.
 
 \begin{figure}[!htbp]
     \centering
     \includegraphics[
-        width=0.9\linewidth,
-        height=0.22\textheight,
+        width=0.82\linewidth,
+        height=0.20\textheight,
         keepaspectratio
     ]{figures/pca_rank.png}
-    \caption{\textbf{Recoverable spatial evidence.} We test whether the recovered signal is consistent with spatial layout proxies. We interpret positive mask or boundary agreement as evidence for layout-recoverable information, not as proof that raw activations explicitly encode semantic layout.}
+    \caption{\textbf{Recoverable structure beyond raw feature similarity.} Placeholder for PCA maps and stable-rank diagnostics. These visual and spectral checks are supporting evidence only: they test whether projected states retain compact spatial organization.}
     \label{fig:projection_layout_observation}
 \end{figure}
 
-\subsection{ReSync Transition Prediction}
+\subsection{ReSync: Self-Aligned Transition Consistency}
 
-Motivated by these observations, ReSync replaces direct state matching with a shared transition predictor. For a source layer $a$ and a target layer $b>a$, ReSync predicts the target activation from the source activation at the same denoising timestep:
+ReSync is designed to use the backbone's depth trajectory as a source of self-supervision. Instead of selecting a small set of teacher layers or training a separate adapter for each pair, it samples transitions across the valid layer range and trains one conditional predictor between internal representation spaces. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the diffusion transformer processes $(x_t,t,c)$. For a source layer $a$ and a later target layer $b$, ReSync predicts the target representation from the source representation at the same denoising timestep:
 \begin{equation}
 T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
 \qquad
 \hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across sampled layer pairs and conditioned on the denoising timestep. Thus, the projection-like module is no longer a local adapter for one selected pair, but an amortized transition model reused throughout the depth trajectory. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. We train the predictor with
+The predictor is shared across layer pairs and conditioned on $(a,b,t)$, making it an amortized transition model rather than a collection of pair-specific heads. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a residual stack, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
@@ -84,18 +103,16 @@ d\left(\hat A_{b\mid a}^t,\mathrm{sg}(A_b^t)\right)
 \right].
 \label{eq:align_loss}
 \end{equation}
-The target activation is detached. This prevents the auxiliary loss from symmetrically pulling both layers together and makes the predictor responsible for bridging the source and target representations.
+The target activation is detached, so supervision flows through the transition interface while avoiding symmetric collapse between source and target states.
 
-\subsection{Compositional Consistency}
-
-The prediction loss alone can still behave like a collection of independent projection heads. To encourage a reusable internal transition rule, ReSync adds a compositional constraint. A long transition should agree with the composition of two shorter transitions:
+An amortized predictor trained only with pairwise targets can still behave like a set of unrelated adapters. To couple its predictions into a single internal transition rule, ReSync imposes path consistency. For a triplet $a<b<c$, the direct transition should agree with the composition of two shorter transitions:
 \begin{equation}
 \hat A_{c\mid a}^t
 \approx
 \hat A_{c\mid b\mid a}^t .
 \label{eq:transition_composition}
 \end{equation}
-where $\hat A_{c\mid a}^t$ is the direct long transition and $\hat A_{c\mid b\mid a}^t$ is obtained by applying the transitions $a\to b$ and then $b\to c$. In the loss, we detach the source activation and use an EMA copy $\bar T$ to form a stable composed target, following the common use of weight-averaged consistency targets~\citep{tarvainen2017meanteacher}. Let
+Here $\hat A_{c\mid a}^t$ is produced by one application of $T_\psi$, while $\hat A_{c\mid b\mid a}^t$ is obtained by applying the transitions $a\to b$ and $b\to c$. We form the composed target with an EMA copy $\bar T$ of the predictor, writing $\bar T_{p\to q}^t(A)\equiv\bar T(A,p,q,t)$ and following the common use of weight-averaged consistency targets~\citep{tarvainen2017meanteacher}:
 \begin{equation}
 \tilde A_a^t=\mathrm{sg}(A_a^t),
 \qquad
@@ -106,7 +123,7 @@ where $\hat A_{c\mid a}^t$ is the direct long transition and $\hat A_{c\mid b\mi
 \bar T_{b\to c}^{\,t}(\bar A_{b\mid a}^t).
 \label{eq:composed_target}
 \end{equation}
-The consistency objective is then simply
+The online predictor is then trained against this composed target:
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}
 =
@@ -115,58 +132,66 @@ d\left(T_{a\to c}^t(\tilde A_a^t),\mathrm{sg}(\bar A_{c\mid b\mid a}^t)\right)
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-This coupling is the main mechanism that distinguishes ReSync from pairwise self-alignment: the same predictor must explain local and longer-range changes along the depth trajectory.
+This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local transitions and longer-range transitions sampled throughout the model, making ReSync a consistent internal representation-transition objective rather than a collection of independent matching losses. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
-\subsection{Transition Pair and Predictor Design}
-
-The choice of transition pairs plays a role analogous to layer selection in direct self-alignment. ReSync uses a shared predictor, so we avoid designing a separate head for each source--target pair. Instead, we sample pairs from a bounded range of layer gaps. Very short gaps make the prediction task nearly trivial, while very long gaps can make the target representation too distant to provide stable supervision early in training. In practice, we use a mixture of short and medium gaps and ablate this sampling strategy in the experiments.
-
-We also avoid relying on the final decoder-like blocks as the dominant targets. Prior analyses of diffusion representations indicate that semantic quality is heterogeneous across depth and that the last blocks become increasingly tied to output reconstruction~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We therefore treat the valid source range, target range, and gap distribution as predictor-design choices rather than fixed assumptions. Finally, the predictor itself is kept lightweight and shared across pairs through layer and timestep conditioning. This design keeps the method self-contained while testing whether one compact module can capture reusable internal transitions instead of memorizing pair-specific alignments.
-
-\subsection{Objective}
-
-The main training objective combines the prediction and compositional consistency losses above with the base flow-matching objective. For exploratory skipped-depth ablations, we also consider an optional output-level distillation term. Given a predicted activation, we pass it through the remaining backbone,
+State-level prediction can still be satisfied by activations that are locally close to the target but brittle under the remaining backbone. We therefore require predicted activations to remain compatible with downstream computation. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. Given a predicted target activation, we compute
 \begin{equation}
-\hat y_{\mathrm{skip}}
+o_{\mathrm{pred}}
 =
 F_{\zeta,b:L}(\hat A_b^t,t,c),
 \qquad
-\hat y_{\mathrm{full}}
+o_{\mathrm{full}}
 =
 F_{\zeta,b:L}(A_b^t,t,c),
-\label{eq:skip_output}
+\label{eq:output_consistency_forward}
 \end{equation}
-and match the resulting output to the full computation:
+and enforce output consistency with the full-state branch:
 \begin{equation}
 \mathcal{L}_{\mathrm{out}}
 =
 \left\|
-\hat y_{\mathrm{skip}}
+o_{\mathrm{pred}}
 -
-\mathrm{sg}(\hat y_{\mathrm{full}})
+\mathrm{sg}(o_{\mathrm{full}})
 \right\|_2^2 .
-\label{eq:output_distillation_loss}
+\label{eq:output_consistency_loss}
 \end{equation}
-This term is not required for the main method. We use it only as an ablation to make the predictor more robust to its own errors and to encourage predicted activations to preserve information useful for the final velocity prediction.
+This term is not an external teacher loss: both branches use the same backbone suffix, and the full-state branch is detached. It penalizes predictions that match the target activation locally but drift away from the representation manifold needed by the remaining blocks, making the transition predictor more robust to its own errors.
 
-We collect the auxiliary terms into a single predictor objective,
+The transition and output-consistency terms intentionally couple representations across depth. If weighted too strongly, however, such coupling can reduce the functional separation between blocks. Motivated by DiverseDiT, which identifies block-wise representation diversity as beneficial for DiT training~\citep{yang2026diversedit}, we add a lightweight cosine-squared diversity regularizer:
 \begin{equation}
-\mathcal{L}_{\mathrm{predictor}}
+\mathcal{L}_{\mathrm{div}}
+=
+\mathbb{E}_{a<b,t}
+\left[
+\operatorname{cos}^2(A_a^t,A_b^t)
+\right].
+\label{eq:diversity_loss}
+\end{equation}
+This term penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged. We use it as a balancing regularizer and report no-diversity ablations to isolate its effect.
+
+\subsection{Objective}
+
+ReSync is added to the flow-matching objective as an internal regularizer. It combines transition prediction, path consistency, output consistency, and weak layer diversity:
+\begin{equation}
+\mathcal{L}_{\mathrm{ReSync}}
 =
 \mathcal{L}_{\mathrm{pred}}
 +
 \beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
 +
-\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}} .
-\label{eq:predictor_loss}
+\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}}
++
+\beta_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
+\label{eq:resync_loss}
 \end{equation}
-The resulting training objective is
+The final training objective is
 \begin{equation}
 \mathcal{L}
 =
 \mathcal{L}_{\mathrm{FM}}
 +
-\lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{predictor}} .
+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}} .
 \label{eq:total_loss}
 \end{equation}
-In all main experiments, $\beta_{\mathrm{out}}=0$, so ReSync is purely a training-time representation regularizer and adds no inference-time cost.
+During standard sampling, the transition predictor is discarded and the backbone is evaluated normally, so ReSync adds no inference-time cost.
