@@ -220,44 +220,6 @@ Generation metrics alone cannot show whether ReSync is using the intended mechan
 
 \FloatBarrier
 
-\subsection{Scaling Across Backbones and Model Sizes}
-\label{sec:scaling_experiments}
-
-Next, we evaluate whether ReSync is robust to changes in model capacity and baseline choice. The expected comparison includes at least \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} variants, each trained with and without ReSync under the same recipe. The key question is whether cross-depth transition supervision provides a consistent gain rather than only improving one specific configuration.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.23\textheight][c]{0.88\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: training curves]}\\[0.5em]
-        Plot baseline vs. ReSync across training iterations.\\
-        Suggested axes: training iterations on the $x$-axis and FID, validation loss, or representation metric on the $y$-axis.
-    \end{minipage}}
-    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline backbones and ReSync-augmented backbones.}
-    \label{fig:training_curves}
-\end{figure}
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{ReSync across model sizes.} Placeholder table for comparing baseline and ReSync variants under matched training settings.}
-    \label{tab:model_scaling}
-    \begin{tabular}{lcccc}
-        \toprule
-        Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
-        \midrule
-        \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{B/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\FloatBarrier
-
 \subsection{Comparison with Representation-Guided Training}
 \label{sec:comparison_representation_guidance}
 

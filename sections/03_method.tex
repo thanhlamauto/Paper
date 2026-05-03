@@ -69,7 +69,7 @@ LayerSync exploits the hierarchy by aligning weaker layers to richer internal on
 \end{wraptable}
 
 \paragraph{Signal filtering.}
-The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a residual transformer, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns an implicit internal mapping whose residual $P_{a\to b}(A_a^t)-A_a^t$ approximates knowledge added by later blocks. The interface can therefore distill information between representation spaces and filter the auxiliary signal before it updates the flow-matching model. We test the filtering view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
+The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a transformer architecture with residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns an implicit internal mapping whose residual $P_{a\to b}(A_a^t)-A_a^t$ approximates knowledge added by later blocks. The interface can therefore extract the recoverable component of a source activation, distill information between representation spaces, and filter the auxiliary signal before it updates the flow-matching model. We test this view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
 
 \paragraph{Recoverable layout.}
 The recoverable signal may include spatial structure, not only global semantics. iREPA shows that preserving spatial structure in REPA targets can matter beyond global classification strength~\citep{singh2025irepa}. We therefore use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact qualitative check: low stable rank means a few principal directions explain much of the variation, making PCA maps informative about coarse layout~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}. We treat layout recovery as a hypothesis rather than a primary claim.
@@ -94,7 +94,7 @@ T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
 \hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across layer pairs and conditioned on $(a,b,t)$, making it an amortized transition model rather than a collection of pair-specific heads. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a residual stack, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
+The predictor is shared across layer pairs and conditioned on $(a,b,t)$, making it an amortized transition model rather than a collection of pair-specific heads. This lets signals that appear at different depths train the same transition function, while the conditioning preserves the source and target coordinates of each signal. In this sense, ReSync learns an implicit internal representation mapping: in a transformer architecture with residual blocks, predicting $A_b^t$ from $A_a^t$ amounts to estimating the accumulated transformation from layer $a$ to layer $b$ in the target layer's coordinates. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d(\cdot,\cdot)$ is tokenwise cosine distance; and $\mathrm{sg}(\cdot)$ denotes stop-gradient. The self-alignment loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
@@ -158,17 +158,17 @@ o_{\mathrm{pred}}
 \end{equation}
 This term is not an external teacher loss: both branches use the same backbone suffix, and the full-state branch is detached. It penalizes predictions that match the target activation locally but drift away from the representation manifold needed by the remaining blocks, making the transition predictor more robust to its own errors.
 
-The transition and output-consistency terms intentionally couple representations across depth. If weighted too strongly, however, such coupling can reduce the functional separation between blocks. Motivated by DiverseDiT, which identifies block-wise representation diversity as beneficial for DiT training~\citep{yang2026diversedit}, we add a lightweight cosine-squared diversity regularizer:
+To preserve functional separation between blocks, we add a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used in $\mathcal{L}_{\mathrm{pred}}$, we use
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}
 =
-\mathbb{E}_{a<b,t}
+\mathbb{E}_{i<j,t}
 \left[
-\operatorname{cos}^2(A_a^t,A_b^t)
+\operatorname{cos}^2(A_i^t,A_j^t)
 \right].
 \label{eq:diversity_loss}
 \end{equation}
-This term penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged. We use it as a balancing regularizer and report no-diversity ablations to isolate its effect.
+It penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged; no-diversity ablations isolate its effect.
 
 \subsection{Objective}
 
@@ -194,4 +194,4 @@ The final training objective is
 \lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}} .
 \label{eq:total_loss}
 \end{equation}
-During standard sampling, the transition predictor is discarded and the backbone is evaluated normally, so ReSync adds no inference-time cost.
+The predictor is used only during training and is discarded during standard sampling, so ReSync adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:resync_algorithm_compute,app:resync_hyperparameters}; inference-time skipped-depth execution is a possible extension evaluated separately in \Cref{sec:skip_prediction}.
