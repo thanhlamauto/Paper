@@ -73,7 +73,7 @@
 % =========================================================
 % Metadata
 % =========================================================
-\title{ReSync: Layer-Aware Cross-Depth Alignment for Diffusion Transformers}
+\title{ReAlign: Layer-Aware Cross-Depth Alignment for Diffusion Transformers}
 
 \author{%
   Anonymous Authors \\
@@ -121,7 +121,7 @@
   \hfill
   \begin{minipage}[t]{0.325\linewidth}
     \centering
-    \panelimg{figures/resync.png}
+    \panelimg{figures/realign.png}
     
     \vspace{0.25em}
     {\small\textbf{(c) Projection as transition}}
@@ -131,7 +131,7 @@
   \captionof{figure}{\textbf{Projection-as-transition motivation.}
   \textbf{Left:} REPA- and SRA-style methods use projection heads to align potentially mismatched representation spaces.
   \textbf{Middle:} LayerSync directly aligns selected internal layers.
-  \textbf{Right:} ReSync treats the projection module as a small shared transition predictor that can reuse internal supervision across many layer pairs.}
+  \textbf{Right:} ReAlign treats the projection module as a small shared transition predictor that can reuse internal supervision across many layer pairs.}
   \label{fig:projection_as_transition}
 \end{center}
 \vspace{-0.75em}

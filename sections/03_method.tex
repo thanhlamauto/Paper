@@ -87,17 +87,17 @@ The recoverable signal can include spatial structure as well as global semantics
 
 \subsection{Layer-Aware Cross-Depth Transition Prediction}
 
-ReSync turns internal layer alignment into cross-depth transition prediction. It samples source--target layers $a<b$ and uses one shared predictor for all valid pairs. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ be the token activation after block $\ell$ at denoising timestep $t$. The layer-aware transition predictor is
+ReAlign turns internal layer alignment into cross-depth transition prediction. It samples source--target layers $a<b$ and uses one shared predictor for all valid pairs. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ be the token activation after block $\ell$ at denoising timestep $t$. The layer-aware transition predictor is
 \begin{equation}
 \hat A_{a\to b}^t
 =
 g_\psi(A_a^t; a,b,t),
 \qquad a<b .
-\label{eq:resync_predictor}
+\label{eq:realign_predictor}
 \end{equation}
 The same function $g_\psi$ is reused across depth transitions, while $(a,b,t)$ specifies the source, target, and denoising stage. This makes internal alignment flexible across layer pairs without a separate adapter for each pair. 
 
-The basic ReSync loss asks the predicted target-layer state to match the actual later-layer state:
+The basic ReAlign loss asks the predicted target-layer state to match the actual later-layer state:
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
@@ -135,17 +135,17 @@ and require the direct prediction $\hat A_{a\to c}^{\,t}=g_\psi(\mathrm{sg}(A_a^
     \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
         \centering
         \small
-        \textbf{[PLACEHOLDER: ReSync transition predictor]}\\[0.45em]
+        \textbf{[PLACEHOLDER: ReAlign transition predictor]}\\[0.45em]
         Visualize $g_\psi(A_a^t;a,b,t)$ for $a\to b$, direct $a\to c$,\\
         and the consistency path $a\to b\to c$ with a shared predictor.
     \end{minipage}}
     \caption{\textbf{Shared cross-depth transition interface.} Placeholder for the layer-aware predictor and path consistency.}
-    \label{fig:resync_transition_predictor}
+    \label{fig:realign_transition_predictor}
     \end{minipage}
 \end{figure}
 This keeps the shared interface coordinated across short and long transitions. The effect is simple: layer supervision becomes a reusable transition signal across many layer pairs. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
-For a small subset of each minibatch, ReSync feeds the predicted target state to the remaining transformer blocks and trains it with the ordinary flow-matching target. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. The velocity prediction remains a single quantity:
+For a small subset of each minibatch, ReAlign feeds the predicted target state to the remaining transformer blocks and trains it with the ordinary flow-matching target. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. The velocity prediction remains a single quantity:
 \begin{equation}
 \hat v
 =
@@ -174,16 +174,16 @@ The stop-gradient choices keep the roles of the terms clear. $\mathcal{L}_{\math
 
 \subsection{Full Objective}
 
-ReSync is added to the flow-matching objective as an internal regularizer. The representation objective combines transition prediction, path consistency, and weak layer diversity:
+ReAlign is added to the flow-matching objective as an internal regularizer. The representation objective combines transition prediction, path consistency, and weak layer diversity:
 \begin{equation}
-\mathcal{L}_{\mathrm{ReSync}}
+\mathcal{L}_{\mathrm{ReAlign}}
 =
 \mathcal{L}_{\mathrm{pred}}
 +
 \beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
 +
 \beta_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
-\label{eq:resync_loss}
+\label{eq:realign_loss}
 \end{equation}
 The final training objective is
 \begin{equation}
@@ -191,7 +191,7 @@ The final training objective is
 =
 \mathcal{L}_{\mathrm{FM}}
 +
-\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}} .
+\lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{ReAlign}} .
 \label{eq:total_loss}
 \end{equation}
-The predictor is used only during training and is discarded during standard sampling, so ReSync adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:resync_algorithm_compute,app:resync_hyperparameters}.
+The predictor is used only during training and is discarded during standard sampling, so ReAlign adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:realign_algorithm_compute,app:realign_hyperparameters}.

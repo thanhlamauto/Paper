@@ -1,28 +1,28 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate the two claims made in the introduction: ReSync should improve generation, and its internal representations should become stronger. The main experiments are organized around two questions:
+We evaluate the two claims made in the introduction: ReAlign should improve generation, and its internal representations should become stronger. The main experiments are organized around two questions:
 \begin{itemize}[leftmargin=*]
-    \item Does ReSync improve generation quality and training efficiency across domains and model sizes? (\Cref{sec:image_generation,sec:human_motion_generation})
-    \item Does ReSync improve the backbone representations it supervises? (\Cref{sec:representation_analysis})
+    \item Does ReAlign improve generation quality and training efficiency across domains and model sizes? (\Cref{sec:image_generation,sec:human_motion_generation})
+    \item Does ReAlign improve the backbone representations it supervises? (\Cref{sec:representation_analysis})
 \end{itemize}
-The main tables keep comparisons compact. Training settings, sampling protocols, evaluator details, and sensitivity sweeps are reported in \Cref{app:experimental_details,app:resync_ablation_protocols,app:metric_definitions}. Objective and sampling choices are isolated in \Cref{sec:ablation_study}.
+The main tables keep comparisons compact. Training settings, sampling protocols, evaluator details, and sensitivity sweeps are reported in \Cref{app:experimental_details,app:realign_ablation_protocols,app:metric_definitions}. Objective and sampling choices are isolated in \Cref{sec:ablation_study}.
 
 \subsection{Image Generation}
 \label{sec:image_generation}
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. ReSync trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. ReAlign trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
 
 \paragraph{Evaluation.}
-We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all ReSync variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
+We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all ReAlign variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
 
 \paragraph{Comparison methods.}
 Our main comparisons are against the base SiT/DiT backbone and recent representation-regularized training methods. For self-contained guidance, we compare with Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For externally guided training, we compare with REPA~\citep{yu2024repa} and REED~\citep{wang2025flexible}. For completeness, we also report representative image-generation baselines: pixel-space diffusion models including ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, Simple Diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}; latent diffusion and transformer-based models including LDM~\citep{rombach2022ldm}, U-ViT-H/2~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2-XL/2~\citep{gao2023mdtv2}, MaskDiT~\citep{zheng2023fast}, SD-DiT~\citep{zhu2024sddit}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}; and autoregressive or predictive-generation baselines such as VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
 
 \paragraph{Results.}
-\Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of ReSync from changes in model size, sampler, or guidance.
+\Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of ReAlign from changes in model size, sampler, or guidance.
 
 \begin{table}[!htbp]
     \centering
@@ -42,27 +42,27 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + Dispersive & 130M & 80 & \textbf{25.23} \\
             \quad + SRA & 130M & 80 & \textbf{25.08} \\
             \quad + LayerSync & 130M & 80 & \textbf{21.32} \\
-            \quad + ReSync & 130M & 80 & \textbf{18.88} \\
+            \quad + ReAlign & 130M & 80 & \textbf{18.88} \\
             \midrule
             \texttt{SiT-L/2} & 458M & 80 & \textbf{[TBD]} \\
             \quad + SRA & 458M & 80 & \textbf{[TBD]} \\
             \quad + LayerSync & 458M & 80 & \textbf{[TBD]} \\
-            \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
+            \quad + ReAlign & 458M & 80 & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 80 & \textbf{[TBD]} \\
             \quad + SRA & 675M & 80 & \textbf{[TBD]} \\
             \quad + LayerSync & 675M & 80 & \textbf{[TBD]} \\
-            \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
+            \quad + ReAlign & 675M & 80 & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 200 & \textbf{[TBD]} \\
             \quad + SRA & 675M & 200 & \textbf{[TBD]} \\
             \quad + LayerSync & 675M & 200 & \textbf{[TBD]} \\
-            \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
+            \quad + ReAlign & 675M & 200 & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400 & \textbf{[TBD]} \\
             \quad + SRA & 675M & 400 & \textbf{[TBD]} \\
             \quad + LayerSync & 675M & 400 & \textbf{[TBD]} \\
-            \quad + ReSync & 675M & 400 & \textbf{[TBD]} \\
+            \quad + ReAlign & 675M & 400 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -104,7 +104,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
             \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReAlign & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -113,10 +113,10 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
 
-To test whether ReSync transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
+To test whether ReAlign transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
 \paragraph{Implementation details.}
-We follow the MDM setup~\citep{tevet2022mdm} and use a transformer backbone with the same training budget for the baseline and ReSync variant. The main comparison trains MDM with and without ReSync for $600\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:resync_hyperparameters}.
+We follow the MDM setup~\citep{tevet2022mdm} and use a transformer backbone with the same training budget for the baseline and ReAlign variant. The main comparison trains MDM with and without ReAlign for $600\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
 
 \paragraph{Evaluation metrics.}
 We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in \Cref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
@@ -136,7 +136,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
         Method & Iter. & FID $\downarrow$ & R-Precision $\uparrow$ \\
         \midrule
         MDM & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + ReSync (Ours) & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + ReAlign (Ours) & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -146,7 +146,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Generation metrics show the final effect of training. ReSync, however, is meant to act inside the depth hierarchy, so we also inspect hidden states directly. We compare matched-FID checkpoints: an \texttt{SiT-XL/2} trained with ReSync for \textbf{[TBD]} epochs and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} epochs. This keeps sample quality comparable while exposing how each model organizes intermediate features.
+Generation metrics show the final effect of training. ReAlign, however, is meant to act inside the depth hierarchy, so we also inspect hidden states directly. We compare matched-FID checkpoints: an \texttt{SiT-XL/2} trained with ReAlign for \textbf{[TBD]} epochs and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} epochs. This keeps sample quality comparable while exposing how each model organizes intermediate features.
 
 We probe every backbone block with three layerwise diagnostics: linear classification on Tiny ImageNet~\citep{deng2009imagenet}, linear segmentation on PASCAL VOC~\citep{everingham2010pascal}, and Centered Kernel Alignment (CKA) to DINOv2 features~\citep{kornblith2019similarity,oquab2023dinov2}. The two linear probes measure how much semantic and spatial information is exposed by each layer, while CKA measures whether the hidden states organize visual structure similarly to a strong visual representation. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
 
@@ -158,27 +158,27 @@ We probe every backbone block with three layerwise diagnostics: linear classific
         \small
         \textbf{[PLACEHOLDER: layerwise representation analysis]}\\[0.5em]
         Panels: Tiny ImageNet linear probe, PASCAL VOC segmentation probe, DINOv2 CKA,\\
-        and optional PCA/layout visualization across baseline, LayerSync, and ReSync.
+        and optional PCA/layout visualization across baseline, LayerSync, and ReAlign.
     \end{minipage}}
     \caption{\textbf{Layerwise representation quality.} Placeholder for probes across backbone depth under matched generation settings. Stronger weak- and middle-layer curves indicate that cross-depth transition supervision makes useful features easier to recover throughout the backbone.}
     \label{fig:representation_analysis}
 \end{figure}
 
-\Cref{fig:representation_analysis} summarizes the layerwise probes. Three patterns are most relevant. \textit{First}, ReSync improves weak and middle blocks: averaged over these layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and DINOv2 CKA improves by \textbf{[TBD]\%}. \textit{Second}, the best ReSync layer is stronger than the best baseline layer, with peak linear accuracy improving by \textbf{[TBD]\%}. \textit{Third}, the gains spread across depth instead of concentrating at one selected block.
+\Cref{fig:representation_analysis} summarizes the layerwise probes. Three patterns are most relevant. \textit{First}, ReAlign improves weak and middle blocks: averaged over these layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and DINOv2 CKA improves by \textbf{[TBD]\%}. \textit{Second}, the best ReAlign layer is stronger than the best baseline layer, with peak linear accuracy improving by \textbf{[TBD]\%}. \textit{Third}, the gains spread across depth instead of concentrating at one selected block.
 
-This pattern is the internal trace expected from a shared transition predictor. ReSync creates useful interfaces across depth; weak layers expose cleaner signals, middle layers become better targets, and the final model benefits without external teacher supervision.
+This pattern is the internal trace expected from a shared transition predictor. ReAlign creates useful interfaces across depth; weak layers expose cleaner signals, middle layers become better targets, and the final model benefits without external teacher supervision.
 
 \FloatBarrier
 
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400\mathrm{K}$ training iterations, then validate the final recipe in the main generation tables. The main ablations answer three questions: which objective terms matter, what the cosine-squared regularizer changes, and what uniform transition prediction reveals about pair selection. Extended controls are reported in \Cref{app:resync_ablation_protocols}.
+We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400\mathrm{K}$ training iterations, then validate the final recipe in the main generation tables. The main ablations answer three questions: which objective terms matter, what the cosine-squared regularizer changes, and what uniform transition prediction reveals about pair selection. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
     \caption{\textbf{Objective ablation on SiT-B/2.} All rows use the same TPU training budget; FID is computed with $10\mathrm{K}$ samples. ``FM path'' denotes feeding the predicted target state to the remaining blocks inside the ordinary flow-matching loss for a small batch fraction.}
-    \label{tab:resync_ablation}
+    \label{tab:realign_ablation}
     \small
     \setlength{\tabcolsep}{4pt}
     \renewcommand{\arraystretch}{0.88}
@@ -189,10 +189,10 @@ We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400
         Vanilla & -- & -- & -- & -- & \textbf{[TBD]} \\
         LayerSync & -- & -- & -- & -- & \textbf{[TBD]} \\
         Cosine squared only & -- & -- & -- & \checkmark & \textbf{[TBD]} \\
-        ReSync pred. & \checkmark & -- & -- & -- & \textbf{[TBD]} \\
-        ReSync pred. + cons. & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} \\
-        ReSync pred. + cons. + FM path & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
-        Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        ReAlign pred. & \checkmark & -- & -- & -- & \textbf{[TBD]} \\
+        ReAlign pred. + cons. & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} \\
+        ReAlign pred. + cons. + FM path & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
+        Full ReAlign & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -215,7 +215,7 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Where uniform transition prediction is difficult.} Prediction error is measured under uniform pair sampling. These diagnostics motivate the final pair-selection strategy; full schedule details are in \Cref{app:resync_ablation_protocols}.}
+    \caption{\textbf{Where uniform transition prediction is difficult.} Prediction error is measured under uniform pair sampling. These diagnostics motivate the final pair-selection strategy; full schedule details are in \Cref{app:realign_ablation_protocols}.}
     \label{tab:pair_sampling_ablation}
     \scriptsize
     \setlength{\tabcolsep}{2.2pt}
@@ -266,6 +266,6 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
     \end{minipage}
 \end{table}
 
-These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, lambda tuning, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:resync_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
+These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, lambda tuning, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
 
 \FloatBarrier
