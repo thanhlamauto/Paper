@@ -53,16 +53,12 @@ Diffusion transformers form a hierarchy of depth-specific hidden states. Prior a
     \renewcommand{\arraystretch}{0.88}
     \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llcc@{}}
         \toprule
-        Pair set & Interface & FID $\downarrow$ & CKA $\uparrow$ \\
+        Pair set & Projector & FID $\downarrow$ & CKA $\uparrow$ \\
         \midrule
-        selected & direct & \textbf{[TBD]} & \textbf{[TBD]} \\
-        selected & linear & \textbf{[TBD]} & \textbf{[TBD]} \\
-        selected & small MLP & \textbf{[TBD]} & \textbf{[TBD]} \\
-        weak & direct & \textbf{[TBD]} & \textbf{[TBD]} \\
-        weak & linear & \textbf{[TBD]} & \textbf{[TBD]} \\
-        weak & small MLP & \textbf{[TBD]} & \textbf{[TBD]} \\
-        uniform & shared & \textbf{[TBD]} & \textbf{[TBD]} \\
-        layer-aware & shared & \textbf{[TBD]} & \textbf{[TBD]} \\
+        selected & None & \textbf{[TBD]} & \textbf{[TBD]} \\
+        selected & CNN & \textbf{[TBD]} & \textbf{[TBD]} \\
+        weak & None & \textbf{[TBD]} & \textbf{[TBD]} \\
+        weak & CNN & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
     \vspace{-0.8em}
@@ -83,7 +79,7 @@ The recoverable signal can include spatial structure as well as global semantics
         \centering
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
         \includegraphics[width=\linewidth]{figures/pca_rank.png}
-        \caption{\textbf{Recoverable spatial structure.} Placeholder for PCA maps and stable-rank diagnostics.}
+        \caption{\textbf{Inspired by SRA, we observe the PCA maps Recoverable spatial structure.} Placeholder for PCA maps and stable-rank diagnostics.}
         \label{fig:projection_layout_observation}
     \end{minipage}
 \end{figure}
@@ -99,7 +95,7 @@ g_\psi(A_a^t; a,b,t),
 \qquad a<b .
 \label{eq:resync_predictor}
 \end{equation}
-The same function $g_\psi$ is reused across depth transitions, while $(a,b,t)$ specifies the source, target, and denoising stage. This makes internal alignment flexible across layer pairs without a separate adapter for each pair. The auxiliary signal is tied to relations between layers, instead of selected endpoints alone.
+The same function $g_\psi$ is reused across depth transitions, while $(a,b,t)$ specifies the source, target, and denoising stage. This makes internal alignment flexible across layer pairs without a separate adapter for each pair. 
 
 The basic ReSync loss asks the predicted target-layer state to match the actual later-layer state:
 \begin{equation}
