@@ -69,7 +69,7 @@ LayerSync exploits the hierarchy by aligning weaker layers to richer internal on
 \end{wraptable}
 
 \paragraph{Signal filtering.}
-The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a transformer architecture with residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns the recoverable part of this accumulated update in the target layer's coordinates. The interface can therefore extract useful supervision from a source activation, distill information between representation spaces, and filter the auxiliary signal before it updates the flow-matching model. We test this view in the appendix with gradient cosine between $\mathcal{L}_{\mathrm{FM}}$ and direct versus projected alignment losses.
+The weak-layer rows are the key comparison. If projection improves them, the source is not simply uninformative; its useful signal is poorly exposed in raw coordinates. In a transformer architecture with residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a projector satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ learns the recoverable part of this accumulated update in the target layer's coordinates. The interface can therefore extract useful supervision from a source activation and filter layer-specific mismatch before the auxiliary loss updates the flow-matching model.
 
 \paragraph{Recoverable layout.}
 The recoverable signal may include spatial structure, not only global semantics. iREPA shows that preserving spatial structure in REPA targets can matter beyond global classification strength~\citep{singh2025irepa}. We therefore use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact qualitative check: low stable rank means a few principal directions explain much of the variation, making PCA maps informative about coarse layout~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}. We treat layout recovery as a hypothesis rather than a primary claim.
@@ -85,78 +85,70 @@ The recoverable signal may include spatial structure, not only global semantics.
     \label{fig:projection_layout_observation}
 \end{figure}
 
-\subsection{ReSync: Self-Aligned Transition Consistency}
+\subsection{ReSync: Layer-Aware Self-Alignment}
 
-ReSync turns the projection-interface view into an amortized self-alignment objective. Instead of selecting a small set of teacher layers or training a separate adapter for each pair, it samples transitions across the valid layer range so that useful signals from many internal states can supervise many source layers. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation after block $\ell$ when the diffusion transformer processes $(x_t,t,c)$. For a source layer $a$ and a later target layer $b$, ReSync predicts the target representation from the source representation at the same denoising timestep:
+ReSync turns the projection-interface view into a shared self-alignment objective. Instead of fixing one teacher layer pair, it samples source--target layers $a<b$ and uses one predictor for all of them. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ be the token activation after block $\ell$ at denoising timestep $t$. We write the shared predictor as
 \begin{equation}
-T_{a\to b}^t(A)\equiv T_\psi(A,a,b,t),
-\qquad
-\hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t).
+\hat A_{a\to b}^t
+=
+g_\psi(A_a^t; a,b,t),
+\qquad a<b .
 \label{eq:resync_predictor}
 \end{equation}
-The predictor is shared across pairs and conditioned on $(a,b,t)$, making the interface amortized rather than pair-specific. It learns an implicit internal mapping from $A_a^t$ to the target-layer coordinates of $A_b^t$. Unless stated otherwise, $\mathbb{E}$ averages over data, noise, timesteps, and sampled layer indices; $d$ is tokenwise cosine distance; and $\mathrm{sg}$ denotes stop-gradient. The self-alignment loss is
+The notation exposes the intended role: the same function $g_\psi$ is reused for many depth transitions, while $(a,b,t)$ tells it where the transition starts, where it ends, and at which denoising stage it is used. This makes the interface flexible across layer pairs without turning each pair into its own adapter. It also shifts the auxiliary task from matching endpoints to modeling the relation between them, encouraging the predictor to capture what is shared across internal transitions rather than only memorizing a few selected matches.
+
+The basic ReSync loss asks the predicted target-layer state to match the actual later-layer state:
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
-\mathbb{E}\left[
-d\left(\hat A_{b\mid a}^t,\mathrm{sg}(A_b^t)\right)
-\right].
+\mathbb{E}_{a<b}
+\left[
+d\left(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t)\right)
+\right],
 \label{eq:align_loss}
 \end{equation}
-The target activation is detached, so supervision flows through the transition interface while avoiding symmetric collapse between source and target states.
+where $d$ is tokenwise cosine distance and $\mathrm{sg}$ denotes stop-gradient. The target is detached, so supervision flows through the transition interface and source-side representation, not by pulling both states symmetrically together.
 
-An amortized predictor trained only with pairwise targets can still behave like a set of unrelated adapters. To couple its predictions into a single internal transition rule, ReSync imposes path consistency. For a triplet $a<b<c$, the direct transition should agree with the composition of two shorter transitions:
+A shared predictor should behave consistently when a long transition can be viewed as two shorter ones. For $a<b<c$, we compare the direct transition $a\to c$ with the composed path $a\to b\to c$:
 \begin{equation}
-\hat A_{c\mid a}^t
+g_\psi(\mathrm{sg}(A_a^t);a,c,t)
 \approx
-\hat A_{c\mid b\mid a}^t .
+\hat A_{a\to c}^{t,\mathrm{via}\ b}.
 \label{eq:transition_composition}
 \end{equation}
-Here $\hat A_{c\mid a}^t$ is produced by one application of $T_\psi$, while $\hat A_{c\mid b\mid a}^t$ is obtained by applying the transitions $a\to b$ and $b\to c$. We form the composed target with an EMA copy $\bar T$ of the predictor, writing $\bar T_{p\to q}^t(A)\equiv\bar T(A,p,q,t)$ and following the common use of weight-averaged consistency targets~\citep{tarvainen2017meanteacher}:
+The composed target is formed with an EMA copy $\bar g_\psi$ of the predictor~\citep{tarvainen2017meanteacher}:
 \begin{equation}
-\tilde A_a^t=\mathrm{sg}(A_a^t),
-\qquad
-\bar A_{b\mid a}^t=\bar T_{a\to b}^{\,t}(\tilde A_a^t),
-\qquad
-\bar A_{c\mid b\mid a}^t
+\hat A_{a\to c}^{t,\mathrm{via}\ b}
 =
-\bar T_{b\to c}^{\,t}(\bar A_{b\mid a}^t).
+\bar g_\psi\left(
+    \bar g_\psi(\mathrm{sg}(A_a^t);a,b,t);
+    b,c,t
+\right).
 \label{eq:composed_target}
 \end{equation}
-The online predictor is then trained against this composed target:
+The consistency loss is then
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}
 =
-\mathbb{E}\left[
-d\left(T_{a\to c}^t(\tilde A_a^t),\mathrm{sg}(\bar A_{c\mid b\mid a}^t)\right)
+\mathbb{E}_{a<b<c}
+\left[
+d\left(
+g_\psi(\mathrm{sg}(A_a^t);a,c,t),
+\mathrm{sg}\left(\hat A_{a\to c}^{t,\mathrm{via}\ b}\right)
+\right)
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-This constraint is the main distinction from pairwise self-alignment. The same conditional predictor must explain local and longer-range transitions sampled throughout the model, making ReSync a consistent interface for reusing internal guidance rather than a collection of fixed-pair matching losses. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
+This regularizer keeps the shared interface coordinated across short and long transitions. The effect is deliberately simple: layer supervision becomes a small, reusable transition system rather than a list of fixed pairwise matches. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
-State-level prediction can still be satisfied by activations that are locally close to the target but brittle under the remaining backbone. We therefore require predicted activations to remain compatible with downstream computation. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. Given a predicted target activation, we compute
+Hidden-state prediction is useful only if the predicted state can still support the generative task. Rather than distilling the output of the unmodified backbone, ReSync can route a small fraction of the minibatch through the predictor inside the ordinary flow-matching loss. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. For a routed example, the velocity prediction is
 \begin{equation}
-o_{\mathrm{pred}}
+\hat v_{\mathrm{route}}
 =
-F_{\zeta,b:L}(\hat A_b^t,t,c),
-\qquad
-o_{\mathrm{full}}
-=
-F_{\zeta,b:L}(A_b^t,t,c),
-\label{eq:output_consistency_forward}
+F_{\zeta,b:L}(\hat A_{a\to b}^t,t,c).
+\label{eq:routed_fm_forward}
 \end{equation}
-and enforce output consistency with the full-state branch:
-\begin{equation}
-\mathcal{L}_{\mathrm{out}}
-=
-\left\|
-o_{\mathrm{pred}}
--
-\mathrm{sg}(o_{\mathrm{full}})
-\right\|_2^2 .
-\label{eq:output_consistency_loss}
-\end{equation}
-This term is not an external teacher loss: both branches use the same backbone suffix, and the full-state branch is detached. It penalizes predictions that match the target activation locally but drift away from the representation manifold needed by the remaining blocks, making the transition predictor more robust to its own errors.
+It is compared to the same velocity target $u_t$ used in \Cref{eq:flow_matching_loss}. Thus routing does not introduce a new objective; it only changes the forward path for part of the minibatch estimate of $\mathcal{L}_{\mathrm{FM}}$.
 
 To preserve functional separation between blocks, we add a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used in $\mathcal{L}_{\mathrm{pred}}$, we use
 \begin{equation}
@@ -171,11 +163,11 @@ To preserve functional separation between blocks, we add a lightweight diversity
 It penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged; no-diversity ablations isolate its effect.
 
 \paragraph{Gradient routing.}
-We route gradients according to the role of each term. $\mathcal{L}_{\mathrm{pred}}$ updates both the transition predictor and the source-side backbone activations, while the target activation is stopped. $\mathcal{L}_{\mathrm{cons}}$ updates only the online predictor because both the source activation and the EMA-composed target are detached. $\mathcal{L}_{\mathrm{out}}$ updates the predictor and the active backbone suffix through the predicted branch, while the full-state branch is stopped. $\mathcal{L}_{\mathrm{div}}$ is applied only to backbone activations and does not update the transition predictor.
+We route gradients according to the role of each term. $\mathcal{L}_{\mathrm{pred}}$ updates the predictor and source-side backbone activations, while the target activation is stopped. $\mathcal{L}_{\mathrm{cons}}$ updates the online predictor against the detached EMA-composed target. Routed examples, when used, update the routed prefix, predictor, and active suffix through $\mathcal{L}_{\mathrm{FM}}$. $\mathcal{L}_{\mathrm{div}}$ is applied only to backbone activations and does not update the transition predictor.
 
 \subsection{Objective}
 
-ReSync is added to the flow-matching objective as an internal regularizer. It combines transition prediction, path consistency, output consistency, and weak layer diversity:
+ReSync is added to the flow-matching objective as an internal regularizer. The representation objective combines transition prediction, path consistency, and weak layer diversity:
 \begin{equation}
 \mathcal{L}_{\mathrm{ReSync}}
 =
@@ -183,11 +175,9 @@ ReSync is added to the flow-matching objective as an internal regularizer. It co
 +
 \beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
 +
-\beta_{\mathrm{out}}\mathcal{L}_{\mathrm{out}}
-+
 \beta_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
 \label{eq:resync_loss}
-\ref{}\end{equation}
+\end{equation}
 The final training objective is
 \begin{equation}
 \mathcal{L}
@@ -197,4 +187,4 @@ The final training objective is
 \lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}} .
 \label{eq:total_loss}
 \end{equation}
-The predictor is used only during training and is discarded during standard sampling, so ReSync adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:resync_algorithm_compute,app:resync_hyperparameters}; inference-time skipped-depth execution is a possible extension evaluated separately in \Cref{sec:skip_prediction}.
+The predictor is used only during training and is discarded during standard sampling, so ReSync adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:resync_algorithm_compute,app:resync_hyperparameters}.

@@ -1,9 +1,9 @@
 \section{ReSync Algorithm and Compute}
 \label{app:resync_algorithm_compute}
 
-This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's shared self-alignment interface and compositional loss. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
+This appendix follows the same organizational principle as LayerSync: the main paper reports compact result tables, while the appendix separates implementation details, baseline protocol, sensitivity studies, metrics, and representation diagnostics. For ReSync, the split is adapted to the method's shared self-alignment interface and path-consistency regularizer. The relevant appendix groups are algorithm and compute, ImageNet and HumanML3D experimental details, transition-pair and timestep ablations, predictor-capacity controls, metric definitions, representation diagnostics, and qualitative examples. We omit LayerSync appendix topics that are not part of the current ReSync claims, such as audio generation, video generation, and post-hoc block dropping.
 
-Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the predictor maps source activations into target-layer coordinates, and the auxiliary objective combines prediction, composition, output-consistency, and weak layer-diversity losses. The predictor is small, typically about 5--10\% of the backbone parameters in our configurations, and is removed for ordinary sampling, so inference cost is unchanged.
+Algorithmically, ReSync adds a lightweight auxiliary branch during training. The backbone forward pass produces source and target activations, the predictor maps source activations into target-layer coordinates, and the auxiliary objective combines prediction, path consistency, and weak layer diversity. A small fraction of each minibatch can use the predictor inside the ordinary flow-matching path. The predictor is small, typically about 5--10\% of the backbone parameters in our configurations, and is removed for ordinary sampling, so inference cost is unchanged.
 
 \begin{figure}[!htbp]
     \centering
@@ -13,15 +13,15 @@ Algorithmically, ReSync adds a lightweight auxiliary branch during training. The
     \textbf{Training.}
     \begin{enumerate}[leftmargin=*,topsep=0.25em,itemsep=0.15em]
         \item Sample data, class condition, noise, timestep, and valid layer tuple $(a,b,c)$.
-        \item Run the DiT/SiT backbone and cache activations $A_a^t,A_b^t,A_c^t$.
-        \item Predict $\hat A_{b\mid a}^t=T_{a\to b}^t(A_a^t)$ and $\hat A_{c\mid a}^t=T_{a\to c}^t(A_a^t)$.
-        \item Form the EMA-composed target $\bar A_{c\mid b\mid a}^t=\bar T_{b\to c}^t(\bar T_{a\to b}^t(\mathrm{sg}(A_a^t)))$.
-        \item Compute $\mathcal{L}_{\mathrm{div}}$ on sampled layer states and optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}}$.
+        \item Split the minibatch into a standard set and a small routed set with fraction $\rho_{\mathrm{route}}$.
+        \item On the standard set, run the full DiT/SiT backbone, cache $A_a^t,A_b^t,A_c^t$, and compute $\mathcal{L}_{\mathrm{pred}}$, $\mathcal{L}_{\mathrm{cons}}$, and $\mathcal{L}_{\mathrm{div}}$.
+        \item On the routed set, run blocks up to $a$, predict $\hat A_{a\to b}^t=g_\psi(A_a^t;a,b,t)$, continue with the suffix $F_{\zeta,b:L}$, and evaluate the usual flow-matching error against $u_t$.
+        \item Estimate $\mathcal{L}_{\mathrm{FM}}$ from the standard and routed examples, optimize $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}}$, and update the EMA predictor.
     \end{enumerate}
     \vspace{0.25em}
-    \textbf{Standard inference.} Discard $T_\psi$ and run the original backbone with the same sampler and guidance settings as the baseline. Inference-time skipped-depth execution is evaluated separately as an extension.
+    \textbf{Standard inference.} Discard $T_\psi$ and run the original backbone with the same sampler and guidance settings as the baseline.
     \end{minipage}}
-    \caption{\textbf{ReSync training and inference summary.} Placeholder algorithm box matching the appendix style of self-alignment methods while exposing ReSync-specific transition, composition, and standard sampling steps.}
+    \caption{\textbf{ReSync training and inference summary.} The routed branch changes the forward path used by part of the flow-matching minibatch; it is not a separate objective.}
     \label{fig:appendix_resync_algorithm}
 \end{figure}
 
@@ -39,7 +39,6 @@ Algorithmically, ReSync adds a lightweight auxiliary branch during training. The
         Dispersive Loss & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
         LayerSync-style alignment & -- & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
         ReSync & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & $1.0\times$ \\
-        ReSync skip ablation & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -54,7 +53,7 @@ We also avoid making the final decoder-like blocks the dominant targets. Prior a
 \subsection{ReSync Hyperparameters}
 \label{app:resync_hyperparameters}
 
-The transition predictor is trained jointly with the backbone and is discarded during ordinary sampling. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, output-consistency weight, and diversity weight. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
+The transition predictor is trained jointly with the backbone and is discarded during ordinary sampling. Each run should report the predictor type, layer-pair distribution, loss weights, EMA decay, routed-batch fraction, and diversity weight. This mirrors LayerSync-style hyperparameter tables while adding the parameters needed for a learned transition model.
 
 \begin{table}[!htbp]
     \centering
@@ -63,11 +62,11 @@ The transition predictor is trained jointly with the backbone and is discarded d
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\beta_{\mathrm{out}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\rho_{\mathrm{route}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
         \midrule
         Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Output/diversity ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Routed-path ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
@@ -133,7 +132,7 @@ Following the LayerSync appendix, we report the model-size details for the SiT b
         \textbf{[PLACEHOLDER: SiT block and ReSync attachment]}\\[0.5em]
         Left: DiT/SiT residual block with AdaLN, MSA, MLP, and gated residual paths.\\
         Right: cached source activation $A_a^t$, target activation $A_b^t$,\\
-        shared transition predictor $T_{a\to b}^t$, and EMA-composed consistency target.
+        shared transition predictor $g_\psi(A_a^t;a,b,t)$, and EMA-composed consistency target.
     \end{minipage}}
     \caption{\textbf{SiT architecture and ReSync attachment.} Schematic placeholder for the backbone block and the training-only ReSync predictor. This should be redrawn for ReSync rather than copied from prior work.}
     \label{fig:appendix_sit_resync_architecture}
@@ -203,18 +202,18 @@ LayerSync evaluates whether alignment should be applied across all timesteps or 
     \end{tabular}
 \end{table}
 
-\paragraph{Predictor capacity and gradient controls.}
-To rule out the possibility that ReSync merely adds auxiliary capacity or changes the effective learning rate, we compare small and large predictors, pair-specific projectors, and matched-gradient or matched-learning-rate controls. These controls correspond to the LayerSync learning-rate appendix but are adapted to a learned auxiliary module.
+\paragraph{Predictor capacity and optimization controls.}
+To rule out the possibility that ReSync merely adds auxiliary capacity or changes the effective learning rate, we compare small and large predictors, pair-specific projectors, and matched-learning-rate controls. These controls correspond to the LayerSync learning-rate appendix but are adapted to a learned auxiliary module.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for separating transition learning from raw capacity or gradient-scale effects.}
+    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for separating transition learning from raw capacity or simple optimization effects.}
     \label{tab:appendix_predictor_capacity_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lccccc}
         \toprule
-        Variant & Pred. params & Aux. grad & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+        Variant & Pred. params & Aux. weight & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
         \midrule
         Baseline & -- & -- & \textbf{[TBD]} & -- & -- \\
         Small shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
@@ -302,7 +301,7 @@ Unless otherwise stated, all diagnostics should be computed on the same checkpoi
 \end{itemize}
 For each method, report the layer pairs, timestep ranges, projection-head architecture, loss weights, and whether an EMA target is used. When using source groups, define them by block index for a backbone with $L$ blocks, for example $\mathcal{S}_{\mathrm{early}}=\{1,\dots,\lfloor0.2L\rfloor\}$, $\mathcal{S}_{\mathrm{mid}}=\{\lfloor0.4L\rfloor,\dots,\lfloor0.6L\rfloor\}$, and $\mathcal{S}_{\mathrm{late}}=\{\lceil0.8L\rceil,\dots,L\}$. This mirrors the appendix style of self-representation alignment work, where implementation details and sensitivity studies are separated from the main result tables.
 
-The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, raw-versus-projected CKA for representation stitching, and generation metrics for direct versus projected self-alignment. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, spatial-layout probes, temporal CKA heatmaps, and gradient-alignment diagnostics.
+The main paper uses a compact diagnostic set: activation RMS or token norm for statistical mismatch, CKA for representation similarity, and linear probes for semantic information exposed by intermediate layers. The appendix reports additional checks, including mean and variance, cosine similarity, SVCCA, stable and effective rank, singular-value spectra, affinity-based similarity, spatial-layout probes, and temporal CKA heatmaps.
 
 \subsection{Metric and Measurement Definitions}
 \label{app:metric_definitions}
@@ -366,24 +365,6 @@ and tokenwise cosine distance is $1-\operatorname{cos}(X,Y)$. Linear CKA is
 \end{equation}
 following the representation-similarity convention of \citet{kornblith2019similarity}; related transformer-representation analyses also use CKA-style diagnostics~\citep{raghu2021visiontransformers}. SVCCA is reported as the mean canonical correlation after projecting $X_c$ and $Y_c$ onto their leading singular subspaces; the retained variance threshold or retained component count should be stated with each result. Affinity error compares pairwise token relations rather than raw features: after row-normalizing activations, form $S_X=\tilde X\tilde X^\top$ and $S_Y=\tilde Y\tilde Y^\top$, then report $\|S_X-S_Y\|_F/M$ or its centered correlation equivalent. Lower affinity error or higher affinity correlation indicates more similar token geometry. Temporal CKA uses the same definition while holding the layer fixed and varying the denoising timestep, for example $\operatorname{CKA}(A_\ell^t,A_\ell^s)$. We report it as a heatmap over $(t,s)$ for selected layers and as a local-neighborhood average for nearby timesteps. This diagnostic supports the broader transition-prediction view but is not part of the main same-timestep ReSync objective.
 
-\paragraph{Gradient-alignment diagnostics.}
-To test whether projection reduces conflict with the generative objective, compute
-\begin{equation}
-\operatorname{gradcos}
-=
-\frac{
-\left\langle
-\nabla_\theta\mathcal{L}_{\mathrm{FM}},
-\nabla_\theta\mathcal{L}_{\mathrm{aux}}
-\right\rangle
-}{
-\|\nabla_\theta\mathcal{L}_{\mathrm{FM}}\|_2
-\|\nabla_\theta\mathcal{L}_{\mathrm{aux}}\|_2
-+\varepsilon
-},
-\end{equation}
-where $\mathcal{L}_{\mathrm{aux}}$ is direct alignment, projected alignment, or ReSync. The parameter subset $\theta$ should be stated explicitly, such as source blocks only, all transformer blocks, or shared embeddings. Report the mean and confidence interval over matched batches, timesteps, layer pairs, and checkpoints; higher values indicate less conflicting auxiliary gradients.
-
 \paragraph{Spatial-layout probes.}
 Pseudo-mask IoU compares a mask or partition recovered from model activations with a reference partition, such as a DINO-derived pseudo mask. For binary masks, $\operatorname{IoU}(P,Q)=|P\cap Q|/|P\cup Q|$; for multiple regions, we report mean best-matched IoU and state the matching rule. Boundary-F1 compares predicted and reference boundary pixels with a fixed tolerance radius $\tau$: precision is the fraction of predicted boundary pixels matched to a reference boundary, recall is the fraction of reference boundary pixels matched by a prediction, and $\operatorname{Boundary\mbox{-}F1}=2PR/(P+R+\varepsilon)$. Same-image, different-image, and token-shuffle controls use the same metric but replace the reference or spatial ordering to test whether the score reflects image-specific layout rather than feature anisotropy.
 
@@ -409,7 +390,7 @@ d\left(
 \right)
 \right].
 \end{equation}
-Skipped-depth output error is measured against the full backbone output using normalized MSE, $\|\hat o_{\mathrm{skip}}-\hat o_{\mathrm{full}}\|_2^2/(\|\hat o_{\mathrm{full}}\|_2^2+\varepsilon)$, or the same tokenwise cosine distance when the output parameterization is normalized. Error--FID correlation is computed across matched runs or checkpoints using Pearson correlation by default; Spearman correlation can be reported as a rank-based robustness check.
+Error--FID correlation is computed across matched runs or checkpoints using Pearson correlation by default; Spearman correlation can be reported as a rank-based robustness check.
 
 \paragraph{Reporting rule for uncited diagnostics.}
 Whenever a metric is not a named benchmark with an explicit citation, the table or caption should state the normalization axes, sample count, timestep range, layer-pair sampling rule, whether features are centered or normalized, and whether lower or higher is better. This keeps descriptive diagnostics interpretable without treating them as standalone benchmark claims.
@@ -513,7 +494,7 @@ The goal of this diagnostic is to test whether direct alignment is difficult bec
 \subsection{Projection Capacity and Layer Gap}
 \label{app:projection_capacity_layer_gap}
 
-This ablation tests whether projection heads extract useful recoverable signal or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. If projection heads mitigate mismatch while exposing useful information, we expect a small projection head to improve generation quality and reduce alignment difficulty while still transmitting a meaningful gradient to the diffusion backbone. An overly expressive projection may reduce alignment loss without improving FID, which would suggest that it solves the auxiliary task locally rather than improving the model's internal representations.
+This ablation tests whether projection heads extract useful recoverable signal or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. If projection heads mitigate mismatch while exposing useful information, we expect a small projection head to improve generation quality and representation metrics. An overly expressive projection may reduce alignment loss without improving FID, which would suggest that it solves the auxiliary task locally rather than improving the model's internal representations.
 
 \begin{figure}[!htbp]
     \centering
@@ -522,7 +503,7 @@ This ablation tests whether projection heads extract useful recoverable signal o
         \centering
         \textbf{[PLACEHOLDER: projection capacity ablation]}\\[0.5em]
         Compare no projection, small projection, medium projection, and large projection.\\
-        Report FID, alignment loss, backbone gradient norm from auxiliary loss, and training cost.
+        Report FID, alignment loss, representation probes, and training cost.
     \end{minipage}}
     \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether a small projection head extracts useful recoverable signal and reduces feature-space mismatch, while an overly expressive head may absorb the auxiliary loss without providing a useful training signal to the backbone.}
     \label{fig:appendix_projection_capacity}
@@ -553,7 +534,7 @@ This ablation tests whether projection heads extract useful recoverable signal o
 \subsection{Layout-Recoverable Spatial Information}
 \label{app:layout_recoverable_information}
 
-Raw cosine similarity and CKA do not fully measure whether two activations preserve the same spatial layout. Affinity-based similarity to DINO features is also only a weak proxy, since it remains a second-order representation-similarity measure and can still be affected by feature anisotropy or rank structure. We therefore treat layout as a recoverable spatial object extracted from activation maps rather than as raw feature equality. The main probes should convert activations into spatial partitions or boundaries and compare them with external perceptual proxies, such as DINO-derived pseudo masks, image edges, or object masks when available. We will treat a layer as containing layout-recoverable spatial information only if projected or spatial-normalized activations improve pseudo-mask IoU, Boundary-F1, or region agreement relative to raw activations and pass same-image versus different-image or token-shuffle controls.
+Raw cosine similarity and CKA do not fully measure whether two activations preserve the same spatial layout. Affinity-based similarity to DINO features is also only a weak proxy, since it remains a second-order representation-similarity measure and can still be affected by feature anisotropy or rank structure. We therefore treat layout as a recoverable spatial object extracted from activation maps rather than as raw feature equality. The probes convert activations into spatial partitions or boundaries and compare them with external perceptual proxies, such as DINO-derived pseudo masks, image edges, or object masks when available. A layer is counted as containing layout-recoverable spatial information only if projected or spatial-normalized activations improve pseudo-mask IoU, Boundary-F1, or region agreement relative to raw activations and pass same-image versus different-image or token-shuffle controls.
 
 \begin{figure}[!htbp]
     \centering
