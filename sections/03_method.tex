@@ -75,16 +75,19 @@ LayerSync exploits the hierarchy by aligning weaker layers to richer internal on
 The weak-layer rows are the key comparison. If a small interface improves them, the useful signal was already present but poorly exposed in raw coordinates. The uniform and layer-aware rows then ask whether the same idea remains useful when supervision is spread across many pairs. With residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a map satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ recovers part of the accumulated depth update in the target layer's coordinates. This is the step from direct matching to transition prediction.
 
 \paragraph{Recoverable layout.}
-\begin{wrapfigure}{r}{0.67\textwidth}
-    \centering
-    \vspace{-1.0em}
-    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \includegraphics[width=\linewidth]{figures/pca_rank.png}
-    \caption{\textbf{Recoverable spatial structure.} Placeholder for PCA maps and stable-rank diagnostics.}
-    \label{fig:projection_layout_observation}
-    \vspace{-1.0em}
-\end{wrapfigure}
 The recoverable signal can include spatial structure as well as global semantics. iREPA shows that spatial structure in alignment targets can matter in addition to classification strength~\citep{singh2025irepa}. We use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact check of whether projected states retain organized spatial variation~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}{0.67\textwidth}
+        \centering
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \includegraphics[width=\linewidth]{figures/pca_rank.png}
+        \caption{\textbf{Recoverable spatial structure.} Placeholder for PCA maps and stable-rank diagnostics.}
+        \label{fig:projection_layout_observation}
+    \end{minipage}
+\end{figure}
+\FloatBarrier
 
 \subsection{Layer-Aware Cross-Depth Transition Prediction}
 
