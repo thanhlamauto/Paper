@@ -135,59 +135,6 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
     \end{tabular}}
 \end{table}
 
-\subsection{Residual Transition Identity}
-\label{app:residual_transition_derivation}
-
-We state the residual-transition identity only to clarify the transition notation used by ReAlign. For a DiT/SiT-style stack~\citep{vaswani2017attention,peebles2023scalable,ma2024sit}, let $A_i^t$ be the token activation entering block $i$ at denoising timestep $t$, and let $c$ denote the conditioning signal. A standard block can be written as two residual branches,
-\begin{equation}
-\bar A_i^t
-=
-\operatorname{AdaLN}^{\mathrm{msa}}_i(A_i^t;t,c),
-\qquad
-U_i^t
-=
-A_i^t
-+
-g_i^{\mathrm{msa}}(t,c)\odot
-\operatorname{MSA}_i(\bar A_i^t),
-\end{equation}
-\begin{equation}
-\bar U_i^t
-=
-\operatorname{AdaLN}^{\mathrm{mlp}}_i(U_i^t;t,c),
-\qquad
-A_{i+1}^t
-=
-U_i^t
-+
-g_i^{\mathrm{mlp}}(t,c)\odot
-\operatorname{MLP}_i(\bar U_i^t).
-\end{equation}
-Thus each block contributes an update $\Delta_i^t=A_{i+1}^t-A_i^t$, and any cross-depth transition satisfies
-\begin{equation}
-A_b^t
-=
-A_a^t
-+
-\sum_{i=a}^{b-1}\Delta_i^t,
-\qquad a<b .
-\label{eq:appendix_telescoping}
-\end{equation}
-This identity separates the source activation from the computation accumulated by intervening blocks, which is the quantity approximated by the shared transition predictor.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: DiT residual block and depth transition]}\\[0.5em]
-        Left: one DiT block with AdaLN, MSA, MLP, and gated residual paths.\\
-        Right: stacked blocks from $a$ to $b$ showing $A_b^t=A_a^t+\sum_{i=a}^{b-1}\Delta_i^t$.
-    \end{minipage}}
-    \caption{\textbf{Residual view of a DiT stack.} Placeholder schematic for the residual transition used by ReAlign notation.}
-    \label{fig:appendix_dit_residual_stack}
-\end{figure}
-
 \section{Experimental Protocols}
 \label{app:experimental_details}
 \label{app:baseline_protocol}

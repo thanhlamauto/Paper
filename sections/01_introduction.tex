@@ -12,8 +12,7 @@ Across ImageNet $256\times256$ experiments, ReAlign improves over the base SiT m
 
 Our contributions are:
 \begin{itemize}[leftmargin=*,topsep=0.25em,itemsep=0.15em,parsep=0pt]
-    \item We formulate internal representation alignment for diffusion transformers as conditional transition prediction across layers.
-    \item We introduce a pair-conditioned predictor that supports arbitrary source--target layer pairs, reducing reliance on manually selected alignments.
-    \item We add a transition-consistency objective that stabilizes long-range prediction by matching direct transitions with composed shorter transitions.
-    \item We show that ReAlign improves diffusion transformer training over direct internal-alignment baselines with small training-time overhead.
+    \item We cast internal representation alignment as conditional transition prediction across DiT layers.
+    \item We introduce a lightweight pair-conditioned predictor with a transition-consistency loss.
+    \item We show improved generation and representations over direct internal-alignment baselines with small training overhead.
 \end{itemize}
