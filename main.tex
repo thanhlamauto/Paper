@@ -66,7 +66,7 @@
 % =========================================================
 % Metadata
 % =========================================================
-\title{ReSyn: Self-Aligned Representation Transition Consistency in Diffusion Transformers}
+\title{ReSync: Layer-Aware Cross-Depth Alignment for Diffusion Transformers}
 
 \author{%
   Anonymous Authors \\
@@ -124,7 +124,7 @@
   \captionof{figure}{\textbf{Projection-as-transition motivation.}
   \textbf{Left:} REPA- and SRA-style methods use projection heads to align potentially mismatched representation spaces.
   \textbf{Middle:} LayerSync directly aligns selected internal layers.
-  \textbf{Right:} ReSyn treats the projection module as a small shared transition model for reusable layer- and timestep-conditioned representation dynamics.}
+  \textbf{Right:} ReSync treats the projection module as a small shared transition predictor that can reuse internal supervision across many layer pairs.}
   \label{fig:projection_as_transition}
 \end{center}
 \vspace{-0.75em}
