@@ -1,6 +1,6 @@
-\section{Limitations}
+\section{Limitations and Future Work}
 
-Our evaluation focuses on training-time internal alignment for diffusion transformers under standard sampling. Large-scale sweeps are expensive, so component and sampling ablations are run on the smaller backbone, while the main comparisons test whether the same recipe transfers across larger settings. ReSync does not claim to replace external teachers in every regime or to accelerate sampling; the predictor is removed for ordinary inference.
+This paper keeps ReSync focused on training-time internal alignment under standard sampling. Component and sampling ablations use the smaller backbone, and the final configuration is evaluated across larger backbones to check transfer across depth. The learned transition interface leaves two natural directions: using cross-depth states during sampling, and modeling transitions jointly over layer depth and denoising time.
 
 \section{Conclusion}
 

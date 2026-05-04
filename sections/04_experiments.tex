@@ -1,12 +1,12 @@
 \section{Experiments}
 \label{sec:experiments}
 
-This section tests the claims made in the introduction. If useful internal guidance is better exposed through a learned layer-aware interface, then ReSync should improve generation, its component ablations should identify the useful parts of the objective, and representation probes should show stronger intermediate features. We organize the experiments around three questions:
+We evaluate the two claims made in the introduction: ReSync should improve generation, and its internal representations should become stronger. The main experiments are organized around two questions:
 \begin{itemize}[leftmargin=*]
     \item Does ReSync improve generation quality and training efficiency across domains and model sizes? (\Cref{sec:image_generation,sec:human_motion_generation})
-    \item Which parts of the predictor and layer-pair sampling strategy matter? (\Cref{sec:ablation_study})
     \item Does ReSync improve the backbone representations it supervises? (\Cref{sec:representation_analysis})
 \end{itemize}
+The main tables keep comparisons compact. Training settings, sampling protocols, evaluator details, and sensitivity sweeps are reported in \Cref{app:experimental_details,app:resync_ablation_protocols,app:metric_definitions}. Objective and sampling choices are isolated in \Cref{sec:ablation_study}.
 
 \subsection{Image Generation}
 \label{sec:image_generation}
@@ -143,80 +143,129 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 
 \FloatBarrier
 
-\subsection{Ablation Study}
+\subsection{Representation Analysis}
+\label{sec:representation_analysis}
+
+Generation metrics show the final effect of training. ReSync, however, is meant to act inside the depth hierarchy, so we also inspect hidden states directly. We compare matched-FID checkpoints: an \texttt{SiT-XL/2} trained with ReSync for \textbf{[TBD]} epochs and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} epochs. This keeps sample quality comparable while exposing how each model organizes intermediate features.
+
+We probe every backbone block with three layerwise diagnostics: linear classification on Tiny ImageNet~\citep{deng2009imagenet}, linear segmentation on PASCAL VOC~\citep{everingham2010pascal}, and Centered Kernel Alignment (CKA) to DINOv2 features~\citep{kornblith2019similarity,oquab2023dinov2}. The two linear probes measure how much semantic and spatial information is exposed by each layer, while CKA measures whether the hidden states organize visual structure similarly to a strong visual representation. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.24\textheight][c]{0.92\linewidth}
+        \centering
+        \small
+        \textbf{[PLACEHOLDER: layerwise representation analysis]}\\[0.5em]
+        Panels: Tiny ImageNet linear probe, PASCAL VOC segmentation probe, DINOv2 CKA,\\
+        and optional PCA/layout visualization across baseline, LayerSync, and ReSync.
+    \end{minipage}}
+    \caption{\textbf{Layerwise representation quality.} Placeholder for probes across backbone depth under matched generation settings. Stronger weak- and middle-layer curves indicate that cross-depth transition supervision makes useful features easier to recover throughout the backbone.}
+    \label{fig:representation_analysis}
+\end{figure}
+
+\Cref{fig:representation_analysis} summarizes the layerwise probes. Three patterns are most relevant. \textit{First}, ReSync improves weak and middle blocks: averaged over these layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and DINOv2 CKA improves by \textbf{[TBD]\%}. \textit{Second}, the best ReSync layer is stronger than the best baseline layer, with peak linear accuracy improving by \textbf{[TBD]\%}. \textit{Third}, the gains spread across depth instead of concentrating at one selected block.
+
+This pattern is the internal trace expected from a shared transition predictor. ReSync creates useful interfaces across depth; weak layers expose cleaner signals, middle layers become better targets, and the final model benefits without external teacher supervision.
+
+\FloatBarrier
+
+\section{Ablation Study}
 \label{sec:ablation_study}
 
-We first isolate the contribution of each ReSync design choice on the same backbone and training budget. The ablation starts from the baseline, then adds a shared predictor, layer and timestep conditioning, path consistency, and the weak diversity term. We also compare layer-pair sampling strategies to separate the main benefit of the shared predictor from the additional gain of choosing better transition pairs. Detailed timestep, capacity, routing, and pair-range sweeps are moved to \Cref{app:resync_ablation_protocols}.
+We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400\mathrm{K}$ training iterations, then validate the final recipe in the main generation tables. The main ablations answer three questions: which objective terms matter, what the cosine-squared regularizer changes, and what uniform transition prediction reveals about pair selection. Extended controls are reported in \Cref{app:resync_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
-    \begin{minipage}[t]{0.48\textwidth}
-        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{Ablation of ReSync components.} Lower FID is better; higher IS is better.}
-        \label{tab:resync_ablation}
-        \vspace{0.25em}
-        \scriptsize
-        \setlength{\tabcolsep}{2.0pt}
-        \renewcommand{\arraystretch}{0.88}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
+    \caption{\textbf{Objective ablation on SiT-B/2.} All rows use the same TPU training budget; FID is computed with $10\mathrm{K}$ samples. ``FM path'' denotes feeding the predicted target state to the remaining blocks inside the ordinary flow-matching loss for a small batch fraction.}
+    \label{tab:resync_ablation}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.88}
+    \begin{tabular*}{0.96\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+        \toprule
+        Variant & $\mathcal{L}_{\mathrm{pred}}$ & $\mathcal{L}_{\mathrm{cons}}$ & FM path & $\cos^2$ & FID-10K $\downarrow$ \\
+        \midrule
+        Vanilla & -- & -- & -- & -- & \textbf{[TBD]} \\
+        LayerSync & -- & -- & -- & -- & \textbf{[TBD]} \\
+        Cosine squared only & -- & -- & -- & \checkmark & \textbf{[TBD]} \\
+        ReSync pred. & \checkmark & -- & -- & -- & \textbf{[TBD]} \\
+        ReSync pred. + cons. & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} \\
+        ReSync pred. + cons. + FM path & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
+        Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+    \fbox{%
+    \begin{minipage}[c][0.22\textheight][c]{0.92\linewidth}
+        \centering
+        \small
+        \textbf{[PLACEHOLDER: layer cosine heatmaps]}\\[0.5em]
+        Left: cosine-similarity heatmap across backbone layers before $\cos^2$ regularization.\\
+        Right: the same heatmap after applying the cosine-squared term.
+    \end{minipage}}
+    \caption{\textbf{Effect of the cosine-squared regularizer.} The heatmaps visualize pairwise layer similarity before and after the regularizer. The intended effect is simple: reduce excessive layer collapse while preserving the cross-depth transition signal.}
+    \label{fig:cosine_squared_heatmap}
+\end{figure}
+
+Uniform layer-pair training is both a baseline and a diagnostic. A useful shared predictor should already work under uniform sampling; its prediction errors then reveal which transitions are too easy, too hard, or most informative. We compute these diagnostics with batch size $128$, $400\mathrm{K}$ iterations, and $4\mathrm{K}$-sample evaluation checkpoints.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Where uniform transition prediction is difficult.} Prediction error is measured under uniform pair sampling. These diagnostics motivate the final pair-selection strategy; full schedule details are in \Cref{app:resync_ablation_protocols}.}
+    \label{tab:pair_sampling_ablation}
+    \scriptsize
+    \setlength{\tabcolsep}{2.2pt}
+    \renewcommand{\arraystretch}{0.88}
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Layer gap}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
             \toprule
-            Variant & Shared & Layer & Time & Extra & FID $\downarrow$ & IS $\uparrow$ \\
+            Gap & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            Baseline & -- & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Pair predictor & \checkmark & -- & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Layer-aware & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            + time cond. & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            + path cons. & \checkmark & \checkmark & \checkmark & path & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Full ReSync & \checkmark & \checkmark & \checkmark & path+div & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Short & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Medium & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Long & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Very long & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{Layer-pair sampling strategy.} The shared predictor already works with uniform sampling; a simple layer-aware strategy further improves the same objective.}
-        \label{tab:pair_sampling_ablation}
-        \vspace{0.25em}
-        \scriptsize
-        \setlength{\tabcolsep}{2.0pt}
-        \renewcommand{\arraystretch}{0.88}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Source layer}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
             \toprule
-            Variant & Pair sampling & Pred. & FID $\downarrow$ & IS $\uparrow$ \\
+            Source & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            Baseline & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Fixed selected & selected & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Uniform & all valid & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Gap-balanced & mixed gaps & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Final strategy & layer-aware & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Early & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Early-mid & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Middle & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Late & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Timestep}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Range & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            \midrule
+            High noise & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Mid noise & \textbf{[TBD]} & \textbf{[TBD]} \\
+            Low noise & \textbf{[TBD]} & \textbf{[TBD]} \\
+            All & 1.00 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
 \end{table}
 
-\FloatBarrier
-
-\subsection{Representation Analysis}
-\label{sec:representation_analysis}
-
-Finally, we test whether ReSync changes the backbone's intermediate representations in ways that are consistent with the proposed mechanism. The main diagnostics follow \Cref{fig:sit_xl_layer_statistics}: activation RMS or token norm measures statistical mismatch across layers, CKA measures representational similarity to stronger internal or external features, and linear probing measures how much semantic information is exposed by intermediate states. Supplementary spatial-layout, rank-spectrum, SVCCA, and temporal CKA checks are reported in \Cref{app:layer_statistics_projection}; measurement definitions are given in \Cref{app:metric_definitions}.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Representation probes on intermediate layers.} ReSync should improve generation while also exposing stronger reusable features inside the backbone.}
-    \label{tab:representation_probe}
-    \small
-    \setlength{\tabcolsep}{6pt}
-    \renewcommand{\arraystretch}{0.9}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        Method & Layer range & Linear probe $\uparrow$ & DINO CKA $\uparrow$ & Norm CV $\downarrow$ \\
-        \midrule
-        Baseline & weak/mid & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LayerSync & weak/mid & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync & weak/mid & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, lambda tuning, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:resync_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
 
 \FloatBarrier
