@@ -51,6 +51,13 @@
 \usepackage{enumitem}
 \usepackage{wrapfig}
 \usepackage{placeins}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\makeatletter
+\renewcommand{\theALG@line}{\thealgorithm.\arabic{ALG@line}}
+\providecommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\renewcommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\makeatother
 
 % Avoid vertically stretched pages when forcing a new page after the teaser figure.
 \raggedbottom
