@@ -1,77 +1,31 @@
 \section{Method}
 \label{sec:method}
 
-\subsection{Diffusion Transformer Training}
+\subsection{Preliminaries and Internal Activations}
 
-We adopt the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}, which provides a common view of flow-based and diffusion-based generative models. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
+We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
 \begin{equation}
 x_t=\alpha_t x_0+\sigma_t\epsilon ,
 \label{eq:stochastic_interpolant}
 \end{equation}
-where $\alpha_t$ and $\sigma_t$ control the mixture of data and noise. The schedule is chosen so that the path connects clean data to a tractable noise distribution, and generation follows the learned dynamics in the reverse direction. The instantaneous velocity of this path is
+with target velocity
 \[
 u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon .
 \]
-A diffusion transformer $v_\zeta$ receives the noisy latent $x_t$, timestep $t$, and optional condition $c$, and is trained to predict this velocity by minimizing
+A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by minimizing
 \begin{equation}
 \mathcal{L}_{\mathrm{FM}}
 =
 \mathbb{E}_{x_0,\epsilon,t,c}\left[
-\left\|v_\zeta(x_t,t,c)-u_t\right\|_2^2
+\left\|v_\theta(x_t,t,c)-u_t\right\|_2^2
 \right].
 \label{eq:flow_matching_loss}
 \end{equation}
 
-\subsection{Why Cross-Depth Alignment Needs an Interface}
+Let $A_\ell^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$. Here $N$ is the number of latent tokens and $C$ is the channel dimension. ReAlign uses these internal activations as self-contained alignment targets.
 
-\paragraph{Representation hierarchy.}
-\begin{wrapfigure}{r}{0.33\linewidth}
-    \vspace{-1.0em}
-    \centering
-    \captionsetup{font=scriptsize,justification=raggedright,singlelinecheck=false}
-    \fbox{%
-    \begin{minipage}[c][0.13\textheight][c]{0.94\linewidth}
-        \centering
-        \scriptsize
-        \textbf{[PLACEHOLDER: SiT-XL/2 layer statistics]}\\[0.35em]
-        RMS by block; CKA to DINOv2 averaged over timesteps.
-    \end{minipage}}
-    \caption{\textbf{Layer statistics.} Activation RMS and DINOv2 CKA vary across SiT-XL/2 depth.}
-    \label{fig:sit_xl_layer_statistics}
-    \vspace{-1.0em}
-\end{wrapfigure}
-Diffusion transformers form a hierarchy of depth-specific hidden states. Prior analyses show that semantic quality varies across depth, often peaking before the final decoder-like blocks~\citep{mukhopadhyay2024,kim2025,stracke2025,haghighi2026layersync}. We observe the same pattern in SiT-XL/2: activation scale drifts across depth, while CKA to DINOv2 changes substantially by layer (\Cref{fig:sit_xl_layer_statistics}). Raw layer matching therefore mixes two issues: which layers contain useful signal, and whether their coordinates are comparable.
-
-\begin{wraptable}{r}{0.48\linewidth}
-    \vspace{-1.8em}
-    \centering
-    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \caption{\textbf{Projected self-alignment probe.} Target, timestep range, and loss are fixed; only the source interface and pair set change. Full probe settings are in \Cref{app:diagnostic_protocol}.}
-    \label{tab:layersync_projector_probe}
-    \scriptsize
-    \setlength{\tabcolsep}{2.3pt}
-    \renewcommand{\arraystretch}{0.88}
-    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llcc@{}}
-        \toprule
-        Pair set & Projector & FID $\downarrow$ & CKA $\uparrow$ \\
-        \midrule
-        selected & None & \textbf{[TBD]} & \textbf{[TBD]} \\
-        selected & CNN & \textbf{[TBD]} & \textbf{[TBD]} \\
-        weak & None & \textbf{[TBD]} & \textbf{[TBD]} \\
-        weak & CNN & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular*}
-    \vspace{-0.8em}
-\end{wraptable}
-
-\paragraph{Projection as interface.}
-LayerSync exploits the hierarchy by aligning weaker layers to richer internal ones~\citep{haghighi2026layersync}. Direct alignment, however, still assumes that source and target activations are comparable in raw coordinates. REPA and SRA avoid raw matching by inserting projection heads before matching external or internal targets~\citep{yu2024repa,jiang2025sra}. \Cref{tab:layersync_projector_probe} isolates this interface choice.
-
-\paragraph{Signal filtering.}
-The weak-layer rows are the key comparison. If a small interface improves them, the useful signal was already present but poorly exposed in raw coordinates. The uniform and layer-aware rows then ask whether the same idea remains useful when supervision is spread across many pairs. With residual blocks, $A_b^t=A_a^t+\Delta_{a:b}^t$, so a map satisfying $P_{a\to b}(A_a^t)\approx A_b^t$ recovers part of the accumulated depth update in the target layer's coordinates. This is the step from direct matching to transition prediction.
-
-\paragraph{Recoverable layout.}
-The recoverable signal can include spatial structure as well as global semantics. iREPA shows that spatial structure in alignment targets can matter in addition to classification strength~\citep{singh2025irepa}. We use PCA and stable rank in \Cref{fig:projection_layout_observation} as a compact check of whether projected states retain organized spatial variation~\citep{daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}.
+\paragraph{Shared spatial structure.}
+Internal layers are not identical, but they often preserve a common spatial scaffold across depth. \Cref{fig:projection_layout_observation} visualizes this with PCA maps and stable-rank diagnostics. This observation motivates a transition interface: instead of directly matching one fixed pair of raw activations, we learn conditional mappings that exploit shared structure while adapting to the representation gap of each layer pair.
 
 \begin{figure}[!htbp]
     \centering
@@ -79,53 +33,72 @@ The recoverable signal can include spatial structure as well as global semantics
         \centering
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
         \includegraphics[width=\linewidth]{figures/pca_rank.png}
-        \caption{\textbf{Inspired by SRA, we observe the PCA maps Recoverable spatial structure.} Placeholder for PCA maps and stable-rank diagnostics.}
+        \caption{\textbf{Shared spatial structure across depth.} Although activations vary across layers, PCA visualizations reveal a common spatial scaffold. ReAlign uses conditional transitions to exploit this shared structure while adapting to layer-pair-specific representation gaps.}
         \label{fig:projection_layout_observation}
     \end{minipage}
 \end{figure}
 \FloatBarrier
 
-\subsection{Layer-Aware Cross-Depth Transition Prediction}
+\subsection{Conditional Internal Transitions}
 
-ReAlign turns internal layer alignment into cross-depth transition prediction. It samples source--target layers $a<b$ and uses one shared predictor for all valid pairs. Let $A_\ell^t\in\mathbb{R}^{N\times C}$ be the token activation after block $\ell$ at denoising timestep $t$. The layer-aware transition predictor is
+Existing internal alignment methods typically match a manually selected pair of layers. In contrast, ReAlign learns a conditional transition function that maps a source activation $A_a^t$ to the representation space of a target layer $b$:
 \begin{equation}
-\hat A_{a\to b}^t
+\widehat A_{a\to b}^{\,t}
 =
-g_\psi(A_a^t; a,b,t),
-\qquad a<b .
+G_\psi(A_a^t,e_a,e_b,e_t),
+\qquad a<b ,
 \label{eq:realign_predictor}
 \end{equation}
-The same function $g_\psi$ is reused across depth transitions, while $(a,b,t)$ specifies the source, target, and denoising stage. This makes internal alignment flexible across layer pairs without a separate adapter for each pair. 
+where $G_\psi$ is a lightweight neural predictor, and $e_a,e_b,e_t$ are source-layer, target-layer, and timestep embeddings. We focus on forward depth transitions from earlier to later layers, since the goal is to expose later-layer representational guidance to earlier computation. The same predictor is shared across valid source--target pairs; layer and timestep conditioning allow it to adapt to different transition gaps.
 
-The basic ReAlign loss asks the predicted target-layer state to match the actual later-layer state:
+\paragraph{Transition alignment.}
+We train the predictor to approximate the target activation:
 \begin{equation}
 \mathcal{L}_{\mathrm{pred}}
 =
-\mathbb{E}_{a<b,\,t}\Big[\,
-\underbrace{\,d\big(\hat A_{a\to b}^{\,t},\; \mathrm{sg}(A_b^t)\,\big)\,}_{\text{predicted layer-}b\text{ state vs.\ actual layer-}b\text{ state}}
-\Big],
+\mathbb{E}_{a<b,t}\left[
+d\left(
+\widehat A_{a\to b}^{\,t},
+\operatorname{sg}(A_b^t)
+\right)
+\right],
 \label{eq:align_loss}
 \end{equation}
-where $d$ is tokenwise cosine distance and $\mathrm{sg}$ denotes stop-gradient. The detached target directs supervision through the transition interface and source-side representation.
+where $d(\cdot,\cdot)$ is tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. This term updates the predictor and source-side backbone activations while using the target layer as a stable internal reference.
 
-We add a lightweight path-consistency term so that short and long transitions share the same interface. Using an EMA copy $\bar g_\psi$ of the predictor~\citep{tarvainen2017meanteacher}, we form the composed target in two steps,
+\subsection{Transition Consistency}
+
+Long-range transitions can be harder to learn directly, especially when the source and target layers are far apart. To stabilize arbitrary-pair prediction, ReAlign encourages direct transitions to agree with compositions of shorter transitions. For $a<b<c$, we define a direct prediction
 \begin{equation}
-\hat A_{a\to b}^{\,t,\,\bar\psi}
-= \bar g_\psi\!\big(\mathrm{sg}(A_a^t);\, a,b,t\big),
-\qquad
-\hat A_{a\to c}^{\,t,\,\mathrm{via}\,b}
-= \bar g_\psi\!\big(\hat A_{a\to b}^{\,t,\,\bar\psi};\, b,c,t\big),
+\widehat A_{a\to c}^{\,t}
+=
+G_\psi(\operatorname{sg}(A_a^t),e_a,e_c,e_t),
+\label{eq:direct_transition}
+\end{equation}
+and an EMA-composed prediction
+\begin{equation}
+\widehat A_{a\to b\to c}^{\,t}
+=
+\bar G_\psi\!\left(
+\bar G_\psi(\operatorname{sg}(A_a^t),e_a,e_b,e_t),
+e_b,e_c,e_t
+\right),
 \label{eq:composed_target}
 \end{equation}
-and require the direct prediction $\hat A_{a\to c}^{\,t}=g_\psi(\mathrm{sg}(A_a^t);a,c,t)$ to agree with it:
+where $\bar G_\psi$ is an EMA copy of the predictor~\citep{tarvainen2017meanteacher}. The consistency loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}
 =
-\mathbb{E}_{a<b<c,\,t}\Big[\,
-\underbrace{\,d\big(\hat A_{a\to c}^{\,t},\; \mathrm{sg}(\hat A_{a\to c}^{\,t,\,\mathrm{via}\,b})\,\big)\,}_{\text{direct prediction vs.\ composed (EMA) prediction}}
-\Big].
+\mathbb{E}_{a<b<c,t}\left[
+d\left(
+\widehat A_{a\to c}^{\,t},
+\operatorname{sg}(\widehat A_{a\to b\to c}^{\,t})
+\right)
+\right].
 \label{eq:consistency_loss}
 \end{equation}
+This loss updates the online predictor against a detached composed target, encouraging the shared interface to behave consistently across short and long transitions.
+
 \begin{figure}[!htbp]
     \centering
     \begin{minipage}{0.66\linewidth}
@@ -136,28 +109,29 @@ and require the direct prediction $\hat A_{a\to c}^{\,t}=g_\psi(\mathrm{sg}(A_a^
         \centering
         \small
         \textbf{[PLACEHOLDER: ReAlign transition predictor]}\\[0.45em]
-        Visualize $g_\psi(A_a^t;a,b,t)$ for $a\to b$, direct $a\to c$,\\
+        Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
         and the consistency path $a\to b\to c$ with a shared predictor.
     \end{minipage}}
-    \caption{\textbf{Shared cross-depth transition interface.} Placeholder for the layer-aware predictor and path consistency.}
+    \caption{\textbf{Shared conditional transition interface.} ReAlign predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated.}
     \label{fig:realign_transition_predictor}
     \end{minipage}
 \end{figure}
-This keeps the shared interface coordinated across short and long transitions. The effect is simple: layer supervision becomes a reusable transition signal across many layer pairs. Implementation choices for layer ranges, gap sampling, and predictor capacity are given in \Cref{app:transition_pair_predictor_design}.
 
-For a small subset of each minibatch, ReAlign feeds the predicted target state to the remaining transformer blocks and trains it with the ordinary flow-matching target. Let $F_{\zeta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. The velocity prediction remains a single quantity:
+\subsection{Training Objective}
+
+For a small subset of each minibatch, ReAlign feeds the predicted target state to the remaining transformer blocks and trains it with the ordinary flow-matching target. Let $F_{\theta,b:L}$ denote the suffix of the diffusion transformer from block $b$ to the output. The velocity prediction remains a single quantity:
 \begin{equation}
 \hat v
 =
 \begin{cases}
-F_{\zeta,1:L}(x_t,t,c), & \text{standard example},\\
-F_{\zeta,b:L}(\hat A_{a\to b}^t,t,c), & \text{FM-path example}.
+F_{\theta,1:L}(x_t,t,c), & \text{standard example},\\
+F_{\theta,b:L}(\widehat A_{a\to b}^{\,t},t,c), & \text{FM-path example}.
 \end{cases}
 \label{eq:fm_path_forward}
 \end{equation}
-For FM-path examples, the second line is used. The same loss $\|\hat v-u_t\|_2^2$ is applied in both cases. This keeps transition prediction connected to the generative objective without adding a separate output-matching loss.
+The same flow-matching loss $\|\hat v-u_t\|_2^2$ is applied in both cases, so this path connects transition prediction to the generative objective without introducing a separate output-matching loss.
 
-To keep layers from collapsing into overly similar states, we add a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used in $\mathcal{L}_{\mathrm{pred}}$, we use
+We also use a lightweight diversity regularizer inspired by DiverseDiT~\citep{yang2026diversedit}. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used in $\mathcal{L}_{\mathrm{pred}}$, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}
 =
@@ -167,14 +141,9 @@ To keep layers from collapsing into overly similar states, we add a lightweight 
 \right].
 \label{eq:diversity_loss}
 \end{equation}
-It penalizes high direct similarity between sampled layer activations while leaving the transition targets unchanged; no-diversity ablations isolate its effect.
+The predictor is intentionally lightweight and regularized, so it acts as a constrained transition interface rather than a replacement for the intervening transformer blocks.
 
-\paragraph{Optimization details.}
-The stop-gradient choices keep the roles of the terms clear. $\mathcal{L}_{\mathrm{pred}}$ updates the predictor and source-side backbone activations against a detached target state. $\mathcal{L}_{\mathrm{cons}}$ updates the online predictor against the detached EMA-composed target. $\mathcal{L}_{\mathrm{div}}$ is applied only to backbone activations.
-
-\subsection{Full Objective}
-
-ReAlign is added to the flow-matching objective as an internal regularizer. The representation objective combines transition prediction, path consistency, and weak layer diversity:
+The ReAlign regularizer is
 \begin{equation}
 \mathcal{L}_{\mathrm{ReAlign}}
 =
@@ -194,4 +163,4 @@ The final training objective is
 \lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{ReAlign}} .
 \label{eq:total_loss}
 \end{equation}
-The predictor is used only during training and is discarded during standard sampling, so ReAlign adds no inference-time cost. Training and inference procedures, architecture, parameter overhead, and loss weights are reported in \Cref{app:realign_algorithm_compute,app:realign_hyperparameters}.
+Training procedures, predictor capacity, layer-pair sampling, and loss weights are reported in \Cref{app:realign_algorithm_compute,app:realign_hyperparameters}.
