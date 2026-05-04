@@ -73,7 +73,7 @@
 % =========================================================
 % Metadata
 % =========================================================
-\title{ReSync: Layer-Aware Cross-Depth Alignment for Diffusion Transformers}
+\title{ReAlign: Representation Alignment via Layer-Aware Transitions for Diffusion Transformers}
 
 \author{%
   Anonymous Authors \\
@@ -103,35 +103,26 @@
     }%
   }
 
-  \begin{minipage}[t]{0.325\linewidth}
+  \begin{minipage}[t]{0.46\linewidth}
     \centering
     \panelimg{figures/sra.png}
     
     \vspace{0.25em}
-    {\small\textbf{(a) Projection as adapter}}
+    {\small\textbf{Projection as adapter}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.325\linewidth}
+  \begin{minipage}[t]{0.46\linewidth}
     \centering
-    \panelimg{figures/layersync.png}
+    \panelimg{figures/realign.png}
     
     \vspace{0.25em}
-    {\small\textbf{(b) Direct self-alignment}}
-  \end{minipage}
-  \hfill
-  \begin{minipage}[t]{0.325\linewidth}
-    \centering
-    \panelimg{figures/resync.png}
-    
-    \vspace{0.25em}
-    {\small\textbf{(c) Projection as transition}}
+    {\small\textbf{Conditional transition prediction}}
   \end{minipage}
 
   \vspace{0.6em}
   \captionof{figure}{\textbf{Projection-as-transition motivation.}
-  \textbf{Left:} REPA- and SRA-style methods use projection heads to align potentially mismatched representation spaces.
-  \textbf{Middle:} LayerSync directly aligns selected internal layers.
-  \textbf{Right:} ReSync treats the projection module as a small shared transition predictor that can reuse internal supervision across many layer pairs.}
+  \textbf{Left:} Projection-based alignment maps a source representation to a chosen target space.
+  \textbf{Right:} ReAlign turns this interface into a shared conditional transition predictor that supports many internal layer pairs.}
   \label{fig:projection_as_transition}
 \end{center}
 \vspace{-0.75em}

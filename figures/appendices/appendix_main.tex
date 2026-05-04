@@ -1,18 +1,18 @@
-\section{ReSync Method Details}
-\label{app:resync_algorithm_compute}
+\section{ReAlign Method Details}
+\label{app:realign_algorithm_compute}
 
-This appendix keeps the main paper compact while making the implementation easy to audit. We organize the details into four groups: ReSync method details, experimental protocols, additional ablations, and representation diagnostics. Cross-references from the main text point to the specific subsection needed for each result.
+This appendix keeps the main paper compact while making the implementation easy to audit. We organize the details into four groups: ReAlign method details, experimental protocols, additional ablations, and representation diagnostics. Cross-references from the main text point to the specific subsection needed for each result.
 
 \subsection{Training Algorithm and Compute}
 
-ReSync adds a lightweight training-time branch to the diffusion transformer. The backbone forward pass exposes source and target activations, the shared predictor maps the source state into target-layer coordinates, and the auxiliary loss combines transition prediction, path consistency, and weak-layer diversity. A small fraction of the minibatch can feed the predicted target state into the remaining blocks inside the ordinary flow-matching loss.
+ReAlign adds a lightweight training-time branch to the diffusion transformer. The backbone forward pass exposes source and target activations, the shared predictor maps the source state into target-layer coordinates, and the auxiliary loss combines transition prediction, path consistency, and weak-layer diversity. A small fraction of the minibatch can feed the predicted target state into the remaining blocks inside the ordinary flow-matching loss.
 
 \begin{algorithm}[!htbp]
-\caption{\textbf{ReSync training.} One flow-matching loss with a shared cross-depth transition predictor.}
-\label{alg:resync_training}
+\caption{\textbf{ReAlign training.} One flow-matching loss with a shared cross-depth transition predictor.}
+\label{alg:realign_training}
 \small
 \begin{algorithmic}[1]
-\Require backbone $F_\zeta$ with block ranges $F_{\zeta,i:j}$; predictor $g_\psi$; EMA predictor $\bar g_\psi$; pair law $q(a,b,r)$; FM-path rate $\rho$; weights $\lambda_{\mathrm{sync}},\beta_{\mathrm{cons}},\beta_{\mathrm{div}}$.
+\Require backbone $F_\zeta$ with block ranges $F_{\zeta,i:j}$; predictor $g_\psi$; EMA predictor $\bar g_\psi$; pair law $q(a,b,r)$; FM-path rate $\rho$; weights $\lambda_{\mathrm{align}},\beta_{\mathrm{cons}},\beta_{\mathrm{div}}$.
 \Repeat
     \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim\mathcal{U}(0,1)$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
@@ -43,15 +43,15 @@ ReSync adds a lightweight training-time branch to the diffusion transformer. The
     &= \bar g_\psi\!\left(\bar g_\psi(\mathrm{sg}(A_a^t);a,b,t);b,r,t\right).
     \end{aligned}
     \]
-    \State Compute the ReSync regularizer:
+    \State Compute the ReAlign regularizer:
     \[
-    \mathcal{L}_{\mathrm{ReSync}}
+    \mathcal{L}_{\mathrm{ReAlign}}
     =
     d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))
     +\beta_{\mathrm{cons}}d(\hat A_{a\to r}^t,\mathrm{sg}(\tilde A_{a\to r}^t))
     +\beta_{\mathrm{div}}\mathbb{E}_{i<j}\operatorname{cos}^2(A_i^t,A_j^t).
     \]
-    \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{sync}}\mathcal{L}_{\mathrm{ReSync}}$.
+    \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{ReAlign}}$.
     \State Update $\bar\psi\leftarrow\tau\bar\psi+(1-\tau)\psi$.
 \Until{training budget is reached}
 \end{algorithmic}
@@ -59,11 +59,11 @@ ReSync adds a lightweight training-time branch to the diffusion transformer. The
 
 \subsection{Optional Inference Interface}
 
-Standard generation uses the usual Euler integrator with the full backbone. The learned transition interface can also be evaluated inside the sampler by choosing a strategy $\pi_{\mathrm{skip}}$ that specifies which Euler steps use the predictor and which layer jump $(a_k,b_k)$ is used. This appendix reports the interface cleanly; the main paper evaluates ReSync under standard sampling. The strategy should be reported with its skip rate and pair rule, such as fixed-pair, gap-balanced, or the final layer-aware rule from \Cref{tab:pair_sampling_ablation}. Both variants use the same state update; they differ only in how $\hat v_k$ is computed.
+Standard generation uses the usual Euler integrator with the full backbone. The learned transition interface can also be evaluated inside the sampler by choosing a strategy $\pi_{\mathrm{skip}}$ that specifies which Euler steps use the predictor and which layer jump $(a_k,b_k)$ is used. This appendix reports the interface cleanly; the main paper evaluates ReAlign under standard sampling. The strategy should be reported with its skip rate and pair rule, such as fixed-pair, gap-balanced, or the final layer-aware rule from \Cref{tab:pair_sampling_ablation}. Both variants use the same state update; they differ only in how $\hat v_k$ is computed.
 
 \begin{algorithm}[!htbp]
 \caption{\textbf{Euler inference and optional transition-interface evaluation.}}
-\label{alg:resync_inference}
+\label{alg:realign_inference}
 \small
 \begin{algorithmic}[1]
 \Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $F_\zeta$; optional predictor $g_\psi$ and strategy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
@@ -102,8 +102,8 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
         \midrule
         SiT baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ & $1.00\times$ \\
         LayerSync & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        ReSync & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        ReSync interface Euler & 5--10\% & -- & -- & -- & -- & -- & \textbf{[TBD]} \\
+        ReAlign & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
+        ReAlign interface Euler & 5--10\% & -- & -- & -- & -- & -- & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -113,19 +113,19 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
 
 Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs sample a mixture of short and medium gaps and keep the target range away from the final reconstruction-heavy blocks. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
 
-\subsection{ReSync Hyperparameters}
-\label{app:resync_hyperparameters}
+\subsection{ReAlign Hyperparameters}
+\label{app:realign_hyperparameters}
 
 Each run reports the predictor architecture, layer-pair distribution, loss weights, EMA decay, FM-path batch fraction, diversity weight, and training cost. Ablations use the same backbone and budget unless the table states otherwise.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{ReSync hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
-    \label{tab:appendix_resync_hparams}
+    \caption{\textbf{ReAlign hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
+    \label{tab:appendix_realign_hparams}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{sync}}$ & $\beta_{\mathrm{cons}}$ & $\rho_{\mathrm{path}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{align}}$ & $\beta_{\mathrm{cons}}$ & $\rho_{\mathrm{path}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
         \midrule
         Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
@@ -138,7 +138,7 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 \subsection{Residual Transition Identity}
 \label{app:residual_transition_derivation}
 
-We state the residual-transition identity only to clarify the transition notation used by ReSync. For a DiT/SiT-style stack~\citep{vaswani2017attention,peebles2023scalable,ma2024sit}, let $A_i^t$ be the token activation entering block $i$ at denoising timestep $t$, and let $c$ denote the conditioning signal. A standard block can be written as two residual branches,
+We state the residual-transition identity only to clarify the transition notation used by ReAlign. For a DiT/SiT-style stack~\citep{vaswani2017attention,peebles2023scalable,ma2024sit}, let $A_i^t$ be the token activation entering block $i$ at denoising timestep $t$, and let $c$ denote the conditioning signal. A standard block can be written as two residual branches,
 \begin{equation}
 \bar A_i^t
 =
@@ -184,7 +184,7 @@ This identity separates the source activation from the computation accumulated b
         Left: one DiT block with AdaLN, MSA, MLP, and gated residual paths.\\
         Right: stacked blocks from $a$ to $b$ showing $A_b^t=A_a^t+\sum_{i=a}^{b-1}\Delta_i^t$.
     \end{minipage}}
-    \caption{\textbf{Residual view of a DiT stack.} Placeholder schematic for the residual transition used by ReSync notation.}
+    \caption{\textbf{Residual view of a DiT stack.} Placeholder schematic for the residual transition used by ReAlign notation.}
     \label{fig:appendix_dit_residual_stack}
 \end{figure}
 
@@ -192,55 +192,122 @@ This identity separates the source activation from the computation accumulated b
 \label{app:experimental_details}
 \label{app:baseline_protocol}
 
-\subsection{ImageNet Setup}
+\subsection{Image Generation Experimental Details}
+\label{app:image_generation_details}
 
-All ImageNet results use the same VAE, preprocessing, reference statistics, sampler family, number of sampling steps, and classifier-free guidance setting within each table. No-CFG results in \Cref{tab:imagenet_no_cfg} should state the ODE/SDE sampler and step count. CFG results in \Cref{tab:imagenet_cfg} should state the guidance scale and any interval or scheduled guidance.
+We use a node of 4 GH200 GPUs and a batch size of 256. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+
+\paragraph{Classification.}
+We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
+
+\paragraph{Segmentation.}
+For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and train linear heads for 25 epochs.
+
+\paragraph{CKA.}
+For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from ImageNet $256\times256$.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{ImageNet training and sampling details.} Placeholder table for the exact configuration used by each main ImageNet table.}
+    \caption{\textbf{Hyperparameter setup for main experiments.}}
     \label{tab:appendix_imagenet_protocol}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{lcccccc}
+    \scriptsize
+    \setlength{\tabcolsep}{5pt}
+    \begin{tabular}{lcccc}
         \toprule
-        Table & Backbone & Iter. / epochs & Batch & Sampler & Steps & CFG \\
+        & Table 1 (SiT-B) & Table 1 (SiT-L) & Table 1 (SiT-XL) & Table 2 \\
         \midrule
-        \Cref{tab:imagenet_no_cfg} & \texttt{B/2}, \texttt{L/2}, \texttt{XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & Heun / Euler & \textbf{[TBD]} & -- \\
-        \Cref{tab:imagenet_cfg} & \texttt{XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Ablations & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \multicolumn{5}{l}{\textbf{Architecture}} \\
+        Input dim. & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ \\
+        Num. layers & 12 & 24 & 28 & 28 \\
+        Hidden dim. & 768 & 1024 & 1152 & 1152 \\
+        Num. heads & 12 & 16 & 16 & 16 \\
+        \midrule
+        \multicolumn{5}{l}{\textbf{LayerSync}} \\
+        $\lambda$ & 0.3 & 0.2 & 0.2 & 0.2 \\
+        Syncing layers & (4,7) & (8,18) & (8,16) & (8,16) \\
+        $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. & cos. sim. \\
+        \midrule
+        \multicolumn{5}{l}{\textbf{Optimization}} \\
+        Batch size & 256 & 256 & 256 & 256 \\
+        Optimizer & AdamW & AdamW & AdamW & AdamW \\
+        lr & 0.0001 & 0.0001 & 0.0001 & 0.0001 \\
+        \midrule
+        \multicolumn{5}{l}{\textbf{Interpolants}} \\
+        $\alpha_t$ & $t$ & $t$ & $t$ & $t$ \\
+        $\sigma_t$ & $1-t$ & $1-t$ & $1-t$ & $1-t$ \\
+        Training objective & v-prediction & v-prediction & v-prediction & v-prediction \\
+        Sampler & ODE Heun & ODE Heun & ODE Heun & SDE Euler--Maruyama \\
+        Sampling steps & 250 & 250 & 250 & 250 \\
+        Guidance & -- & -- & -- & 1.37 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\subsection{Baseline Descriptions and Parameter Matching}
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Hyperparameter setup for figures and ablation experiments.}}
+    \label{tab:appendix_ablation_protocol}
+    \scriptsize
+    \setlength{\tabcolsep}{5pt}
+    \begin{tabular}{lccc}
+        \toprule
+        & Figure 3 (SiT-XL) & Table 6 (SiT-XL and SiT-B) & Table 7 (SiT-B) \\
+        \midrule
+        \multicolumn{4}{l}{\textbf{Architecture}} \\
+        Input dim. & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ \\
+        Num. layers & 28 & 28 / 12 & 12 \\
+        Hidden dim. & 1152 & 1152 / 768 & 768 \\
+        Num. heads & 16 & 16 / 12 & 12 \\
+        \midrule
+        \multicolumn{4}{l}{\textbf{LayerSync}} \\
+        $\lambda$ & 0.2 & 0.3 & -- \\
+        Alignment depth & (8,16) & -- & (2,8) \\
+        $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. \\
+        \midrule
+        \multicolumn{4}{l}{\textbf{Optimization}} \\
+        Training iteration & 400K & 400K & 400K \\
+        Batch size & 256 & 256 & 256 \\
+        Optimizer & AdamW & AdamW & AdamW \\
+        lr & 0.0001 & 0.0001 & 0.0001 \\
+        \midrule
+        \multicolumn{4}{l}{\textbf{Interpolants}} \\
+        $\alpha_t$ & $t$ & $t$ & $t$ \\
+        $\sigma_t$ & $1-t$ & $1-t$ & $1-t$ \\
+        Training objective & v-prediction & v-prediction & v-prediction \\
+        Sampler & ODE Heun & ODE Heun & ODE Heun \\
+        Sampling steps & 250 & 250 & 250 \\
+        Guidance & -- & -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Extended Related Work and Baseline Descriptions}
 \label{app:baseline_descriptions}
 
-For each baseline in the system-level ImageNet table, we report the source of the number, parameter count when available, training budget, sampler, CFG setting, and whether the result is reproduced or copied from the original paper. External-teacher methods also report whether teacher forward passes are included in the compute comparison.
+In what follows, we summarize the main baseline methods used in our evaluation:
 
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Baseline accounting protocol.} Placeholder table for documenting how each baseline in the main comparison is matched or sourced.}
-    \label{tab:appendix_baseline_accounting}
-    \scriptsize
-    \setlength{\tabcolsep}{2.5pt}
-    \begin{tabular}{lccccc}
-        \toprule
-        Family & Examples & Source & Param match & Budget match & Notes \\
-        \midrule
-        Pixel diffusion & ADM, VDM++, CDM & \textbf{[TBD]} & -- & -- & \textbf{[TBD]} \\
-        Autoregressive & VAR, D-JEPA & \textbf{[TBD]} & \textbf{[TBD]} & -- & \textbf{[TBD]} \\
-        Latent diffusion & LDM, U-ViT, DiT, SiT & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        External guidance & REPA, REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & teacher cost \\
-        Internal guidance & Dispersive, SRA, LayerSync & \textbf{[TBD]} & \checkmark & \checkmark & self-contained \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{ADM}~\citep{dhariwal2021diffusion} builds upon U-Net-based diffusion models by introducing classifier-guided sampling, allowing fine-grained control over the trade-off between generation quality and diversity.
+    \item \textbf{VDM++}~\citep{kingma2023understanding} proposes an adaptive noise schedule that adjusts dynamically during training, improving convergence and sample quality.
+    \item \textbf{Simple diffusion}~\citep{hoogeboom2023simple} simplifies both the noise schedule and architectural components, enabling high-resolution image generation with improved computational efficiency.
+    \item \textbf{CDM}~\citep{ho2022cascaded} introduces cascaded diffusion models that progressively refine images from low to high resolution using super-resolution stages, achieving better detail synthesis.
+    \item \textbf{LDM}~\citep{rombach2022ldm} trains diffusion models in a compressed latent space learned by a VAE, drastically reducing training cost while maintaining image fidelity.
+    \item \textbf{U-ViT}~\citep{bao2023all} combines ViT-based backbones with U-Net-style skip connections in the latent space, bridging the benefits of transformers and convolutional inductive biases.
+    \item \textbf{DiffiT}~\citep{hatamizadeh2024diffit} enhances transformer-based diffusion models using time-aware multi-head self-attention, boosting sample efficiency and reducing training time.
+    \item \textbf{MDTv2}~\citep{gao2023mdtv2} employs an asymmetric encoder-decoder transformer architecture with U-Net-inspired shortcuts in the encoder and dense skip connections in the decoder, improving generation quality and coherence.
+    \item \textbf{MaskDiT}~\citep{zheng2023fast} introduces masked modeling into diffusion transformers by training with an auxiliary mask reconstruction objective, leading to better efficiency and generalization.
+    \item \textbf{SD-DiT}~\citep{zhu2024sddit} builds on MaskDiT by incorporating a self-supervised discrimination objective using momentum encoding, enhancing the semantic richness of internal representations.
+    \item \textbf{DiT}~\citep{peebles2023scalable} proposes a pure transformer architecture for diffusion, using AdaLN-zero modules to stabilize training and scale to large model sizes efficiently.
+    \item \textbf{SiT}~\citep{ma2024sit} investigates the link between training efficiency and flow-based perspectives by transitioning from discrete-time diffusion to continuous flow matching, showing improved sample quality and convergence rates.
+    \item \textbf{D-JEPA}~\citep{chen2024jepa} integrates Joint-Embedding Predictive Architectures into generative modeling by reframing masked image modeling as a generalized next-token prediction task, using diffusion or flow-matching losses to model per-token probability distributions in a continuous space.
+    \item \textbf{VAR}~\citep{tian2024visual} redefines autoregressive image generation as a coarse-to-fine ``next-scale prediction'' process, diverging from standard raster-scan next-token prediction and allowing faster inference and scaling laws similar to large language models.
+    \item \textbf{SRA}~\citep{jiang2025sra} is an EMA-based method that enables diffusion transformers to enhance their own representation learning and generation quality by aligning latent outputs from earlier, noisier layers with those from later, cleaner layers, eliminating the need for external guidance models.
+\end{itemize}
 
 \subsection{SiT Architecture Details}
 \label{app:sit_architecture_details}
 
-We use the same SiT-style transformer stack as the internal-alignment baselines~\citep{ma2024sit,haghighi2026layersync}. \Cref{fig:appendix_sit_resync_architecture} shows the reference stack and where ReSync attaches its shared transition predictor.
+We use the same SiT-style transformer stack as the internal-alignment baselines~\citep{ma2024sit,haghighi2026layersync}. \Cref{fig:appendix_sit_realign_architecture} shows the reference stack and where ReAlign attaches its shared transition predictor.
 
 \begin{figure}[!htbp]
     \centering
@@ -252,26 +319,26 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
     \hfill
     \begin{subfigure}[t]{0.55\linewidth}
         \centering
-        \includegraphics[height=0.34\textheight,keepaspectratio]{figures/resync.png}
-        \caption{ReSync attaches a shared predictor to sampled source--target layers.}
+        \includegraphics[height=0.34\textheight,keepaspectratio]{figures/realign.png}
+        \caption{ReAlign attaches a shared predictor to sampled source--target layers.}
     \end{subfigure}
-    \caption{\textbf{SiT stack and ReSync attachment.} The backbone follows the same SiT block stack used by LayerSync~\citep{haghighi2026layersync}. ReSync keeps the stack unchanged and adds a training-time transition predictor between sampled depths.}
-    \label{fig:appendix_sit_resync_architecture}
+    \caption{\textbf{SiT stack and ReAlign attachment.} The backbone follows the same SiT block stack used by LayerSync~\citep{haghighi2026layersync}. ReAlign keeps the stack unchanged and adds a training-time transition predictor between sampled depths.}
+    \label{fig:appendix_sit_realign_architecture}
 \end{figure}
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{SiT backbone details.} Placeholder table for backbone architecture details used in the main ImageNet experiments.}
+    \caption{\textbf{SiT backbone details.} Number of transformer layers, hidden dimensionality, and attention heads for the SiT models used in our experiments.}
     \label{tab:appendix_sit_architecture}
-    \small
-    \setlength{\tabcolsep}{5pt}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{lccccc}
         \toprule
         Backbone & Layers & Hidden dim. & Heads & Patch size & Params \\
         \midrule
-        \texttt{SiT-B/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 130M \\
-        \texttt{SiT-L/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 458M \\
-        \texttt{SiT-XL/2} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & 2 & 675M \\
+        \texttt{SiT-B/2} & 12 & 768 & 12 & 2 & 130M \\
+        \texttt{SiT-L/2} & 24 & 1024 & 16 & 2 & 458M \\
+        \texttt{SiT-XL/2} & 28 & 1152 & 16 & 2 & 675M \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -279,11 +346,22 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
 \subsection{HumanML3D Setup}
 \label{app:humanml3d_details}
 
-HumanML3D contains text descriptions paired with 3D human-motion sequences~\citep{guo2022generating}. Following MDM~\citep{tevet2022mdm}, the baseline and ReSync runs use the same split, text encoder, motion representation, diffusion schedule, and evaluator. Because motion backbones are shallower than ImageNet SiT models, the selected transition pairs are reported explicitly.
+\paragraph{Task.}
+Given a sentence that describes a motion as a sequence of actions, the task is to generate a corresponding human motion. Each motion sequence consists of a series of human poses, where each pose is represented by 22 joints defined as 3D points in space.
+
+\paragraph{Dataset.}
+We rely on the HumanML3D dataset~\citep{guo2022generating}, which contains 44,970 motion annotations across 14,646 motion sequences from the AMASS~\citep{mahmood2019amass} and HumanAct12~\citep{guo2020action2motion} datasets, along with corresponding text descriptions. HumanML3D is widely used for text-conditional human motion generation. Motions in HumanML3D follow the SMPL skeleton structure~\citep{loper2015smpl} with 22 joints. Each pose $p$ in the motion sequence is represented by a vector of size 237,
+\[
+    (r^a,\dot r^x,\dot r^z,r^y,j^p,j^v,j^r,c^f),
+\]
+where $r^a\in\mathbb{R}$ is the root (pelvis joint) angular velocity along the Y-axis; $(\dot r^x,\dot r^z)\in\mathbb{R}^2$ are the root linear velocities in the XZ-plane; $r^y\in\mathbb{R}$ is the root height; $j^p\in\mathbb{R}^{3J}$, $j^v\in\mathbb{R}^{3J}$, and $j^r\in\mathbb{R}^{6J}$ are the local joint positions, velocities, and rotations in the root space, with $J$ indicating the number of joints; and $c^f\in\mathbb{R}^4$ represents foot-ground contact features.
+
+\paragraph{Implementation details.}
+We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iterations using a H100 GPU and align block 3 with block 6.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{HumanML3D setup.} Placeholder table for the exact motion-generation configuration.}
+    \caption{\textbf{HumanML3D setup.} Motion-generation configuration used by the baseline and ReAlign variant.}
     \label{tab:appendix_humanml3d_setup}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -291,8 +369,8 @@ HumanML3D contains text descriptions paired with 3D human-motion sequences~\cite
         \toprule
         Method & Backbone layers & Iter. & Transition pairs & Evaluator & Metrics \\
         \midrule
-        MDM & \textbf{[TBD]} & 600K & -- & \textbf{[TBD]} & FID, R-Precision \\
-        MDM + ReSync & \textbf{[TBD]} & 600K & \textbf{[TBD]} & \textbf{[TBD]} & FID, R-Precision \\
+        MDM & 6 & 600K & -- & Standard MDM & FID, R-Precision \\
+        MDM + ReAlign & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -316,8 +394,8 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main artifact & Quantity & Protocol & Citation \\
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
-        \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline and ReSync. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:resync_ablation} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms change. & \citep{heusel2017gans} \\
+        \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline and ReAlign. & \citep{guo2022generating,tevet2022mdm} \\
+        \Cref{tab:realign_ablation} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -357,9 +435,9 @@ d\left(g_\psi(A_a^t;a,b,t),\operatorname{sg}(A_b^t)\right)
 where $d$ is tokenwise cosine distance unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
 
 \section{Additional Ablations and Scaling}
-\label{app:resync_ablation_protocols}
+\label{app:realign_ablation_protocols}
 
-The main ablation tables isolate the components needed for ReSync. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper.
+The main ablation tables isolate the components needed for ReAlign. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper.
 
 \subsection{Appendix-Only Control Map}
 
@@ -380,7 +458,7 @@ The following controls support the main ablation story without becoming separate
         Timestep PCA & Visualize how representations and predictor outputs evolve across denoising time & PCA maps, timestep panels \\
         Predictor output vs. target layer & Check whether predicted states recover target-layer structure & PCA, cosine heatmap, CKA \\
         Architecture and strategy config & Document the final predictor architecture and pair-selection rule & ConvNeXt-style predictor / selected schedule \\
-        Lambda tuning & Set the ReSync weight without changing the main recipe & FID, prediction error, stability \\
+        Lambda tuning & Set the ReAlign weight without changing the main recipe & FID, prediction error, stability \\
         Max-gap and pair schedule & Separate max layer gap from timestep schedule effects & FID, $\mathcal{L}_{\mathrm{pred}}$ \\
         Qualitative samples & Show matched-seed visual differences & Image grids \\
         \bottomrule
@@ -456,18 +534,18 @@ We compare small and large predictors, pair-specific projectors, and matched-lea
 
 \subsection{Lambda, Max-Gap, and Schedule Controls}
 
-These controls tune the final recipe without changing the main ReSync mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
+These controls tune the final recipe without changing the main ReAlign mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Lambda and schedule controls.} Placeholder for tuning the ReSync weight, maximum layer gap, and pair/timestep schedule.}
+    \caption{\textbf{Lambda and schedule controls.} Placeholder for tuning the ReAlign weight, maximum layer gap, and pair/timestep schedule.}
     \label{tab:appendix_lambda_schedule_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \renewcommand{\arraystretch}{0.9}
     \begin{tabular*}{0.96\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
         \toprule
-        Setting & $\lambda_{\mathrm{sync}}$ & Max gap & Pair / timestep schedule & FID $\downarrow$ \\
+        Setting & $\lambda_{\mathrm{align}}$ & Max gap & Pair / timestep schedule & FID $\downarrow$ \\
         \midrule
         Low weight & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
         Default & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
@@ -482,7 +560,7 @@ These controls tune the final recipe without changing the main ReSync mechanism.
 \subsection{Scaling Across Backbones and Model Sizes}
 \label{app:scaling_experiments}
 
-Scaling runs test whether the same ReSync recipe transfers across \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} backbones. The comparison uses matched training settings within each size.
+Scaling runs test whether the same ReAlign recipe transfers across \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} backbones. The comparison uses matched training settings within each size.
 
 \begin{figure}[!htbp]
     \centering
@@ -490,26 +568,26 @@ Scaling runs test whether the same ReSync recipe transfers across \texttt{B/2}, 
     \begin{minipage}[c][0.22\textheight][c]{0.88\linewidth}
         \centering
         \textbf{[PLACEHOLDER: training curves]}\\[0.5em]
-        Plot baseline vs. ReSync across training iterations. Suggested axes: FID, validation loss, or representation metric.
+        Plot baseline vs. ReAlign across training iterations. Suggested axes: FID, validation loss, or representation metric.
     \end{minipage}}
-    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline and ReSync-augmented backbones.}
+    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline and ReAlign-augmented backbones.}
     \label{fig:appendix_training_curves}
 \end{figure}
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{ReSync across model sizes.} Placeholder table for comparing baseline and ReSync variants under matched training settings.}
+    \caption{\textbf{ReAlign across model sizes.} Placeholder table for comparing baseline and ReAlign variants under matched training settings.}
     \label{tab:appendix_model_scaling}
     \begin{tabular}{lcccc}
         \toprule
         Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
         \midrule
         \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{B/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{B/2} & \textbf{[TBD]} & Baseline + ReAlign & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{L/2} & \textbf{[TBD]} & Baseline + ReAlign & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline + ReSync & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{XL/2} & \textbf{[TBD]} & Baseline + ReAlign & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -517,7 +595,7 @@ Scaling runs test whether the same ReSync recipe transfers across \texttt{B/2}, 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
 
-This section collects the diagnostics behind \Cref{sec:representation_analysis} and the projection-as-transition probe in \Cref{tab:layersync_projector_probe}. The main paper reports the compact version; the appendix gives protocols, controls, and additional views.
+This section collects the diagnostics behind \Cref{sec:representation_analysis} and the shared-structure motivation in \Cref{fig:projection_layout_observation}. The main paper reports the compact version; the appendix gives protocols, controls, and additional views.
 
 \subsection{Diagnostic Protocol}
 \label{app:diagnostic_protocol}
@@ -528,7 +606,7 @@ Diagnostics use the same checkpoints, dataset split, resolution, VAE, and layer 
     \item LayerSync-style direct cosine alignment;
     \item LayerSync-style alignment with a small projection head;
     \item pair-specific projectors for selected layer pairs;
-    \item ReSync with a shared conditional transition predictor.
+    \item ReAlign with a shared conditional transition predictor.
 \end{itemize}
 For each method, report layer pairs, timestep ranges, projection or predictor architecture, loss weights, and whether an EMA target is used. Source groups are defined by block index for a backbone with $L$ blocks: $\mathcal{S}_{\mathrm{early}}=\{1,\dots,\lfloor0.2L\rfloor\}$, $\mathcal{S}_{\mathrm{mid}}=\{\lfloor0.4L\rfloor,\dots,\lfloor0.6L\rfloor\}$, and $\mathcal{S}_{\mathrm{late}}=\{\lceil0.8L\rceil,\dots,L\}$.
 
@@ -565,7 +643,7 @@ This diagnostic measures how representation statistics change across depth. We r
         \centering
         \textbf{[PLACEHOLDER: layerwise statistical mismatch]}\\[0.5em]
         Panels: RMS activation, variance, stable rank, cosine similarity, and CKA.\\
-        Axes: layer index and layer distance; curves for baseline, LayerSync variants, and ReSync.
+        Axes: layer index and layer distance; curves for baseline, LayerSync variants, and ReAlign.
     \end{minipage}}
     \caption{\textbf{Layerwise statistical mismatch.} Placeholder for measuring how representation statistics change across depth and timestep.}
     \label{fig:appendix_layerwise_statistics}
@@ -591,7 +669,7 @@ This ablation tests whether projection heads extract useful recoverable signal o
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Near vs. far layer alignment.} Placeholder for evaluating whether projection heads and ReSync become more important as the layer gap increases.}
+    \caption{\textbf{Near vs. far layer alignment.} Placeholder for evaluating whether projection heads and ReAlign become more important as the layer gap increases.}
     \label{tab:appendix_near_far_alignment}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccccc}
@@ -603,8 +681,8 @@ This ablation tests whether projection heads extract useful recoverable signal o
         Projection-augmented alignment & Near & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Projection-augmented alignment & Far & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Pair-specific projector & Far & Per-pair projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReAlign & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReAlign & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -634,7 +712,7 @@ This diagnostic distinguishes a shared transition interface from a collection of
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether ReSync generalizes across unseen layer pairs better than pair-specific projectors.}
+    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether ReAlign generalizes across unseen layer pairs better than pair-specific projectors.}
     \label{tab:appendix_transition_generalization}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccc}
@@ -643,7 +721,7 @@ This diagnostic distinguishes a shared transition interface from a collection of
         \midrule
         Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        ReSync shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        ReAlign shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -651,7 +729,7 @@ This diagnostic distinguishes a shared transition interface from a collection of
 \section{Qualitative Examples}
 \label{app:qualitative_examples}
 
-Qualitative examples use matched noise, sampler, guidance, and checkpoints across baseline, Dispersive, LayerSync-style alignment, and ReSync. They supplement the quantitative metrics by showing visible failure modes and sample-level differences under the same random seed.
+Qualitative examples use matched noise, sampler, guidance, and checkpoints across baseline, Dispersive, LayerSync-style alignment, and ReAlign. They supplement the quantitative metrics by showing visible failure modes and sample-level differences under the same random seed.
 
 \begin{figure}[!htbp]
     \centering
@@ -659,7 +737,7 @@ Qualitative examples use matched noise, sampler, guidance, and checkpoints acros
     \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
         \centering
         \textbf{[PLACEHOLDER: qualitative ImageNet samples]}\\[0.5em]
-        Rows: baseline, Dispersive, LayerSync-style alignment, ReSync.\\
+        Rows: baseline, Dispersive, LayerSync-style alignment, ReAlign.\\
         Columns: matched class labels and identical initial noise.
     \end{minipage}}
     \caption{\textbf{Qualitative ImageNet comparison.} Placeholder for matched-seed samples used as supplementary visual evidence.}

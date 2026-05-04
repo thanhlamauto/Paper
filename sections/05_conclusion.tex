@@ -1,7 +1,7 @@
 \section{Limitations and Future Work}
 
-This paper keeps ReSync focused on training-time internal alignment under standard sampling. Component and sampling ablations use the smaller backbone, and the final configuration is evaluated across larger backbones to check transfer across depth. The learned transition interface leaves two natural directions: using cross-depth states during sampling, and modeling transitions jointly over layer depth and denoising time.
+This paper keeps ReAlign focused on training-time internal alignment under standard sampling. Component and sampling ablations use the smaller backbone, and the final configuration is evaluated across larger backbones to check transfer across depth. The learned transition interface leaves two natural directions: using cross-depth states during sampling, and modeling transitions jointly over layer depth and denoising time.
 
 \section{Conclusion}
 
-We introduced ReSync, a self-contained training objective for layer-aware self-alignment in Diffusion Transformers. ReSync replaces fixed raw-state matching with a shared predictor that maps earlier activations into later-layer coordinates across sampled layer pairs. This simple interface reduces reliance on hand-picked alignments, improves generation under matched settings, and produces stronger intermediate representations without changing the standard sampler.
+We introduced ReAlign, a self-contained training objective for layer-aware self-alignment in Diffusion Transformers. ReAlign replaces fixed raw-state matching with a shared predictor that maps earlier activations into later-layer coordinates across sampled layer pairs. This simple interface reduces reliance on hand-picked alignments, improves generation under matched settings, and produces stronger intermediate representations without changing the standard sampler.
