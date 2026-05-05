@@ -1,4 +1,4 @@
-\section{Method}
+\section{Methodology}
 \label{sec:method}
 
 \subsection{Preliminaries and Internal Activations}
@@ -8,7 +8,7 @@ We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}
 x_t=\alpha_t x_0+\sigma_t\epsilon ,
 \label{eq:stochastic_interpolant}
 \end{equation}
-with target velocity
+with the target velocity
 \[
 u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon .
 \]
@@ -30,7 +30,7 @@ SRA observes that diffusion-transformer representations become more structured a
 
 \begin{figure}[!htbp]
     \centering
-    \begin{minipage}{0.67\textwidth}
+    \begin{minipage}{1\textwidth}
         \centering
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
         \includegraphics[width=\linewidth]{figures/dit_pca_feature_maps.png}
@@ -66,7 +66,7 @@ d\left(
 \right],
 \label{eq:align_loss}
 \end{equation}
-where $d(\cdot,\cdot)$ is tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
+where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
 
 \subsection{Transition Consistency}
 
@@ -144,7 +144,7 @@ The LARA regularizer assigns a separate weight to each component:
 \lambda_{\mathrm{div}}\mathcal{L}_{\mathrm{div}}(\theta).
 \label{eq:realign_loss}
 \end{equation}
-The final training objective is
+The final training objective: 
 \begin{equation}
 \mathcal{L}(\theta,\psi)
 =

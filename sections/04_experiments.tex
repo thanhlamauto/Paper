@@ -1,4 +1,4 @@
-\section{Experiments}
+\section{Empirical Experiments}
 \label{sec:experiments}
 
 We evaluate the two claims made in the introduction: LARA should improve generation, and its internal representations should become stronger. The main experiments are organized around two questions:
@@ -36,37 +36,37 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \renewcommand{\arraystretch}{0.78}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
             \toprule
-            Model & \#Params & Epochs & FID $\downarrow$ \\
+            Model & \#Params & Iter & FID $\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 80 & \textbf{35.17} \\
-            \quad + Dispersive & 130M & 80 & \textbf{31.27} \\
-            \quad + SRA & 130M & 80 & \textbf{30.84} \\
-            \quad + LayerSync & 130M & 80 & \textbf{28.63} \\
-            \quad + ReSync & 130M & 80 & \textbf{27.31} \\
+            \texttt{SiT-B/2} & 130M & 400K & \textbf{35.17} \\
+            \quad + Dispersive & 130M & 400K & \textbf{31.27} \\
+            \quad + SRA & 130M & 400K & \textbf{30.84} \\
+            \quad + LayerSync & 130M & 400K & \textbf{28.63} \\
+            \quad + ReSync & 130M & 400K & \textbf{25.01} \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 80 & \textbf{20.55} \\
-            \quad + Dispersive & 458M & 80 & \textbf{16.27} \\
-            \quad + SRA & 458M & 80 & \textbf{15.50} \\
-            \quad + LayerSync & 458M & 80 & \textbf{14.21} \\
-            \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-L/2} & 458M & 400K & \textbf{20.55} \\
+            \quad + Dispersive & 458M & 400K & \textbf{16.27} \\
+            \quad + SRA & 458M & 400K & \textbf{15.50} \\
+            \quad + LayerSync & 458M & 400K & \textbf{14.21} \\
+            \quad + ReSync & 458M & 400K & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 80 & \textbf{17.32} \\
-            \quad + Dispersive & 675M & 80 & \textbf{15.35} \\
-            \quad + SRA & 675M & 80 & \textbf{15.26} \\
-            \quad + LayerSync & 675M & 80 & \textbf{11.06} \\
-            \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 400K & \textbf{17.32} \\
+            \quad + Dispersive & 675M & 400K & \textbf{15.35} \\
+            \quad + SRA & 675M & 400K & \textbf{15.26} \\
+            \quad + LayerSync & 675M & 400K & \textbf{11.06} \\
+            \quad + ReSync & 675M & 400K & \textbf{9.75} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 200 & \textbf{12.03} \\
-            \quad + Dispersive & 675M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 200 & \textbf{10.59} \\
-            \quad + LayerSync & 675M & 200 & \textbf{8.12} \\
-            \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 1M & \textbf{12.03} \\
+            \quad + Dispersive & 675M & 1M & \textbf{10.62} \\
+            \quad + SRA & 675M & 1M & \textbf{10.59} \\
+            \quad + LayerSync & 675M & 1M & \textbf{8.12} \\
+            \quad + ReSync & 675M & 1M & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 400 & \textbf{8.85} \\
-            \quad + Dispersive & 675M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 400 & \textbf{7.97} \\
-            \quad + LayerSync & 675M & 400 & \textbf{6.80} \\
-            \quad + ReSync & 675M & 400 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 2M & \textbf{8.85} \\
+            \quad + Dispersive & 675M & 2M & \textbf{[TBD]} \\
+            \quad + SRA & 675M & 2M & \textbf{7.97} \\
+            \quad + LayerSync & 675M & 2M & \textbf{6.80} \\
+            \quad + ReSync & 675M & 2M & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -76,12 +76,12 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
-        \scrsubmisiptsize
+        \scriptsize
         \setlength{\tabcolsep}{1.8pt}
         \renewcommand{\arraystretch}{0.80}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
             \toprule
-            Model & Epochs & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            Model & Iter & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Pixel diffusion}} \\
             ADM-U & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
@@ -105,7 +105,6 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             DiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             SiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + REPA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
             \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
