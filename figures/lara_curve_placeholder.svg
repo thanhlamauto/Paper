@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+  <rect width="900" height="620" fill="white"/>
+  <text x="450" y="46" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">ImageNet 256x256</text>
+  <line x1="105" y1="500" x2="820" y2="500" stroke="#222" stroke-width="4"/>
+  <line x1="105" y1="85" x2="105" y2="500" stroke="#222" stroke-width="4"/>
+  <g stroke="#e5e5e5" stroke-width="2">
+    <line x1="105" y1="400" x2="820" y2="400"/>
+    <line x1="105" y1="300" x2="820" y2="300"/>
+    <line x1="105" y1="200" x2="820" y2="200"/>
+    <line x1="105" y1="100" x2="820" y2="100"/>
+  </g>
+  <text x="36" y="310" transform="rotate(-90 36 310)" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">FID-50K</text>
+  <text x="462" y="585" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Training Iterations</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="22" text-anchor="end">
+    <text x="92" y="507">5</text>
+    <text x="92" y="407">10</text>
+    <text x="92" y="307">20</text>
+    <text x="92" y="207">50</text>
+    <text x="92" y="107">90</text>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="20" text-anchor="middle">
+    <text x="105" y="535" transform="rotate(-90 105 535)">50K</text>
+    <text x="225" y="535" transform="rotate(-90 225 535)">100K</text>
+    <text x="345" y="535" transform="rotate(-90 345 535)">200K</text>
+    <text x="465" y="535" transform="rotate(-90 465 535)">400K</text>
+    <text x="585" y="535" transform="rotate(-90 585 535)">800K</text>
+    <text x="705" y="535" transform="rotate(-90 705 535)">2M</text>
+    <text x="805" y="535" transform="rotate(-90 805 535)">4M</text>
+  </g>
+  <polyline points="105,110 225,215 345,275 465,340 585,390 705,420 805,430" fill="none" stroke="#1f77b4" stroke-width="5"/>
+  <polyline points="105,145 225,260 345,330 465,390 585,420 705,445 805,455" fill="none" stroke="#d62728" stroke-width="5"/>
+  <g fill="#1f77b4">
+    <circle cx="105" cy="110" r="10"/><circle cx="225" cy="215" r="10"/><circle cx="345" cy="275" r="10"/><circle cx="465" cy="340" r="10"/><circle cx="585" cy="390" r="10"/><circle cx="705" cy="420" r="10"/><circle cx="805" cy="430" r="10"/>
+  </g>
+  <g fill="#d62728">
+    <circle cx="105" cy="145" r="10"/><circle cx="225" cy="260" r="10"/><circle cx="345" cy="330" r="10"/><circle cx="465" cy="390" r="10"/><circle cx="585" cy="420" r="10"/><circle cx="705" cy="445" r="10"/><circle cx="805" cy="455" r="10"/>
+  </g>
+  <rect x="395" y="88" width="360" height="92" fill="white" stroke="#d0d0d0" stroke-width="2"/>
+  <line x1="420" y1="120" x2="490" y2="120" stroke="#1f77b4" stroke-width="5"/>
+  <text x="510" y="128" font-family="Arial, Helvetica, sans-serif" font-size="24">SiT-XL/2</text>
+  <line x1="420" y1="155" x2="490" y2="155" stroke="#d62728" stroke-width="5"/>
+  <text x="510" y="163" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">SiT-XL/2 + LARA</text>
+  <text x="600" y="425" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">[TBD] faster</text>
+</svg>

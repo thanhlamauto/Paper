@@ -42,31 +42,31 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + Dispersive & 130M & 400K & \textbf{31.27} \\
             \quad + SRA & 130M & 400K & \textbf{30.84} \\
             \quad + LayerSync & 130M & 400K & \textbf{28.63} \\
-            \quad + ReSync & 130M & 400K & \textbf{25.01} \\
+            \quad + LARA & 130M & 400K & \textbf{25.01} \\
             \midrule
             \texttt{SiT-L/2} & 458M & 400K & \textbf{20.55} \\
             \quad + Dispersive & 458M & 400K & \textbf{16.27} \\
             \quad + SRA & 458M & 400K & \textbf{15.50} \\
             \quad + LayerSync & 458M & 400K & \textbf{14.21} \\
-            \quad + ReSync & 458M & 400K & \textbf{[TBD]} \\
+            \quad + LARA & 458M & 400K & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400K & \textbf{17.32} \\
             \quad + Dispersive & 675M & 400K & \textbf{15.35} \\
             \quad + SRA & 675M & 400K & \textbf{15.26} \\
             \quad + LayerSync & 675M & 400K & \textbf{11.06} \\
-            \quad + ReSync & 675M & 400K & \textbf{9.75} \\
+            \quad + LARA & 675M & 400K & \textbf{9.75} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 1M & \textbf{12.03} \\
             \quad + Dispersive & 675M & 1M & \textbf{10.62} \\
             \quad + SRA & 675M & 1M & \textbf{10.59} \\
             \quad + LayerSync & 675M & 1M & \textbf{8.12} \\
-            \quad + ReSync & 675M & 1M & \textbf{[TBD]} \\
+            \quad + LARA & 675M & 1M & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 2M & \textbf{8.85} \\
             \quad + Dispersive & 675M & 2M & \textbf{[TBD]} \\
             \quad + SRA & 675M & 2M & \textbf{7.97} \\
             \quad + LayerSync & 675M & 2M & \textbf{6.80} \\
-            \quad + ReSync & 675M & 2M & \textbf{[TBD]} \\
+            \quad + LARA & 675M & 2M & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -81,23 +81,25 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \renewcommand{\arraystretch}{0.80}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
             \toprule
-            Model & Iter & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            Model & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Pixel diffusion}} \\
-            ADM-U & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            VDM++ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
-            Simple diffusion & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
-            CDM & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+            ADM-U & 2.00M & 3.94 & 186.7 & 0.82 & 0.52 \\
+            VDM++ & 2.80M & 2.40 & 225.3 & -- & -- \\
+            Simple diffusion & 4.00M & 2.77 & 211.8 & -- & -- \\
+            CDM & 10.80M & 4.88 & 158.7 & -- & -- \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
-            VAR-d20 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            D-JEPA-L & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            VAR-d20 & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
+            D-JEPA-L & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
-            U-ViT-H/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
+            DiffiT$^\ast$ & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
+            MDTv2-XL/2$^\ast$ & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             MaskDiT & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
@@ -107,7 +109,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + REPA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
             \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + LARA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -152,7 +154,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Generation metrics show the final effect of training. LARA, however, is meant to act inside the depth hierarchy, so we also inspect hidden states directly. We compare matched-FID checkpoints: an \texttt{SiT-XL/2} trained with LARA for \textbf{[TBD]} epochs and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} epochs. This keeps sample quality comparable while exposing how each model organizes intermediate features.
+Generation metrics show the final effect of training. LARA, however, is designed to act inside the depth hierarchy, so we also inspect hidden states directly. We compare matched-FID checkpoints: an \texttt{SiT-XL/2} trained with LARA for \textbf{[TBD]} iterations and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} iterations. Matching generation quality makes the comparison more direct: differences in the probes reflect how the regularizer changes the learned representations, rather than simply reflecting a stronger final generator.
 
 We probe every backbone block with three layerwise diagnostics: linear classification on Tiny ImageNet~\citep{deng2009imagenet}, linear segmentation on PASCAL VOC~\citep{everingham2010pascal}, and Centered Kernel Alignment (CKA) to DINOv2 features~\citep{kornblith2019similarity,oquab2023dinov2}. The two linear probes measure how much semantic and spatial information is exposed by each layer, while CKA measures whether the hidden states organize visual structure similarly to a strong visual representation. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
 
@@ -170,9 +172,9 @@ We probe every backbone block with three layerwise diagnostics: linear classific
     \label{fig:representation_analysis}
 \end{figure}
 
-\Cref{fig:representation_analysis} summarizes the layerwise probes. Three patterns are most relevant. \textit{First}, LARA improves weak and middle blocks: averaged over these layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and DINOv2 CKA improves by \textbf{[TBD]\%}. \textit{Second}, the best LARA layer is stronger than the best baseline layer, with peak linear accuracy improving by \textbf{[TBD]\%}. \textit{Third}, the gains spread across depth instead of concentrating at one selected block.
+\Cref{fig:representation_analysis} summarizes the layerwise probes and suggests two main trends. First, LARA distributes useful features more evenly across depth: averaged over the evaluated layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and CKA alignment with DINOv2 improves by \textbf{[TBD]\%}. This is consistent with the role of the transition predictor: supervision is no longer concentrated around one selected pair, but reused across many source--target depths. Second, the best layer also improves, with peak linear accuracy increasing by \textbf{[TBD]\%}. This is less automatic than raising weak layers toward a fixed reference. It indicates that shared transition learning can reorganize the feature hierarchy, producing a stronger representation rather than merely copying one high-performing block.
 
-This pattern is the internal trace expected from a shared transition predictor. LARA creates useful interfaces across depth; weak layers expose cleaner signals, middle layers become better targets, and the final model benefits without external teacher supervision.
+This pattern is the internal trace expected from LARA. Weak layers expose cleaner signals, middle layers become stronger targets, and the gains spread across the hierarchy instead of collapsing around a hand-picked reference layer.
 
 \FloatBarrier
 

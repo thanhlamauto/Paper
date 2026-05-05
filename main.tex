@@ -89,7 +89,7 @@
 \input{sections/00_abstract}
 \end{abstract}
 
-\vspace{-0.75em}
+\vspace{-0.6em}
 \begin{center}
   \centering
 
@@ -97,35 +97,44 @@
     \makebox[\linewidth][c]{%
       \includegraphics[
         width=\linewidth,
-        height=0.18\textheight,
+        height=0.15\textheight,
         keepaspectratio
       ]{#1}%
     }%
   }
 
-  \begin{minipage}[t]{0.46\linewidth}
+  \begin{minipage}[t]{0.32\linewidth}
     \centering
-    \panelimg{figures/sra.png}
+    \panelimg{figures/lara_group3.png}
     
     \vspace{0.25em}
-    {\small\textbf{Projection as adapter}}
+    {\small\textbf{(a) Fixed internal alignment}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.46\linewidth}
+  \begin{minipage}[t]{0.32\linewidth}
     \centering
-    \panelimg{figures/realign.png}
+    \panelimg{figures/lara_group4.png}
     
     \vspace{0.25em}
-    {\small\textbf{Conditional transition prediction}}
+    {\small\textbf{(b) Layer-aware transition}}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.32\linewidth}
+    \centering
+    \panelimg{figures/lara_curve_placeholder.png}
+    
+    \vspace{0.25em}
+    {\small\textbf{(c) Training curve}}
   \end{minipage}
 
   \vspace{0.6em}
-  \captionof{figure}{\textbf{Projection-as-transition motivation.}
-  \textbf{Left:} Projection-based alignment maps a source representation to a chosen target space.
-  \textbf{Right:} LARA turns this interface into a shared conditional transition predictor that supports many internal layer pairs.}
+  \captionof{figure}{\textbf{Layer-aware representation alignment.}
+  \textbf{Left:} Fixed internal alignment ties supervision to selected layer pairs.
+  \textbf{Middle:} LARA uses a shared layer-aware transition predictor across source--target depths.
+  \textbf{Right:} Placeholder for matched-budget FID curves.}
   \label{fig:projection_as_transition}
 \end{center}
-\vspace{-0.75em}
+\vspace{-0.6em}
 
 \clearpage
 
