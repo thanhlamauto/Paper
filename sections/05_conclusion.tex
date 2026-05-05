@@ -1,7 +1,5 @@
-\section{Limitations and Future Work}
+\section{Conclusion and Discussion}
 
-This paper keeps ReAlign focused on training-time internal alignment under standard sampling. Component and sampling ablations use the smaller backbone, and the final configuration is evaluated across larger backbones to check transfer across depth. The learned transition interface leaves two natural directions: using cross-depth states during sampling, and modeling transitions jointly over layer depth and denoising time.
+We introduced LARA, a self-contained framework for layer-aware representation alignment in Diffusion Transformers. Instead of directly matching a manually selected pair of hidden states, LARA learns a shared transition predictor that maps activations across arbitrary layer pairs while adapting to source and target depth. This turns internal supervision into a reusable alignment signal and improves both generation quality and intermediate representation quality with small training overhead.
 
-\section{Conclusion}
-
-We introduced ReAlign, a self-contained training objective for layer-aware self-alignment in Diffusion Transformers. ReAlign replaces fixed raw-state matching with a shared predictor that maps earlier activations into later-layer coordinates across sampled layer pairs. This simple interface reduces reliance on hand-picked alignments, improves generation under matched settings, and produces stronger intermediate representations without changing the standard sampler.
+Our study focuses on training-time alignment under standard sampling. Component and sampling ablations are run on the smaller backbone, while the final recipe is validated on larger settings to check transfer across depth and scale. The transition interface also suggests a broader use of internal states as controllable computation points, including lightweight distillation or inference-time interfaces, which we leave for future work.
