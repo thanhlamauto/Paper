@@ -38,25 +38,25 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \toprule
             Model & \#Params & Epochs & FID $\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 80 & \textbf{25.78} \\
-            \quad + Dispersive & 130M & 80 & \textbf{25.23} \\
+            \texttt{SiT-B/2} & 130M & 80 & \textbf{35.17} \\
+            \quad + Dispersive & 130M & 80 & \textbf{32.78} \\
             \quad + SRA & 130M & 80 & \textbf{25.08} \\
             \quad + LayerSync & 130M & 80 & \textbf{21.32} \\
-            \quad + ReSync & 130M & 80 & \textbf{18.88} \\
+            \quad + ReSync & 130M & 80 & \textbf{18.25} \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 458M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 458M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-L/2} & 458M & 80 & \textbf{20.} \\
+            \quad + SRA & 458M & 80 & \textbf{19.72} \\
+            \quad + LayerSync & 458M & 80 & \textbf{11.23} \\
             \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 80 & \textbf{11.88} \\
+            \quad + SRA & 675M & 80 & \textbf{11.65} \\
+            \quad + LayerSync & 675M & 80 & \textbf{7.57} \\
             \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 200 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 200 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 200 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 200 & \textbf{8.36} \\
+            \quad + SRA & 675M & 200 & \textbf{8.11} \\
+            \quad + LayerSync & 675M & 200 & \textbf{7.82} \\
             \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400 & \textbf{[TBD]} \\
@@ -72,7 +72,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
-        \scriptsize
+        \scrsubmisiptsize
         \setlength{\tabcolsep}{1.8pt}
         \renewcommand{\arraystretch}{0.80}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
@@ -177,7 +177,7 @@ We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Objective ablation on SiT-B/2.} All rows use the same TPU training budget; FID is computed with $10\mathrm{K}$ samples. ``FM path'' denotes feeding the predicted target state to the remaining blocks inside the ordinary flow-matching loss for a small batch fraction.}
+    \caption{\textbf{Objective ablation on SiT-B/2.} All rows use the same TPU training budget; Training is done with batch size 128 and FID is computed with $10\mathrm{K}$ samples. ``FM path'' denotes feeding the predicted target state to the remaining blocks inside the ordinary flow-matching loss for a small batch fraction.}
     \label{tab:resync_ablation}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -186,12 +186,12 @@ We conduct ablations on the \texttt{B/2} backbone with batch size $128$ and $400
         \toprule
         Variant & $\mathcal{L}_{\mathrm{pred}}$ & $\mathcal{L}_{\mathrm{cons}}$ & FM path & $\cos^2$ & FID-10K $\downarrow$ \\
         \midrule
-        Vanilla & -- & -- & -- & -- & \textbf{[TBD]} \\
-        LayerSync & -- & -- & -- & -- & \textbf{[TBD]} \\
-        Cosine squared only & -- & -- & -- & \checkmark & \textbf{[TBD]} \\
-        ReSync pred. & \checkmark & -- & -- & -- & \textbf{[TBD]} \\
-        ReSync pred. + cons. & \checkmark & \checkmark & -- & -- & \textbf{[TBD]} \\
-        ReSync pred. + cons. + FM path & \checkmark & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
+        Vanilla & -- & -- & -- & -- & \textbf{52.61} \\
+        LayerSync & -- & -- & -- & -- & \textbf{44.17} \\
+        Cosine squared only & -- & -- & -- & \checkmark & \textbf{44.44} \\
+        ReSync pred. & \checkmark & -- & -- & -- & \textbf{41.79} \\
+        ReSync pred. + cons. & \checkmark & \checkmark & -- & -- & \textbf{40.19} \\
+        ReSync pred. + cons. + FM path & \checkmark & \checkmark & \checkmark & -- & \textbf{39.58} \\
         Full ReSync & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
