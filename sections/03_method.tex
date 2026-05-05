@@ -147,11 +147,11 @@ The ReAlign regularizer is
 \begin{equation}
 \mathcal{L}_{\mathrm{ReAlign}}
 =
-\mathcal{L}_{\mathrm{pred}}
+\lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{pred}}
 +
-\beta_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
+\lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}
 +
-\beta_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
+\lambda_{\mathrm{div}}\mathcal{L}_{\mathrm{div}} .
 \label{eq:realign_loss}
 \end{equation}
 The final training objective is
@@ -160,7 +160,7 @@ The final training objective is
 =
 \mathcal{L}_{\mathrm{FM}}
 +
-\lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{ReAlign}} .
+\mathcal{L}_{\mathrm{ReAlign}} .
 \label{eq:total_loss}
 \end{equation}
 Training procedures, predictor capacity, layer-pair sampling, and loss weights are reported in \Cref{app:realign_algorithm_compute,app:realign_hyperparameters}.

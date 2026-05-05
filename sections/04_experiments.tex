@@ -136,6 +136,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
         Method & Iter. & FID $\downarrow$ & R-Precision $\uparrow$ \\
         \midrule
         MDM & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
+        + LayerSync & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
         + ReAlign (Ours) & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
@@ -266,6 +267,6 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
     \end{minipage}
 \end{table}
 
-These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, lambda tuning, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
+These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
 
 \FloatBarrier
