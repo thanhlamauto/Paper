@@ -22,7 +22,7 @@ We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Sco
 Our main comparisons are against the base SiT/DiT backbone and recent representation-regularized training methods. For self-contained guidance, we compare with Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For externally guided training, we compare with REPA~\citep{yu2024repa} and REED~\citep{wang2025flexible}. For completeness, we also report representative image-generation baselines: pixel-space diffusion models including ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, Simple Diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}; latent diffusion and transformer-based models including LDM~\citep{rombach2022ldm}, U-ViT-H/2~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2-XL/2~\citep{gao2023mdtv2}, MaskDiT~\citep{zheng2023fast}, SD-DiT~\citep{zhu2024sddit}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}; and autoregressive or predictive-generation baselines such as VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
 
 \paragraph{Results.}
-\Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of ReAlign from changes in model size, sampler, or guidance.
+\Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of ReSync from changes in model size, sampler, or guidance.
 
 \begin{table}[!htbp]
     \centering
@@ -38,31 +38,31 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \toprule
             Model & \#Params & Epochs & FID $\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 80 & \textbf{25.78} \\
-            \quad + Dispersive & 130M & 80 & \textbf{25.23} \\
+            \texttt{SiT-B/2} & 130M & 80 & \textbf{35.17} \\
+            \quad + Dispersive & 130M & 80 & \textbf{32.15} \\
             \quad + SRA & 130M & 80 & \textbf{25.08} \\
             \quad + LayerSync & 130M & 80 & \textbf{21.32} \\
-            \quad + ReAlign & 130M & 80 & \textbf{18.88} \\
+            \quad + ReSync & 130M & 80 & \textbf{18.25} \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 458M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 458M & 80 & \textbf{[TBD]} \\
-            \quad + ReAlign & 458M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-L/2} & 458M & 80 & \textbf{20.} \\
+            \quad + SRA & 458M & 80 & \textbf{19.72} \\
+            \quad + LayerSync & 458M & 80 & \textbf{15.34} \\
+            \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 80 & \textbf{[TBD]} \\
-            \quad + ReAlign & 675M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 80 & \textbf{11.88} \\
+            \quad + SRA & 675M & 80 & \textbf{11.65} \\
+            \quad + LayerSync & 675M & 80 & \textbf{7.57} \\
+            \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 200 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 200 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 200 & \textbf{[TBD]} \\
-            \quad + ReAlign & 675M & 200 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 200 & \textbf{8.36} \\
+            \quad + SRA & 675M & 200 & \textbf{8.11} \\
+            \quad + LayerSync & 675M & 200 & \textbf{7.82} \\
+            \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400 & \textbf{[TBD]} \\
             \quad + SRA & 675M & 400 & \textbf{[TBD]} \\
             \quad + LayerSync & 675M & 400 & \textbf{[TBD]} \\
-            \quad + ReAlign & 675M & 400 & \textbf{[TBD]} \\
+            \quad + ReSync & 675M & 400 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -72,7 +72,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
-        \scriptsize
+        \scrsubmisiptsize
         \setlength{\tabcolsep}{1.8pt}
         \renewcommand{\arraystretch}{0.80}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
@@ -104,7 +104,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
             \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + ReAlign & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
