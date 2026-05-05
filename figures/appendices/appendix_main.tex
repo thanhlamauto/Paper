@@ -5,50 +5,100 @@ This appendix keeps the main paper compact while making the implementation easy 
 
 \subsection{Training Algorithm and Compute}
 
-LARA adds a lightweight training-time branch to the diffusion transformer. The backbone forward pass exposes source and target activations, the shared predictor maps the source state into target-layer coordinates, and the auxiliary loss combines transition prediction, path consistency, and weak-layer diversity.
+LARA adds a lightweight training-time branch to the diffusion transformer. The backbone forward pass exposes source and target activations, the shared predictor maps the source state into target-layer coordinates, and a small depth-shortcut subset can be routed through the predicted state inside the same flow-matching objective. The auxiliary regularizer combines transition prediction, path consistency, and weak-layer diversity.
 
 \begin{algorithm}[!htbp]
-\caption{\textbf{LARA training.} One flow-matching loss with a shared cross-depth transition predictor.}
+\caption{\textbf{LARA training.} Flow matching with an integrated depth shortcut.}
 \label{alg:realign_training}
 \small
 \begin{algorithmic}[1]
-\Require backbone $F_\zeta$; predictor $g_\psi$; EMA predictor $g_{\mathrm{ema}}$; pair law $q(a,b,r)$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
+\Require backbone $F_\zeta$ with suffix $F_{\zeta,b:L}$; predictor $g_\psi$; EMA predictor $g_{\mathrm{ema}}$.
+\Require pair law $q(a,b,c)$; depth-shortcut subset $\mathcal{B}_{\mathrm{ds}}$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
 \Repeat
     \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim\mathcal{U}(0,1)$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
-    \State Sample $(a,b,r)\sim q(a,b,r)$ with $a<b<r$.
-    \State Run the full backbone once:
+    \State Run the full backbone and cache hidden states:
     \[
-    (\hat v,A_a^t,A_b^t,A_r^t,\{A_i^t\})\leftarrow F_\zeta(x_t,t,y).
+    (\hat v,\mathcal{H})\leftarrow F_\zeta(x_t,t,y),\qquad
+    \mathcal{H}=\{A_\ell^t\}_{\ell=0}^{L}.
     \]
-    \State Compute the flow-matching loss:
+    \State Sample $(a,b,c)\sim q(a,b,c)$ with $a<b<c$, and compute transitions from cached states:
+    \[
+    \begin{aligned}
+    \hat A_{a\to b}^t &= g_\psi(A_a^t;a,b,t,y),\\
+    \hat A_{a\to c}^t &= g_\psi(A_a^t;a,c,t,y),\\
+    \tilde A_{a\to b\to c}^t
+    &= g_{\mathrm{ema}}\!\left(g_{\mathrm{ema}}(\mathrm{sg}(A_a^t);a,b,t,y);b,c,t,y\right).
+    \end{aligned}
+    \]
+    \State Compute the routed velocity for the depth-shortcut subset:
+    \[
+    \tilde v=F_{\zeta,b:L}(\hat A_{a\to b}^t,t,y).
+    \]
+    \State Compute the unified flow-matching loss:
     \[
     \mathcal{L}_{\mathrm{FM}}
     =
-    \mathbb{E}_{\mathcal{B}}\|\hat v-u_t\|_2^2.
+    \mathbb{E}_{i\in\mathcal{B}}
+    \left[
+    \|\hat v_i-u_{t,i}\|_2^2
+    +
+    \mathbb{I}_{\{i\in\mathcal{B}_{\mathrm{ds}}\}}
+    \|\tilde v_i-u_{t,i}\|_2^2
+    \right].
     \]
-    \State Compute transition and consistency predictions:
+    \State Compute the LARA regularizer from the cached states in $\mathcal{H}$:
     \[
     \begin{aligned}
-    \hat A_{a\to b}^t &= g_\psi(A_a^t;a,b,t),\\
-    \hat A_{a\to r}^t &= g_\psi(A_a^t;a,r,t),\\
-    \tilde A_{a\to r}^t
-    &= g_{\mathrm{ema}}\!\left(g_{\mathrm{ema}}(\mathrm{sg}(A_a^t);a,b,t);b,r,t\right).
-    \end{aligned}
-    \]
-    \State Compute the LARA regularizer:
-    \[
     \mathcal{L}_{\mathrm{LARA}}
-    =
-    \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))
-    +\lambda_{\mathrm{cons}}d(\hat A_{a\to r}^t,\mathrm{sg}(\tilde A_{a\to r}^t))
-    +\lambda_{\mathrm{div}}\mathbb{E}_{i<j}\operatorname{cos}^2(A_i^t,A_j^t).
+    &=
+    \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))\\
+    &\quad+\lambda_{\mathrm{cons}}d(\hat A_{a\to c}^t,\mathrm{sg}(\tilde A_{a\to b\to c}^t))\\
+    &\quad+\lambda_{\mathrm{div}}\mathbb{E}_{i<j}
+    \operatorname{cos}_{\mathrm{tok}}^2(A_i^t,A_j^t),
+    \qquad A_i^t,A_j^t\in\mathcal{H}.
+    \end{aligned}
     \]
     \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\mathcal{L}_{\mathrm{LARA}}$.
     \State Update $\psi_{\mathrm{ema}}\leftarrow\tau\psi_{\mathrm{ema}}+(1-\tau)\psi$.
 \Until{training budget is reached}
 \end{algorithmic}
 \end{algorithm}
+
+\paragraph{Tokenwise distances.}
+For two token activations $U,V\in\mathbb{R}^{N\times C}$, LARA computes cosine similarity independently at each token and then averages over tokens:
+\begin{equation}
+\operatorname{cos}_{\mathrm{tok}}(U,V)
+=
+\frac{1}{N}\sum_{n=1}^{N}
+\frac{\langle U_n,V_n\rangle}
+{\|U_n\|_2\|V_n\|_2+\varepsilon}.
+\label{eq:appendix_token_cosine}
+\end{equation}
+The transition distance used in \Cref{alg:realign_training} is the corresponding tokenwise cosine distance,
+\begin{equation}
+d(U,V)
+=
+\frac{1}{N}\sum_{n=1}^{N}
+\left(
+1-
+\frac{\langle U_n,V_n\rangle}
+{\|U_n\|_2\|V_n\|_2+\varepsilon}
+\right).
+\label{eq:appendix_token_cosine_distance}
+\end{equation}
+The diversity term uses the same cached activations and squares the tokenwise cosine before averaging:
+\begin{equation}
+\operatorname{cos}_{\mathrm{tok}}^2(U,V)
+=
+\frac{1}{N}\sum_{n=1}^{N}
+\left(
+\frac{\langle U_n,V_n\rangle}
+{\|U_n\|_2\|V_n\|_2+\varepsilon}
+\right)^2.
+\label{eq:appendix_token_cosine_squared}
+\end{equation}
+Thus $\mathcal{L}_{\mathrm{div}}$ is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
 \subsection{Optional Inference Interface}
 
@@ -134,7 +184,11 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 \subsection{Image Generation Experimental Details}
 \label{app:image_generation_details}
 
-We use a node of 4 GH200 GPUs and a batch size of 256. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+\paragraph{Compute.}
+We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments are run on TPU v4-16 with batch size 256. Ablation studies are run on a local workstation with two NVIDIA RTX 4090 GPUs. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+
+\paragraph{Existing assets.}
+We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
 
 \paragraph{Classification.}
 We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
@@ -167,6 +221,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
         $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. & cos. sim. \\
         \midrule
         \multicolumn{5}{l}{\textbf{Optimization}} \\
+        Hardware & TPU v4-16 & TPU v4-16 & TPU v4-16 & TPU v4-16 \\
         Batch size & 256 & 256 & 256 & 256 \\
         Optimizer & AdamW & AdamW & AdamW & AdamW \\
         lr & 0.0001 & 0.0001 & 0.0001 & 0.0001 \\
@@ -204,6 +259,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
         $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. \\
         \midrule
         \multicolumn{4}{l}{\textbf{Optimization}} \\
+        Hardware & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 \\
         Training iteration & 400K & 400K & 400K \\
         Batch size & 256 & 256 & 256 \\
         Optimizer & AdamW & AdamW & AdamW \\
@@ -246,24 +302,7 @@ In what follows, we summarize the main baseline methods used in our evaluation:
 \subsection{SiT Architecture Details}
 \label{app:sit_architecture_details}
 
-We use the same SiT-style transformer stack as the internal-alignment baselines~\citep{ma2024sit,haghighi2026layersync}. \Cref{fig:appendix_sit_realign_architecture} shows the reference stack and where LARA attaches its shared transition predictor.
-
-\begin{figure}[!htbp]
-    \centering
-    \begin{subfigure}[t]{0.32\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/layersync.png}
-        \caption{Reference SiT stack used by fixed-pair internal alignment.}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.55\linewidth}
-        \centering
-        \includegraphics[height=0.34\textheight,keepaspectratio]{figures/realign.png}
-        \caption{LARA attaches a shared predictor to sampled source--target layers.}
-    \end{subfigure}
-    \caption{\textbf{SiT stack and LARA attachment.} The backbone follows the same SiT block stack used by LayerSync~\citep{haghighi2026layersync}. LARA keeps the stack unchanged and adds a training-time transition predictor between sampled depths.}
-    \label{fig:appendix_sit_realign_architecture}
-\end{figure}
+We use the same SiT-style transformer stack as the internal-alignment baselines~\citep{ma2024sit,haghighi2026layersync}. LARA keeps the backbone unchanged and adds only the training-time transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
@@ -296,7 +335,7 @@ We rely on the HumanML3D dataset~\citep{guo2022generating}, which contains 44,97
 where $r^a\in\mathbb{R}$ is the root (pelvis joint) angular velocity along the Y-axis; $(\dot r^x,\dot r^z)\in\mathbb{R}^2$ are the root linear velocities in the XZ-plane; $r^y\in\mathbb{R}$ is the root height; $j^p\in\mathbb{R}^{3J}$, $j^v\in\mathbb{R}^{3J}$, and $j^r\in\mathbb{R}^{6J}$ are the local joint positions, velocities, and rotations in the root space, with $J$ indicating the number of joints; and $c^f\in\mathbb{R}^4$ represents foot-ground contact features.
 
 \paragraph{Implementation details.}
-We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iterations using a H100 GPU and align block 3 with block 6.
+We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iterations and align block 3 with block 6.
 
 \begin{table}[!htbp]
     \centering
@@ -372,7 +411,7 @@ E_{\mathrm{pred}}(a,b)
 d\left(g_\psi(A_a^t;a,b,t),\operatorname{sg}(A_b^t)\right)
 \right],
 \end{equation}
-where $d$ is tokenwise cosine distance unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
+where $d$ follows the tokenwise cosine distance in \Cref{eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
 
 \section{Additional Ablations and Scaling}
 \label{app:realign_ablation_protocols}

@@ -19,59 +19,60 @@ Unless otherwise stated, we follow the class-conditional ImageNet training setup
 We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all LARA variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
 
 \paragraph{Comparison methods.}
-Our main comparisons are against the base SiT/DiT backbone and recent representation-regularized training methods. For self-contained guidance, we compare with Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For externally guided training, we compare with REPA~\citep{yu2024repa} and REED~\citep{wang2025flexible}. For completeness, we also report representative image-generation baselines: pixel-space diffusion models including ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, Simple Diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}; latent diffusion and transformer-based models including LDM~\citep{rombach2022ldm}, U-ViT-H/2~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2-XL/2~\citep{gao2023mdtv2}, MaskDiT~\citep{zheng2023fast}, SD-DiT~\citep{zhu2024sddit}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}; and autoregressive or predictive-generation baselines such as VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
+Our main comparisons are against the base SiT backbone and recent self-contained representation-regularized methods: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For system-level context, we also report representative ImageNet baselines from pixel diffusion~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}, latent diffusion~\citep{rombach2022ldm}, transformer-hybrid diffusion~\citep{bao2023all,hatamizadeh2024diffit,gao2023mdtv2}, and autoregressive or predictive generation~\citep{tian2024visual,chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
 
 \paragraph{Results.}
 \Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of LARA from changes in model size, sampler, or guidance.
 
 \begin{table}[!htbp]
     \centering
-    \begin{minipage}[t]{0.45\textwidth}
+    \begin{minipage}[t]{0.49\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{FID comparisons of class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used.}
+        \captionof{table}{\textbf{Class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used.}
         \label{tab:imagenet_no_cfg}
         \vspace{0.35em}
         \scriptsize
-        \setlength{\tabcolsep}{2.1pt}
+        \setlength{\tabcolsep}{2.0pt}
         \renewcommand{\arraystretch}{0.78}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+        \resizebox{\linewidth}{!}{%
+        \begin{tabular}{@{}lcccccc@{}}
             \toprule
-            Model & \#Params & Iter & FID $\downarrow$ \\
+            Model & \#Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 400K & \textbf{35.17} \\
-            \quad + Dispersive & 130M & 400K & \textbf{31.27} \\
-            \quad + SRA & 130M & 400K & \textbf{30.84} \\
-            \quad + LayerSync & 130M & 400K & \textbf{28.63} \\
-            \quad + LARA & 130M & 400K & \textbf{25.01} \\
+            \texttt{SiT-B/2} & 130M & 400K & 35.17 & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & 130M & 400K & 31.27 & [TBD] & [TBD] & [TBD] \\
+            \quad + SRA & 130M & 400K & 30.84 & [TBD] & [TBD] & [TBD] \\
+            \quad + LayerSync & 130M & 400K & 28.63 & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & 130M & 400K & 25.01 & [TBD] & [TBD] & [TBD] \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 400K & \textbf{20.55} \\
-            \quad + Dispersive & 458M & 400K & \textbf{16.27} \\
-            \quad + SRA & 458M & 400K & \textbf{15.50} \\
-            \quad + LayerSync & 458M & 400K & \textbf{14.21} \\
-            \quad + LARA & 458M & 400K & \textbf{[TBD]} \\
+            \texttt{SiT-L/2} & 458M & 400K & 20.55 & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & 458M & 400K & 16.27 & [TBD] & [TBD] & [TBD] \\
+            \quad + SRA & 458M & 400K & 15.50 & [TBD] & [TBD] & [TBD] \\
+            \quad + LayerSync & 458M & 400K & 14.21 & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & 458M & 400K & [TBD] & [TBD] & [TBD] & [TBD] \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 400K & \textbf{17.32} \\
-            \quad + Dispersive & 675M & 400K & \textbf{15.35} \\
-            \quad + SRA & 675M & 400K & \textbf{15.26} \\
-            \quad + LayerSync & 675M & 400K & \textbf{11.06} \\
-            \quad + LARA & 675M & 400K & \textbf{9.75} \\
+            \texttt{SiT-XL/2} & 675M & 400K & 17.32 & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & 675M & 400K & 15.35 & [TBD] & [TBD] & [TBD] \\
+            \quad + SRA & 675M & 400K & 15.26 & [TBD] & [TBD] & [TBD] \\
+            \quad + LayerSync & 675M & 400K & 11.06 & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & 675M & 400K & 9.75 & [TBD] & [TBD] & [TBD] \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 1M & \textbf{12.03} \\
-            \quad + Dispersive & 675M & 1M & \textbf{10.62} \\
-            \quad + SRA & 675M & 1M & \textbf{10.59} \\
-            \quad + LayerSync & 675M & 1M & \textbf{8.12} \\
-            \quad + LARA & 675M & 1M & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 1M & 12.03 & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & 675M & 1M & 10.62 & [TBD] & [TBD] & [TBD] \\
+            \quad + SRA & 675M & 1M & 10.59 & [TBD] & [TBD] & [TBD] \\
+            \quad + LayerSync & 675M & 1M & 8.12 & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & 675M & 1M & [TBD] & [TBD] & [TBD] & [TBD] \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 2M & \textbf{8.85} \\
-            \quad + Dispersive & 675M & 2M & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 2M & \textbf{7.97} \\
-            \quad + LayerSync & 675M & 2M & \textbf{6.80} \\
-            \quad + LARA & 675M & 2M & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 2M & 8.85 & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \quad + SRA & 675M & 2M & 7.97 & [TBD] & [TBD] & [TBD] \\
+            \quad + LayerSync & 675M & 2M & 6.80 & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
             \bottomrule
-        \end{tabular*}
+        \end{tabular}}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.51\textwidth}
+    \begin{minipage}[t]{0.47\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
         \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
@@ -94,28 +95,28 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             D-JEPA-L & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
+            LDM-4 & 1.00M & 3.60 & 247.7 & 0.87 & 0.48 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
             U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
             DiffiT$^\ast$ & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2$^\ast$ & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
+            MDTv2-XL/2$^\ast$ & 5.40M & 1.58 & 314.7 & 0.79 & 0.65 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            MaskDiT & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            SD-DiT & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
-            DiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            SiT-XL/2 & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + REPA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
-            \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + LARA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            MaskDiT & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            SD-DiT & [TBD] & [TBD] & -- & -- & -- \\
+            DiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            SiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \quad + REPA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \quad + Dispersive & [TBD] & [TBD] & -- & -- & -- \\
+            \quad + LayerSync & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \quad + LARA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
 \end{table}
 
-On \texttt{SiT-B/2}, LARA reduces FID from $25.78$ to $18.88$, a $26.8\%$ relative improvement over the base model. Compared with LayerSync, it improves FID from $21.32$ to $18.88$, an $11.4\%$ relative gain under the same training budget.
+The no-CFG results show the same pattern across available scales. On \texttt{SiT-B/2}, LARA improves FID from $35.17$ to $25.01$, a $28.9\%$ relative gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-XL/2} at $400\mathrm{K}$ iterations, LARA improves FID from $17.32$ to $9.75$, a $43.7\%$ gain over the base model and an $11.8\%$ gain over LayerSync. The \texttt{SiT-L/2}, \texttt{SiT-XL/2} $1\mathrm{M}$, and \texttt{SiT-XL/2} $2\mathrm{M}$ LARA runs are reported as \textbf{[TBD]} in the table.
 
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
