@@ -38,31 +38,35 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \toprule
             Model & \#Params & Epochs & FID $\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 80 & \textbf{25.78} \\
-            \quad + Dispersive & 130M & 80 & \textbf{25.23} \\
-            \quad + SRA & 130M & 80 & \textbf{25.08} \\
-            \quad + LayerSync & 130M & 80 & \textbf{21.32} \\
-            \quad + LARA & 130M & 80 & \textbf{18.88} \\
+            \texttt{SiT-B/2} & 130M & 80 & \textbf{35.17} \\
+            \quad + Dispersive & 130M & 80 & \textbf{31.27} \\
+            \quad + SRA & 130M & 80 & \textbf{30.84} \\
+            \quad + LayerSync & 130M & 80 & \textbf{28.63} \\
+            \quad + ReSync & 130M & 80 & \textbf{27.31} \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 458M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 458M & 80 & \textbf{[TBD]} \\
-            \quad + LARA & 458M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-L/2} & 458M & 80 & \textbf{20.55} \\
+            \quad + Dispersive & 458M & 80 & \textbf{16.27} \\
+            \quad + SRA & 458M & 80 & \textbf{15.50} \\
+            \quad + LayerSync & 458M & 80 & \textbf{14.21} \\
+            \quad + ReSync & 458M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 80 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 80 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 80 & \textbf{[TBD]} \\
-            \quad + LARA & 675M & 80 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 80 & \textbf{17.32} \\
+            \quad + Dispersive & 675M & 80 & \textbf{15.35} \\
+            \quad + SRA & 675M & 80 & \textbf{15.26} \\
+            \quad + LayerSync & 675M & 80 & \textbf{11.06} \\
+            \quad + ReSync & 675M & 80 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 200 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 200 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 200 & \textbf{[TBD]} \\
-            \quad + LARA & 675M & 200 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 200 & \textbf{12.03} \\
+            \quad + SRA & 675M & 200 & \textbf{10.59} \\
+            \quad + Dispersive & 675M & 80 & \textbf{[TBD]} \\
+            \quad + LayerSync & 675M & 200 & \textbf{8.12} \\
+            \quad + ReSync & 675M & 200 & \textbf{[TBD]} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 400 & \textbf{[TBD]} \\
-            \quad + SRA & 675M & 400 & \textbf{[TBD]} \\
-            \quad + LayerSync & 675M & 400 & \textbf{[TBD]} \\
-            \quad + LARA & 675M & 400 & \textbf{[TBD]} \\
+            \texttt{SiT-XL/2} & 675M & 400 & \textbf{8.85} \\
+            \quad + Dispersive & 675M & 80 & \textbf{[TBD]} \\
+            \quad + SRA & 675M & 400 & \textbf{7.97} \\
+            \quad + LayerSync & 675M & 400 & \textbf{6.80} \\
+            \quad + ReSync & 675M & 400 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -72,7 +76,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
         \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
-        \scriptsize
+        \scrsubmisiptsize
         \setlength{\tabcolsep}{1.8pt}
         \renewcommand{\arraystretch}{0.80}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
@@ -104,7 +108,7 @@ Our main comparisons are against the base SiT/DiT backbone and recent representa
             \quad + REED & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \quad + Dispersive & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- & -- \\
             \quad + LayerSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \quad + LARA & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \quad + ReSync & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
