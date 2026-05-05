@@ -187,6 +187,9 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 \paragraph{Compute.}
 We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments are run on TPU v4-16 with batch size 256. Ablation studies are run on a local workstation with two NVIDIA RTX 4090 GPUs. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
+\paragraph{Existing assets.}
+We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
+
 \paragraph{Classification.}
 We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
 
