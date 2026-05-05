@@ -12,7 +12,7 @@ ReAlign adds a lightweight training-time branch to the diffusion transformer. Th
 \label{alg:realign_training}
 \small
 \begin{algorithmic}[1]
-\Require backbone $F_\zeta$ with block ranges $F_{\zeta,i:j}$; predictor $g_\psi$; EMA predictor $\bar g_\psi$; pair law $q(a,b,r)$; FM-path rate $\rho$; weights $\lambda_{\mathrm{align}},\beta_{\mathrm{cons}},\beta_{\mathrm{div}}$.
+\Require backbone $F_\zeta$ with block ranges $F_{\zeta,i:j}$; predictor $g_\psi$; EMA predictor $\bar g_\psi$; pair law $q(a,b,r)$; FM-path rate $\rho$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
 \Repeat
     \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim\mathcal{U}(0,1)$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
@@ -47,11 +47,11 @@ ReAlign adds a lightweight training-time branch to the diffusion transformer. Th
     \[
     \mathcal{L}_{\mathrm{ReAlign}}
     =
-    d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))
-    +\beta_{\mathrm{cons}}d(\hat A_{a\to r}^t,\mathrm{sg}(\tilde A_{a\to r}^t))
-    +\beta_{\mathrm{div}}\mathbb{E}_{i<j}\operatorname{cos}^2(A_i^t,A_j^t).
+    \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))
+    +\lambda_{\mathrm{cons}}d(\hat A_{a\to r}^t,\mathrm{sg}(\tilde A_{a\to r}^t))
+    +\lambda_{\mathrm{div}}\mathbb{E}_{i<j}\operatorname{cos}^2(A_i^t,A_j^t).
     \]
-    \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\lambda_{\mathrm{align}}\mathcal{L}_{\mathrm{ReAlign}}$.
+    \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\mathcal{L}_{\mathrm{ReAlign}}$.
     \State Update $\bar\psi\leftarrow\tau\bar\psi+(1-\tau)\psi$.
 \Until{training budget is reached}
 \end{algorithmic}
@@ -125,11 +125,11 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{align}}$ & $\beta_{\mathrm{cons}}$ & $\rho_{\mathrm{path}}$ & $\beta_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & $\rho_{\mathrm{path}}$ & EMA decay & Target detach & Extra cost \\
         \midrule
         Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        FM-path ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        FM-path ablation & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
@@ -308,7 +308,7 @@ We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iteratio
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{HumanML3D setup.} Motion-generation configuration used by the baseline and ReAlign variant.}
+    \caption{\textbf{HumanML3D setup.} Motion-generation configuration used by the baseline, LayerSync, and ReAlign variants.}
     \label{tab:appendix_humanml3d_setup}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -317,6 +317,7 @@ We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iteratio
         Method & Backbone layers & Iter. & Transition pairs & Evaluator & Metrics \\
         \midrule
         MDM & 6 & 600K & -- & Standard MDM & FID, R-Precision \\
+        MDM + LayerSync & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
         MDM + ReAlign & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
@@ -341,7 +342,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main artifact & Quantity & Protocol & Citation \\
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
-        \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline and ReAlign. & \citep{guo2022generating,tevet2022mdm} \\
+        \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and ReAlign. & \citep{guo2022generating,tevet2022mdm} \\
         \Cref{tab:realign_ablation} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
@@ -405,7 +406,7 @@ The following controls support the main ablation story without becoming separate
         Timestep PCA & Visualize how representations and predictor outputs evolve across denoising time & PCA maps, timestep panels \\
         Predictor output vs. target layer & Check whether predicted states recover target-layer structure & PCA, cosine heatmap, CKA \\
         Architecture and strategy config & Document the final predictor architecture and pair-selection rule & ConvNeXt-style predictor / selected schedule \\
-        Lambda tuning & Set the ReAlign weight without changing the main recipe & FID, prediction error, stability \\
+        Loss-weight tuning & Set the component weights without changing the main recipe & FID, prediction error, stability \\
         Max-gap and pair schedule & Separate max layer gap from timestep schedule effects & FID, $\mathcal{L}_{\mathrm{pred}}$ \\
         Qualitative samples & Show matched-seed visual differences & Image grids \\
         \bottomrule
@@ -434,28 +435,6 @@ We sweep source and target blocks while keeping compute, batch size, and trainin
     \end{tabular}
 \end{table}
 
-\subsection{Timestep Coverage and Conditioning}
-
-This ablation separates which timesteps receive the transition loss from whether the predictor is explicitly conditioned on $t$.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Ablation on timestep coverage and conditioning.} Placeholder for testing transition prediction across denoising time.}
-    \label{tab:appendix_timestep_ablation}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{lcccc}
-        \toprule
-        Timestep coverage & Time cond. & FID $\downarrow$ & Prediction error $\downarrow$ & Comp. error $\downarrow$ \\
-        \midrule
-        25\% & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        50\% & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        100\% & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        100\% & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
 \subsection{Predictor Capacity and Optimization Controls}
 
 We compare small and large predictors, pair-specific projectors, and matched-learning-rate controls. These runs separate cross-depth transition learning from raw auxiliary capacity.
@@ -468,7 +447,7 @@ We compare small and large predictors, pair-specific projectors, and matched-lea
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lccccc}
         \toprule
-        Variant & Pred. params & Aux. weight & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+        Variant & Pred. params & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
         \midrule
         Baseline & -- & -- & \textbf{[TBD]} & -- & -- \\
         Small shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
@@ -479,24 +458,24 @@ We compare small and large predictors, pair-specific projectors, and matched-lea
     \end{tabular}
 \end{table}
 
-\subsection{Lambda, Max-Gap, and Schedule Controls}
+\subsection{Loss-Weight, Max-Gap, and Schedule Controls}
 
 These controls tune the final recipe without changing the main ReAlign mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Lambda and schedule controls.} Placeholder for tuning the ReAlign weight, maximum layer gap, and pair/timestep schedule.}
-    \label{tab:appendix_lambda_schedule_controls}
+    \caption{\textbf{Loss-weight and schedule controls.} Placeholder for tuning ReAlign component weights, maximum layer gap, and pair/timestep schedule.}
+    \label{tab:appendix_loss_weight_schedule_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \renewcommand{\arraystretch}{0.9}
     \begin{tabular*}{0.96\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
         \toprule
-        Setting & $\lambda_{\mathrm{align}}$ & Max gap & Pair / timestep schedule & FID $\downarrow$ \\
+        Setting & Loss weights & Max gap & Pair / timestep schedule & FID $\downarrow$ \\
         \midrule
-        Low weight & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
+        Low weights & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
         Default & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        High weight & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
+        High weights & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
         Short max gap & default & \textbf{[TBD]} & final & \textbf{[TBD]} \\
         Long max gap & default & \textbf{[TBD]} & final & \textbf{[TBD]} \\
         Alternative schedule & default & default & \textbf{[TBD]} & \textbf{[TBD]} \\
