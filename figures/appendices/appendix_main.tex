@@ -55,7 +55,7 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
     \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))\\
     &\quad+\lambda_{\mathrm{cons}}d(\hat A_{a\to c}^t,\mathrm{sg}(\tilde A_{a\to b\to c}^t))\\
     &\quad+\lambda_{\mathrm{div}}\mathbb{E}_{i<j}
-    \operatorname{cos}_{\mathrm{tok}}^2(A_i^t,A_j^t),
+    \operatorname{cos}^2(A_i^t,A_j^t),
     \qquad A_i^t,A_j^t\in\mathcal{H}.
     \end{aligned}
     \]
@@ -87,18 +87,7 @@ d(U,V)
 \right).
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
-The diversity term uses the same cached activations and squares the tokenwise cosine before averaging:
-\begin{equation}
-\operatorname{cos}_{\mathrm{tok}}^2(U,V)
-=
-\frac{1}{N}\sum_{n=1}^{N}
-\left(
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}
-\right)^2.
-\label{eq:appendix_token_cosine_squared}
-\end{equation}
-Thus $\mathcal{L}_{\mathrm{div}}$ is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
+The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
 \subsection{Optional Inference Interface}
 
@@ -374,7 +363,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms change. & \citep{heusel2017gans} \\
+        \Cref{tab:realign_ablation,tab:appendix_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms or loss weights change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -492,6 +481,34 @@ We compare small and large predictors, pair-specific projectors, and matched-lea
 \subsection{Loss-Weight, Max-Gap, and Schedule Controls}
 
 These controls tune the final recipe without changing the main LARA mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Loss-weight tuning on SiT-B/2.} We tune one parameter at a time and keep the other weights fixed at the current best setting. This isolates which value of each component weight gives the best trade-off between generation quality and transition prediction.}
+    \label{tab:appendix_hyperparameter_tuning}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.86}
+    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}llccc@{}}
+        \toprule
+        Tuned weight & Candidate value & Fixed weights & FID-10K $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+        \midrule
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        \midrule
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        \midrule
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        \midrule
+        Final LARA & selected & -- & [TBD] & [TBD] \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
 \begin{table}[!htbp]
     \centering
