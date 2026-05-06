@@ -121,10 +121,10 @@ The diversity term is computed directly from the hidden-state cache $\mathcal{H}
     \end{tabular*}
 \end{table}
 
-\subsection{Comparison with Self-Representation Alignment Using EMA}
+\subsection{Compute Comparison with SRA and LayerSync}
 \label{app:sra_layersync_lara_compute}
 
-We additionally profile internal self-alignment methods that do not use an external representation model. The matched compute comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, batch size, and step count. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor. Wall-clock and FLOP numbers should be filled from the same TPU profiling run.
+We additionally profile the internal alignment methods used in our speed analysis. The matched compute comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, batch size, and step count. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor.
 
 \begin{table}[H]
     \centering
@@ -135,11 +135,11 @@ We additionally profile internal self-alignment methods that do not use an exter
     \renewcommand{\arraystretch}{0.9}
     \begin{tabular*}{0.78\textwidth}{@{\extracolsep{\fill}}lccc@{}}
         \toprule
-        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & TFLOPs/step $\downarrow$ \\
+        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & GFLOPs/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} & \textbf{40,643} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,305} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} & \textbf{35,342} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -565,7 +565,7 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
 \section{Transition Predictor Configuration and Capacity}
 \label{app:predictor_architecture_capacity}
 
-We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNeXt-style spatial predictor~\citep{liu2022convnext} on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
+We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNet-style spatial predictor, implemented with ConvNeXt-style residual blocks~\citep{liu2022convnext}, on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
