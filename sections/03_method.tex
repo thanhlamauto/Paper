@@ -25,18 +25,6 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 
 Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
 
-\begin{figure}[!htbp]
-    \centering
-    \begin{minipage}{1\textwidth}
-        \centering
-        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \includegraphics[width=\linewidth]{figures/PCA.png}
-        \caption{\textbf{Shared spatial structure across depth.} PCA visualizations show that different layers preserve a common spatial scaffold while changing semantic abstraction. LARA uses this shared structure to support layer-aware transitions across many source--target pairs.}
-        \label{fig:projection_layout_observation}
-    \end{minipage}
-\end{figure}
-\FloatBarrier
-
 \paragraph{Motivation from shared structure.}
 SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
 
@@ -70,27 +58,39 @@ where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ st
 
 \begin{figure}[!htbp]
     \centering
-    \begin{minipage}{0.66\linewidth}
-    \centering
     \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \fbox{%
-    \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+    \begin{minipage}[t]{0.62\linewidth}
+        \vspace{0pt}
         \centering
-        \small
-        \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
-        Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
-        and the consistency path $a\to b\to c$ with a shared predictor.
-    \end{minipage}}
-    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated.}
-    \label{fig:realign_transition_predictor}
+        \fbox{%
+        \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+            \centering
+            \small
+            \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
+            Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
+            and the consistency path $a\to b\to c$ with a shared predictor.
+        \end{minipage}}
     \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \vspace{0pt}
+        \centering
+        \includegraphics[
+            width=\linewidth,
+            trim=0 230 0 0,
+            clip
+        ]{figures/lara_curve_placeholder.png}
+    \end{minipage}
+    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated. The right panel is a placeholder for the matched-budget ImageNet training curve.}
+    \label{fig:realign_transition_predictor}
+    \label{fig:training_curve}
 \end{figure}
 
 \FloatBarrier
 
 \subsection{Transition Consistency}
 
-It is quite challenging to directly learn a single long transition. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. For $a<b<c$, we define
+A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. For $a<b<c$, we define
 \begin{equation}
 \widehat A_{a\to c}^{\,t}
 =
@@ -98,15 +98,15 @@ G_\psi(\operatorname{sg}(A_a^t),e_a,e_c,e_t),
 \qquad
 \widetilde A_{a\to b\to c}^{\,t}
 =
-G_{\mathrm{ema}}\!\left(
-G_{\mathrm{ema}}(\operatorname{sg}(A_a^t),e_a,e_b,e_t),
+G_{\bar\psi}\!\left(
+\operatorname{sg}(\widehat A_{a\to b}^{\,t}),
 e_b,e_c,e_t
 \right),
 \label{eq:direct_transition}
 \end{equation}
-where $G_{\mathrm{ema}}$ is an EMA copy of the predictor~\citep{tarvainen2017meanteacher}. The consistency loss is
+where $\bar\psi$ is updated by moving average and $\widehat A_{a\to b}^{\,t}$ is not recomputed by the EMA predictor. The consistency loss is
 \begin{equation}
-\mathcal{L}_{\mathrm{cons}}(\psi)
+\mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
 =
 \mathbb{E}_{a<b<c,t}
 \left[
@@ -117,7 +117,7 @@ d\left(
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-Only the online predictor is updated by this term. The source activation and the composed EMA target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
+Only the online predictor is updated by this term; the EMA predictor provides a stop-gradient target. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
 
 \subsection{Diversity Regularization}
 
@@ -157,7 +157,7 @@ The LARA regularizer assigns a separate weight to each component:
 =
 \lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{pred}}(\theta,\psi)
 +
-\lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}(\psi)
+\lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
 +
 \lambda_{\mathrm{div}}\mathcal{L}_{\mathrm{div}}(\theta).
 \label{eq:realign_loss}

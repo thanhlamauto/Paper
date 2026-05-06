@@ -13,7 +13,7 @@ The main tables keep comparisons compact. Training settings, sampling protocols,
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, EMA decay, loss weights, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
 
 \paragraph{Evaluation.}
 We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all LARA variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
@@ -162,15 +162,8 @@ We probe every backbone block with three layerwise diagnostics: linear classific
 
 \begin{figure}[!htbp]
     \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.92\linewidth}
-        \centering
-        \small
-        \textbf{[PLACEHOLDER: layerwise representation analysis]}\\[0.5em]
-        Panels: Tiny ImageNet linear probe, PASCAL VOC segmentation probe, DINOv2 CKA,\\
-        and optional PCA/layout visualization across baseline, LayerSync, and LARA.
-    \end{minipage}}
-    \caption{\textbf{Layerwise representation quality.} Placeholder for probes across backbone depth under matched generation settings. Stronger weak- and middle-layer curves indicate that cross-depth transition supervision makes useful features easier to recover throughout the backbone.}
+    \includegraphics[width=0.98\linewidth]{figures/representation_analysis_placeholder.png}
+    \caption{\textbf{Layerwise representation quality.} Schematic placeholder for matched-FID probes across backbone depth: Tiny ImageNet linear classification, PASCAL VOC linear segmentation, and DINOv2 CKA. The measured curves and gains are filled after running the appendix protocol; the intended readout is whether LARA (Ours) exposes stronger weak- and middle-layer representations than the baseline under the same generation-quality setting.}
     \label{fig:representation_analysis}
 \end{figure}
 
@@ -206,6 +199,8 @@ We isolate the main design choices before validating the final recipe in the gen
     \end{tabular*}
 \end{table}
 
+\Cref{tab:realign_ablation} separates the roles of the three terms. The key row is LARA pred.: if it already beats LayerSync by a clear margin, the gain comes from learning many layer-conditioned transitions rather than from the diversity regularizer. Consistency should further improve long-gap supervision by making direct and composed paths agree. The $\cos^2$ term is a secondary control: useful for reducing redundant layer directions, but not expected to explain the main improvement by itself.
+
 \begin{table}[!htbp]
     \centering
     \caption{\textbf{Hyperparameter tuning on SiT-B/2.} FID is computed with $10\mathrm{K}$ samples under the same training budget. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
@@ -232,14 +227,15 @@ We isolate the main design choices before validating the final recipe in the gen
     \begin{minipage}[t]{0.48\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{pred}}$}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Setting & Value & FID-10K $\downarrow$ \\
+            Value & FID-10K $\downarrow$ \\
             \midrule
-            low & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
-            high & \textbf{[TBD]} & \textbf{[TBD]} \\
-            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -249,14 +245,15 @@ We isolate the main design choices before validating the final recipe in the gen
     \begin{minipage}[t]{0.48\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{cons}}$}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Setting & Value & FID-10K $\downarrow$ \\
+            Value & FID-10K $\downarrow$ \\
             \midrule
-            off & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
-            high & \textbf{[TBD]} & \textbf{[TBD]} \\
-            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -264,14 +261,15 @@ We isolate the main design choices before validating the final recipe in the gen
     \begin{minipage}[t]{0.48\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{div}}$}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Setting & Value & FID-10K $\downarrow$ \\
+            Value & FID-10K $\downarrow$ \\
             \midrule
-            off & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
-            high & \textbf{[TBD]} & \textbf{[TBD]} \\
-            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -279,62 +277,9 @@ We isolate the main design choices before validating the final recipe in the gen
 
 The sweep keeps the default training timestep sampler uniform. Logit-normal timestep samplers are included only as controls, while the remaining panels tune the three LARA loss weights one at a time around the default configuration.
 
-We choose the layer-pair sampler by first looking at what goes wrong under the simplest sampler. We train the transition predictor with uniform sampling over source layers, target layers, and timesteps. This run is not our final recipe; it is a diagnostic that shows where the auxiliary task wastes capacity and where it provides useful supervision. If all bins had similar prediction error, uniform sampling would be sufficient. Instead, \Cref{tab:pair_sampling_ablation} shows that some transitions are too easy, some are too unstable, and only a subset gives a clean learning signal. Percentages denote normalized bins: layer gap and source layer move from shallow/short to deep/long, while timestep moves from lower to higher noise.
+We choose the layer-pair sampler by first asking where the simplest strategy fails. A temporary diagnostic run samples source layers, target layers, and timesteps uniformly, then groups transition-prediction error by normalized layer gap, source depth, and timestep range. The purpose is not to make uniform sampling the final recipe; it is to identify which internal transitions are too easy, too unstable, or useful for supervision.
 
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap, source-layer, and timestep bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable. Full schedule details are in \Cref{app:realign_ablation_protocols}.}
-    \label{tab:pair_sampling_ablation}
-    \scriptsize
-    \setlength{\tabcolsep}{2.2pt}
-    \renewcommand{\arraystretch}{0.88}
-    \begin{minipage}[t]{0.32\linewidth}
-        \centering
-        \textbf{Layer gap}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
-            \toprule
-            Gap & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.32\linewidth}
-        \centering
-        \textbf{Source layer}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
-            \toprule
-            Source & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.32\linewidth}
-        \centering
-        \textbf{Timestep}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
-            \toprule
-            Range & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-\end{table}
-
-The resulting strategy is simple. Adjacent layers have low error, so repeatedly sampling them mostly teaches the predictor a local copy task. Very distant layers have high error, so using them too often can make the auxiliary loss noisy early in training. The useful layer-pair regime lies between these extremes: medium gaps with broadly covered source positions. We therefore keep coverage across valid depths to preserve layer-agnostic alignment, keep the training timestep sampler uniform, and shift layer-pair probability mass away from trivial adjacent pairs toward informative medium-gap transitions. Additional controls for max gap, timestep sampler, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are reported in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
+The resulting strategy is simple. Adjacent layers usually have low error, so repeatedly sampling them mostly teaches a local copy task. Very distant transitions have high error and can inject noisy auxiliary gradients early in training. The useful regime lies between these extremes: medium layer gaps with broad source-depth coverage. We therefore keep the training timestep sampler uniform, preserve coverage across valid depths for layer-agnostic alignment, and shift layer-pair probability mass away from trivial adjacent pairs toward informative medium-gap transitions. The full binned diagnostic table and schedule details are reported in \Cref{app:uniform_transition_diagnostic,app:realign_ablation_protocols}.
 
 Overall, the experiments indicate that LARA's gains are not simply a consequence of choosing a better weak--strong pair. LayerSync shows that a selected internal alignment can regularize training, but its supervision remains tied to one hand-picked relation. LARA uses the same internal hierarchy more broadly: the shared transition predictor learns from many source--target pairs, while layer conditioning preserves the pair-specific gaps. This gives the model a more global alignment signal across depth, rather than a heuristic constraint anchored to a single reference layer.
 
