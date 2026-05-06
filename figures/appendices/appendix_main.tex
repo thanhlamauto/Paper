@@ -284,7 +284,7 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
         \toprule
         Backbone & Layers & Hidden dim. & Heads & Patch size & Params \\
         \midrule
-        \texttt{SiT-B/2} & 12 & 768 & 12 & 2 & 130M \\
+        \texttt{SiT-B/2} & 12 & 768 & 12 & 2 & 137M \\
         \texttt{SiT-L/2} & 24 & 1024 & 16 & 2 & 458M \\
         \texttt{SiT-XL/2} & 28 & 1152 & 16 & 2 & 675M \\
         \bottomrule
@@ -340,7 +340,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms, timestep sampler, or loss weights change. & \citep{heusel2017gans} \\
+        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
         \Cref{fig:projection_layout_observation} & PCA maps, z-score stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and z-score stable rank is computed per layer from the same normalized feature matrix. & \citep{sanyal2020stable} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -555,7 +555,7 @@ We first specify how the transition predictor is attached to the SiT backbones, 
         \toprule
         Backbone & Blocks & Hidden dim. & Token grid & Predictor state interface & Default budget \\
         \midrule
-        SiT-B/2 & 12 & 768 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times768}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times768}$; condition on $(e_a,e_b,e_t,y)$; target $\operatorname{sg}(A_b^t)$ & 5--10\% of 130M \\
+        SiT-B/2 & 12 & 768 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times768}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times768}$; condition on $(e_a,e_b,e_t,y)$; target $\operatorname{sg}(A_b^t)$ & 5--10\% of 137M \\
         SiT-L/2 & 24 & 1024 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1024}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1024}$; same conditioning and stopped target & 5--10\% of 458M \\
         SiT-XL/2 & 28 & 1152 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1152}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1152}$; same conditioning and stopped target & 5--10\% of 675M \\
         \bottomrule

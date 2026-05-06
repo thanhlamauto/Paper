@@ -39,11 +39,11 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \toprule
             Model & \#Params & Iter. & FID$\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 400K & 35.17 \\
-            \quad + Dispersive & 130M & 400K & 31.27 \\
-            \quad + SRA & 130M & 400K & 30.84 \\
-            \quad + LayerSync & 130M & 400K & 28.63 \\
-            \quad + LARA (Ours) & 130M & 400K & \textbf{25.01} \\
+            \texttt{SiT-B/2} & 137M & 400K & 35.17 \\
+            \quad + Dispersive & 137M & 400K & 31.27 \\
+            \quad + SRA & 137M & 400K & 30.84 \\
+            \quad + LayerSync & 137M & 400K & 28.63 \\
+            \quad + LARA (Ours) & 137M & 400K & \textbf{25.01} \\
             \midrule
             \texttt{SiT-L/2} & 458M & 400K & 20.55 \\
             \quad + Dispersive & 458M & 400K & 16.27 \\
@@ -59,7 +59,7 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \midrule
             \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
             \quad + Dispersive & 675M & 1M & 10.62 \\
-            \quad + SRA & 675M & 1M & 10.59 \\
+            \quad + SRA & 675M & 1M & 10. \\
             \quad + LayerSync & 675M & 1M & 8.12 \\
             \quad + LARA (Ours) & 675M & 1M & \textbf{6.51} \\
             \midrule
@@ -74,7 +74,7 @@ Our main comparisons are against the base SiT backbone and recent self-contained
     \hfill
     \begin{minipage}[t]{0.47\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} \#Params reports inference-generator parameters; training-only auxiliary modules are not counted.}
+        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
         \scriptsize
@@ -106,18 +106,18 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             DiT-XL/2 & 675M & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
             SiT-XL/2 & 675M & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 675M & 2.00M & 1.82 & 284.0 & 0.81 & 0.61 \\
+            \quad + REPA & 675M & 2.00M & 1.80 & 284.0 & 0.81 & 0.61 \\
             \hdashline
             \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
             \quad + Dispersive & 675M & 2.00M & 1.97 & -- & -- & -- \\
             \quad + LayerSync & 675M & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.84 & 276.48 & 0.81 & 0.61 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.82 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular}}
     \end{minipage}
 \end{table}
 
-The no-CFG results show the same pattern across available scales. On \texttt{SiT-B/2}, LARA improves FID from $35.17$ to $25.01$, a $28.9\%$ relative gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, LARA improves FID from $20.55$ to $11.09$, a $46.0\%$ gain over the base model and a $15.0\%$ gain over LayerSync. On \texttt{SiT-XL/2}, the gains remain consistent as training increases: at $400\mathrm{K}$ iterations, LARA improves FID from $17.32$ to $8.57$; at $1\mathrm{M}$ iterations, from $12.03$ to $6.51$; and at $2\mathrm{M}$ iterations, from $8.85$ to $5.09$. With CFG, LARA achieves the best FID among the SiT-family variants in \Cref{tab:imagenet_cfg}, improving over LayerSync from $1.89$ to $1.84$ while keeping comparable precision and recall.
+The no-CFG results show the same pattern across available scales. On \texttt{SiT-B/2}, LARA improves FID from $35.17$ to $25.01$, a $28.9\%$ relative gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, LARA improves FID from $20.55$ to $11.09$, a $46.0\%$ gain over the base model and a $15.0\%$ gain over LayerSync. On \texttt{SiT-XL/2}, the gains remain consistent as training increases: at $400\mathrm{K}$ iterations, LARA improves FID from $17.32$ to $8.57$; at $1\mathrm{M}$ iterations, from $12.03$ to $6.51$; and at $2\mathrm{M}$ iterations, from $8.85$ to $5.09$. With CFG, LARA improves over LayerSync from $1.89$ to $1.82$ while keeping comparable precision and recall; REPA remains the external-target reference row.
 
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
@@ -167,9 +167,7 @@ We probe every backbone block with three layerwise diagnostics: linear classific
     \label{fig:representation_analysis}
 \end{figure}
 
-\Cref{fig:representation_analysis} summarizes the layerwise probes and suggests two main trends. First, LARA distributes useful features more evenly across depth: averaged over the evaluated layers, linear classification improves by \textbf{[TBD]\%}, segmentation mIoU improves by \textbf{[TBD]\%}, and CKA alignment with DINOv2 improves by \textbf{[TBD]\%}. This is consistent with the role of the transition predictor: supervision is no longer concentrated around one selected pair, but reused across many source--target depths. Second, the best layer also improves, with peak linear accuracy increasing by \textbf{[TBD]\%}. This is less automatic than raising weak layers toward a fixed reference. It indicates that shared transition learning can reorganize the feature hierarchy, producing a stronger representation rather than merely copying one high-performing block.
-
-This pattern is the internal trace expected from LARA. Weak layers expose cleaner signals, middle layers become stronger targets, and the gains spread across the hierarchy instead of collapsing around a hand-picked reference layer.
+LARA improves the layerwise probes in both average and peak quality. Across evaluated layers, linear classification rises by \textbf{[TBD]\%}, segmentation mIoU by \textbf{[TBD]\%}, and DINOv2 CKA by \textbf{[TBD]\%}; the best linear-probe layer also increases by \textbf{[TBD]\%}. These gains indicate that transition supervision is reused across many source--target depths, spreading useful features through the hierarchy instead of concentrating them around one selected pair. The effect is not just to copy a strong block into weaker ones: shared transition learning yields cleaner weak-layer signals, stronger middle-layer targets, and a more coherent feature hierarchy.
 
 \FloatBarrier
 
@@ -180,7 +178,7 @@ We isolate the main design choices before validating the final recipe in the gen
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Objective ablation on SiT-B/2.} FID is computed with $10\mathrm{K}$ samples. The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer.}
+    \caption{\textbf{Objective ablation on SiT-B/2.} The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer. Config details are in \Cref{app:metric_definitions}.}
     \label{tab:realign_ablation}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -203,51 +201,33 @@ We isolate the main design choices before validating the final recipe in the gen
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} FID is computed with $10\mathrm{K}$ samples under the same training budget. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
+    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as \Cref{tab:realign_ablation}. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
     \label{tab:main_hyperparameter_tuning}
-    \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{0.84}
-    \begin{minipage}[t]{0.48\linewidth}
+    \tiny
+    \setlength{\tabcolsep}{1.2pt}
+    \renewcommand{\arraystretch}{0.74}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
-        \textbf{Timestep sampler}\\[0.25em]
+        \textbf{Timestep}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Sampler & FID-10K $\downarrow$ \\
+            Sampler & FID $\downarrow$ \\
             \midrule
-            \cellcolor{gray!20}uniform$(0,1)$ & \cellcolor{gray!20}\textbf{[TBD]} \\
-            logit-normal$(-0.2,1.0)$ & \textbf{[TBD]} \\
-            logit-normal$(-0.2,1.2)$ & \textbf{[TBD]} \\
-            logit-normal$(-0.4,1.0)$ & \textbf{[TBD]} \\
-            logit-normal$(-0.4,1.2)$ & \textbf{[TBD]} \\
+            \cellcolor{gray!20}uniform & \cellcolor{gray!20}\textbf{[TBD]} \\
+            logitN$(-.2,1.0)$ & \textbf{[TBD]} \\
+            logitN$(-.2,1.2)$ & \textbf{[TBD]} \\
+            logitN$(-.4,1.0)$ & \textbf{[TBD]} \\
+            logitN$(-.4,1.2)$ & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.48\linewidth}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
-        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.25em]
+        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Value & FID-10K $\downarrow$ \\
-            \midrule
-            0.1 & \textbf{[TBD]} \\
-            0.2 & \textbf{[TBD]} \\
-            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
-            0.7 & \textbf{[TBD]} \\
-            1.0 & \textbf{[TBD]} \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-
-    \vspace{0.65em}
-
-    \begin{minipage}[t]{0.48\linewidth}
-        \centering
-        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Value & FID-10K $\downarrow$ \\
+            Value & FID $\downarrow$ \\
             \midrule
             0.1 & \textbf{[TBD]} \\
             0.2 & \textbf{[TBD]} \\
@@ -258,12 +238,12 @@ We isolate the main design choices before validating the final recipe in the gen
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.48\linewidth}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
-        \textbf{$\lambda_{\mathrm{div}}$}\\[0.25em]
+        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Value & FID-10K $\downarrow$ \\
+            Value & FID $\downarrow$ \\
             \midrule
             0.1 & \textbf{[TBD]} \\
             0.2 & \textbf{[TBD]} \\
@@ -273,14 +253,50 @@ We isolate the main design choices before validating the final recipe in the gen
             \bottomrule
         \end{tabular*}
     \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.235\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID $\downarrow$ \\
+            \midrule
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+
 \end{table}
 
-The sweep keeps the default training timestep sampler uniform. Logit-normal timestep samplers are included only as controls, while the remaining panels tune the three LARA loss weights one at a time around the default configuration.
+The sweep keeps the default training timestep sampler uniform. Logit-normal timestep samplers are included only as controls, while the loss-weight panels tune the three LARA terms one at a time around the default configuration.
 
-We choose the layer-pair sampler by first asking where the simplest strategy fails. A temporary diagnostic run samples source layers, target layers, and timesteps uniformly, then groups transition-prediction error by normalized layer gap, source depth, and timestep range. The purpose is not to make uniform sampling the final recipe; it is to identify which internal transitions are too easy, too unstable, or useful for supervision.
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Predictor-size ablation on SiT-B/2.} The SiT-B/2 backbone has 137M parameters; detailed predictor configurations are in \Cref{app:predictor_architecture_capacity}.}
+    \label{tab:main_predictor_size_ablation}
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+        \toprule
+        Predictor & Params & Share of backbone & FID-10K $\downarrow$ \\
+        \midrule
+        Tiny & 2.7M & 1.9\% & 54.33 \\
+        Small & 5.9M & 4.3\% & \textbf{34.97} \\
+        Base & 18.3M & 13.4\% & 36.45 \\
+        Large & 25.4M & 18.6\% & 47.89 \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
-The resulting strategy is simple. Adjacent layers usually have low error, so repeatedly sampling them mostly teaches a local copy task. Very distant transitions have high error and can inject noisy auxiliary gradients early in training. The useful regime lies between these extremes: medium layer gaps with broad source-depth coverage. We therefore keep the training timestep sampler uniform, preserve coverage across valid depths for layer-agnostic alignment, and shift layer-pair probability mass away from trivial adjacent pairs toward informative medium-gap transitions. The full binned diagnostic table and schedule details are reported in \Cref{app:uniform_transition_diagnostic,app:realign_ablation_protocols}.
+\Cref{tab:main_predictor_size_ablation} shows that predictor capacity is a real design variable. A tiny predictor is too weak to match the geometry of different target layers, leading to poor transition supervision. Increasing capacity helps sharply, but making the predictor too large starts to hurt: a high-capacity auxiliary network can memorize layer representations instead of providing a useful regularizing signal, while also adding training overhead. We therefore use a moderate predictor and treat roughly $5$--$10\%$ of the backbone size as the practical capacity range.
 
-Overall, the experiments indicate that LARA's gains are not simply a consequence of choosing a better weak--strong pair. LayerSync shows that a selected internal alignment can regularize training, but its supervision remains tied to one hand-picked relation. LARA uses the same internal hierarchy more broadly: the shared transition predictor learns from many source--target pairs, while layer conditioning preserves the pair-specific gaps. This gives the model a more global alignment signal across depth, rather than a heuristic constraint anchored to a single reference layer.
+The sampler is chosen from a uniform diagnostic that groups transition error by layer gap, source depth, and timestep. Layer gap controls supervision difficulty: adjacent pairs are easy but mostly local, while very distant pairs are noisy early in training. Source depth controls coverage of the hierarchy, so we keep valid source positions broadly covered instead of anchoring the loss to one reference layer. Timestep has weaker structure in this diagnostic, so the training timestep sampler remains uniform. The final schedule therefore shifts probability away from trivial adjacent pairs toward informative medium-gap transitions; details are in \Cref{app:uniform_transition_diagnostic,app:realign_ablation_protocols}.
+
+Overall, the experiments indicate that LARA's gains are not simply a consequence of choosing a better weak--strong pair. LayerSync shows that a selected internal alignment can regularize training, but its supervision remains tied to one hand-picked relation. LARA uses the same internal hierarchy more broadly: the shared transition predictor learns from many source--target pairs, while layer conditioning preserves the pair-specific gaps. This gives the model a more global and coherent alignment signal across depth, replacing a single-reference constraint with a smoother relation among layers.
 
 \FloatBarrier

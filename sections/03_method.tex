@@ -70,7 +70,7 @@ where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ st
         \centering
         \includegraphics[width=\linewidth]{figures/imagenet256_fid_lara_sit7m_compressed.png}
     \end{minipage}
-    \caption{\textbf{Shared conditional transition interface.} The left panel illustrates LARA's shared predictor for $a\to b$, direct $a\to c$, and composed $a\to b\to c$ transitions. The right panel shows the matched-budget ImageNet $256\times256$ FID curve for SiT-XL/2, LayerSync, and LARA.}
+    \caption{\textbf{Shared conditional transition interface.} Left: at each iteration, LARA samples layer pairs and trains a shared predictor with $\mathcal{L}_{\mathrm{pred}}$ (\#1), which passes supervision across depth by predicting a target-layer state that aligns with layer $b$. The consistency loss $\mathcal{L}_{\mathrm{cons}}$ (\#2) ties direct and composed transitions, helping the predictor capture long-gap representations. Right: ImageNet $256\times256$ FID curves show that LARA reduces FID faster than the baseline and LayerSync.}
     \label{fig:realign_transition_predictor}
     \label{fig:training_curve}
 \end{figure}
@@ -129,22 +129,31 @@ Minimizing this term discourages layer homogenization: different depths can stil
     \vspace{0pt}
     \centering
     \captionsetup{type=figure,font=small,justification=raggedright,singlelinecheck=false}
-    \fbox{%
-    \begin{minipage}[c][0.78\linewidth][c]{0.78\linewidth}
-        \centering
-        \small
-        \textbf{[PLACEHOLDER]}\\[0.25em]
-        Before $\cos^2$
-    \end{minipage}}\\[0.45em]
-    \fbox{%
-    \begin{minipage}[c][0.78\linewidth][c]{0.78\linewidth}
-        \centering
-        \small
-        \textbf{[PLACEHOLDER]}\\[0.25em]
-        After $\cos^2$
-    \end{minipage}}
-    \vspace{-0.3em}
-    \captionof{figure}{\textbf{Layer diversity.} Pairwise layer-cosine heatmaps before and after the cosine-squared regularizer.}
+    \begin{tabular}{@{}c@{\hspace{0.25em}}c@{}}
+    \begin{tabular}[t]{@{}c@{}}
+    \includegraphics[
+        width=0.70\linewidth,
+        trim=50 41 97 32,
+        clip
+    ]{figures/layer_cosine_similarity_before.png}\\[0.30em]
+    \includegraphics[
+        width=0.70\linewidth,
+        trim=34 32 88 28,
+        clip
+    ]{figures/layer_cosine_similarity_after.png}
+    \end{tabular}
+    &
+    \begin{tabular}[t]{@{}c@{}}
+    \raisebox{-0.70\linewidth}{%
+    \includegraphics[
+        height=1.43\linewidth,
+        trim=411 32 0 28,
+        clip
+    ]{figures/layer_cosine_similarity_after.png}}
+    \end{tabular}
+    \end{tabular}
+    \vspace{-0.5em}
+    \captionof{figure}{\textbf{Layer diversity.} LARA on SiT-B/2 at $100\mathrm{K}$: before (top) and after (bottom) the $\cos^2$ regularizer, with a shared color scale. Cross-layer correlations are reduced after regularization.}
     \label{fig:cosine_squared_heatmap}
 \end{minipage}
 \vspace{0.5em}

@@ -116,7 +116,7 @@
     \centering
     \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
     \includegraphics[width=\linewidth]{figures/goose_pca_stable_rank.png}
-    \caption{\textbf{Shared spatial structure across depth and time.} PCA maps show that SiT-XL/2 layers retain a recognizable spatial scaffold while semantic abstraction changes with block depth and denoising timestep. The stable-rank curves on the right summarize how layer representations become richer as the image becomes cleaner, motivating LARA's layer-aware transition predictor across many source--target pairs. Stable-rank measurement details are given in \Cref{app:metric_definitions}.}
+    \caption{\textbf{Shared spatial structure across depth and time.} Following SRA, we visualize SiT-XL/2 hidden states and find a structured layerwise pattern: different blocks preserve a shared perceptual layout while semantics change with depth and denoising time. Because the activations have low effective rank, the leading PCA components retain meaningful signal rather than only visualization noise. The stable-rank curves show that representation richness changes as the image becomes cleaner, motivating LARA's layer-aware transitions across many source--target pairs. Measurement details are in \Cref{app:metric_definitions}.}
     \label{fig:projection_layout_observation}
 \end{figure}
 \vspace{-0.8em}
@@ -125,6 +125,7 @@
 \input{sections/04_experiments}
 \input{sections/05_conclusion}
 
+\clearpage
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
 
