@@ -184,7 +184,7 @@ The ablations are organized around the possible failure modes of the method. A t
         \toprule
         Variant & $\mathcal{L}_{\mathrm{pred}}$ & $\mathcal{L}_{\mathrm{cons}}$ & $\cos^2$ & FID-10K $\downarrow$ \\
         \midrule
-        Vanilla & -- & -- & -- & 51.36 \\
+        Vanilla & -- & -- & -- & 49.36 \\
         LayerSync & -- & -- & -- & 43.26 \\
         Cosine squared only & -- & -- & \checkmark & 44.44 \\
         LARA pred. (Ours) & \checkmark & -- & -- & 42.73 \\
@@ -211,7 +211,7 @@ The first control separates transition learning from auxiliary regularization. T
             Sampler & FID $\downarrow$ \\
             \midrule
             \cellcolor{gray!20}uniform & \cellcolor{gray!20}\textbf{[TBD]} \\
-            logitN$(-.2,1.0)$ & \textbf{[TBD]} \\
+            logitN$(-.2,1.0)$ & \textbf{35.12} \\
             logitN$(-.2,1.2)$ & \textbf{[TBD]} \\
             logitN$(-.4,1.0)$ & \textbf{[TBD]} \\
             logitN$(-.4,1.2)$ & \textbf{[TBD]} \\
