@@ -94,7 +94,7 @@
 \end{abstract}
 
 \vspace{-0.6em}
-\begin{center}
+\begin{figure}[H]
   \centering
 
   \newcommand{\panelimg}[1]{%
@@ -107,43 +107,45 @@
     }%
   }
 
-  \begin{minipage}[t]{0.32\linewidth}
+  \begin{minipage}[t]{0.48\linewidth}
     \centering
     \panelimg{figures/lara_group3.png}
-    
+
     \vspace{0.5em}
     {\small\textbf{(a) LayerSync}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.32\linewidth}
+  \begin{minipage}[t]{0.48\linewidth}
     \centering
     \panelimg{figures/lara_group4.png}
-    
+
     \vspace{0.5em}
     {\small\textbf{(b) Layer-aware transition}}
   \end{minipage}
-  \hfill
-  \begin{minipage}[t]{0.32\linewidth}
-    \centering
-    \panelimg{figures/lara_curve_placeholder.png}
-    
-    \vspace{0.5em}
-    {\small\textbf{(c) Training curve}}
-  \end{minipage}
 
   \vspace{0.5em}
-  \captionof{figure}{\textbf{Layer-aware representation alignment.}
+  \caption{\textbf{Layer-aware representation alignment.}
   \textbf{Left:} LayerSync aligns selected internal layer pairs.
-  \textbf{Middle:} LARA uses a shared layer-aware transition predictor across source--target depths.
-  \textbf{Right:} Placeholder for matched-budget FID curves.}
+  \textbf{Right:} LARA uses a shared layer-aware transition predictor across source--target depths.}
   \label{fig:projection_as_transition}
-\end{center}
+\end{figure}
 \vspace{-0.6em}
 
 \clearpage
 
 \input{sections/01_introduction}
 \input{sections/02_related_works}
+
+\FloatBarrier
+\begin{figure}[H]
+    \centering
+    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+    \includegraphics[width=0.88\linewidth]{figures/PCA.png}
+    \caption{\textbf{Shared spatial structure across depth.} PCA visualizations show that different layers preserve a common spatial scaffold while changing semantic abstraction. LARA uses this shared structure to support layer-aware transitions across many source--target pairs.}
+    \label{fig:projection_layout_observation}
+\end{figure}
+\vspace{-0.8em}
+
 \input{sections/03_method}
 \input{sections/04_experiments}
 \input{sections/05_conclusion}
