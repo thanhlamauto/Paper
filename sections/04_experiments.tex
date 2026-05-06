@@ -24,53 +24,54 @@ Our main comparisons are against the base SiT backbone and recent self-contained
 \paragraph{Results.}
 \Cref{tab:imagenet_no_cfg} reports the main no-CFG ImageNet $256\times256$ comparison under matched SiT training settings, while \Cref{tab:imagenet_cfg} reports a system-level comparison with CFG. The primary comparison is within each backbone and training budget; this separates the effect of LARA from changes in model size, sampler, or guidance.
 
+
 \begin{table}[!htbp]
     \centering
     \begin{minipage}[t]{0.49\textwidth}
-        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{Class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used.}
-        \label{tab:imagenet_no_cfg}
-        \vspace{0.35em}
-        \scriptsize
-        \setlength{\tabcolsep}{2.0pt}
-        \renewcommand{\arraystretch}{0.78}
-        \resizebox{\linewidth}{!}{%
-        \begin{tabular}{@{}lcccccc@{}}
-            \toprule
-            Model & \#Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
-            \midrule
-            \texttt{SiT-B/2} & 130M & 400K & 35.17 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 130M & 400K & 31.27 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 130M & 400K & 30.84 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 130M & 400K & 28.63 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 130M & 400K & 25.01 & [TBD] & [TBD] & [TBD] \\
-            \midrule
-            \texttt{SiT-L/2} & 458M & 400K & 20.55 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 458M & 400K & 16.27 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 458M & 400K & 15.50 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 458M & 400K & 12.69 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 458M & 400K & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \midrule
-            \texttt{SiT-XL/2} & 675M & 400K & 17.32 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 400K & 15.35 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 400K & 15.26 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 400K & 11.06 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 400K & 8.55 & [TBD] & [TBD] & [TBD] \\
-            \midrule
-            \texttt{SiT-XL/2} & 675M & 1M & 12.03 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 1M & 10.62 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 1M & 10.59 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 1M & 8.12 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 1M & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \midrule
-            \texttt{SiT-XL/2} & 675M & 2M & 8.85 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 2M & 7.97 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 2M & 6.80 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \bottomrule
-        \end{tabular}}
-    \end{minipage}
+    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+    \captionof{table}{\textbf{Class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used.}
+    \label{tab:imagenet_no_cfg}
+    \vspace{0.35em}
+    \scriptsize
+    \setlength{\tabcolsep}{3.0pt}
+    \renewcommand{\arraystretch}{0.9}
+    \centering
+    \begin{tabular}{@{}lccc@{}}
+        \toprule
+        Model & \#Params & Iter. & FID$\downarrow$ \\
+        \midrule
+        \texttt{SiT-B/2} & 130M & 400K & 35.17 \\
+        \quad + Dispersive & 130M & 400K & 31.27 \\
+        \quad + SRA & 130M & 400K & 30.84 \\
+        \quad + LayerSync & 130M & 400K & 28.63 \\
+        \quad + LARA (ours) & 130M & 400K & \textbf{25.01} \\
+        \midrule
+        \texttt{SiT-L/2} & 458M & 400K & 20.55 \\
+        \quad + Dispersive & 458M & 400K & 16.27 \\
+        \quad + SRA & 458M & 400K & 15.50 \\
+        \quad + LayerSync & 458M & 400K & 13.04 \\
+        \quad + LARA (ours) & 458M & 400K & \textbf{11.09} \\
+        \midrule
+        \texttt{SiT-XL/2} & 675M & 400K & 17.32 \\
+        \quad + Dispersive & 675M & 400K & 15.35 \\
+        \quad + SRA & 675M & 400K & 15.26 \\
+        \quad + LayerSync & 675M & 400K & 11.06 \\
+        \quad + LARA (ours) & 675M & 400K & \textbf{8.57} \\
+        \midrule
+        \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
+        \quad + Dispersive & 675M & 1M & 10.62 \\
+        \quad + SRA & 675M & 1M & 10.59 \\
+        \quad + LayerSync & 675M & 1M & 8.12 \\
+        \quad + LARA (ours) & 675M & 1M & \textbf{6.51} \\
+        \midrule
+        \texttt{SiT-XL/2} & 675M & 2M & 8.85 \\
+        \quad + Dispersive & 675M & 2M & 8.14 \\
+        \quad + SRA & 675M & 2M & 7.97 \\
+        \quad + LayerSync & 675M & 2M & 6.80 \\
+        \quad + LARA (ours) & 675M & 2M & \textbf{5.09} \\
+        \bottomrule
+    \end{tabular}
+\end{minipage}
     \hfill
     \begin{minipage}[t]{0.47\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
@@ -78,8 +79,8 @@ Our main comparisons are against the base SiT backbone and recent self-contained
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
         \scriptsize
-        \setlength{\tabcolsep}{1.8pt}
-        \renewcommand{\arraystretch}{0.80}
+        \setlength{\tabcolsep}{2.5pt}
+        \renewcommand{\arraystretch}{0.95}
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
             \toprule
             Model & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
@@ -92,25 +93,26 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \midrule
             \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
             VAR-d20 & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
+            D-JEPA-L & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 1.00M & 3.60 & 247.7 & 0.87 & 0.48 \\
+            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
             U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
-            DiffiT$^\ast$ & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2$^\ast$ & 5.40M & 1.58 & 314.7 & 0.79 & 0.65 \\
+            DiffiT & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
+            MDTv2-XL/2 & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            MaskDiT & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            SD-DiT & [TBD] & [TBD] & -- & -- & -- \\
-            DiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            SiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + REPA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & [TBD] & [TBD] & -- & -- & -- \\
-            \quad + LayerSync & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            DiT-XL/2 & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
+            \quad + REPA & 2.00M & \textbf{1.58} & 284.0 & 0.81 & 0.61 \\
+            \quad + SRA & 2.00M & 1.93 & 303.4 & 0.74 & 0.59 \\
+            \hdashline
+            \noalign{\vskip 0.5ex}
+            \quad + Dispersive & 2.00M & 1.97 & -- & -- & -- \\
+            \quad + LayerSync & 2.00M & 1.87 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA (ours) & 2.00M & 1.81 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}

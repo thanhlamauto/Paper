@@ -53,8 +53,7 @@ G_\psi(A_a^t,e_a,e_b,e_t),
 \end{equation}
 Here $G_\psi$ is a lightweight transition predictor, and $e_a,e_b,e_t$ are source-layer, target-layer, and timestep embeddings. The predicted activation $\widehat A_{a\to b}^{\,t}$ lives in the coordinate system of layer $b$. The same predictor is reused for all valid layer pairs, which removes the need to train a separate adapter for each manually selected pair.
 
-The transition prediction loss is
-\begin{equation}
+The transition prediction loss: \begin{equation}
 \mathcal{L}_{\mathrm{pred}}(\theta,\psi)
 =
 \mathbb{E}_{a<b,t}
