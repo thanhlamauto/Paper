@@ -59,7 +59,7 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \midrule
             \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
             \quad + Dispersive & 675M & 1M & 10.62 \\
-            \quad + SRA & 675M & 1M & 10.59 \\
+            \quad + SRA & 675M & 1M & 10. \\
             \quad + LayerSync & 675M & 1M & 8.12 \\
             \quad + LARA (Ours) & 675M & 1M & \textbf{6.51} \\
             \midrule
@@ -106,12 +106,12 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             DiT-XL/2 & 675M & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
             SiT-XL/2 & 675M & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 675M & 2.00M & 1.82 & 284.0 & 0.81 & 0.61 \\
+            \quad + REPA & 675M & 2.00M & 1.80 & 284.0 & 0.81 & 0.61 \\
             \hdashline
             \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
             \quad + Dispersive & 675M & 2.00M & 1.97 & -- & -- & -- \\
             \quad + LayerSync & 675M & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.84 & 276.48 & 0.81 & 0.61 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.82 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular}}
     \end{minipage}
@@ -144,9 +144,9 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
         \toprule
         Method & Iter. & FID $\downarrow$ & R-Precision $\uparrow$ \\
         \midrule
-        MDM & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + LayerSync & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
-        + LARA (Ours) & 600K & \textbf{[TBD]} & \textbf{[TBD]} \\
+        MDM & 600K & \textbf{0.503} & \textbf{0.7202} \\
+        + LayerSync & 600K & \textbf{0.4801} & \textbf{0.7434} \\
+        + LARA (Ours) & 600K & \textbf{0.4565} & \textbf{0.7557} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -180,7 +180,7 @@ We isolate the main design choices before validating the final recipe in the gen
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Objective ablation on SiT-B/2.} All rows use the same TPU training budget; FID is computed with $10\mathrm{K}$ samples. The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer.}
+    \caption{\textbf{Objective ablation on SiT-B/2.} FID is computed with $10\mathrm{K}$ samples. The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer.}
     \label{tab:realign_ablation}
     \small
     \setlength{\tabcolsep}{4pt}
