@@ -11,13 +11,13 @@ The experiments test the two claims behind LARA. First, a shared layer-aware tra
 Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
 
 \paragraph{Evaluation.}
-We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all LARA variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
+We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved,szegedy2016rethinking}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all LARA variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
 
 \paragraph{Comparison methods.}
 Our main comparisons are against the base SiT backbone and recent self-contained representation-regularized methods: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For system-level context, we also report representative ImageNet baselines from pixel diffusion~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}, latent diffusion~\citep{rombach2022ldm}, transformer-hybrid diffusion~\citep{bao2023all,hatamizadeh2024diffit,gao2023mdtv2}, and autoregressive or predictive generation~\citep{tian2024visual,chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
 
 \paragraph{Results.}
-ImageNet provides the main testbed because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, so changes in FID can be attributed to the auxiliary alignment objective rather than to model size, sampler, or guidance. We then include a CFG-based system comparison to place the final model among standard ImageNet generators.
+ImageNet provides the main testbed because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, so changes in FID can be attributed to the auxiliary alignment objective rather than to model size, sampler, or guidance. We then include a CFG-based system comparison to place the final model among standard ImageNet generators, where guidance can change the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}.
 
 \begin{table}[!htbp]
     \centering
@@ -117,7 +117,7 @@ The improvement is not confined to one backbone or training length. On \texttt{S
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
 
-To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
+To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2020action2motion,guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
 \paragraph{Implementation details.}
 We follow the MDM setup~\citep{tevet2022mdm} and use a transformer backbone with the same training budget for the baseline and LARA variant. The main comparison trains MDM with and without LARA for $600\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
