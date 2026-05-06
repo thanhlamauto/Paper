@@ -66,7 +66,27 @@ d\left(
 \right],
 \label{eq:align_loss}
 \end{equation}
-where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
+where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. In implementation, the predictor output is formed before token normalization, as detailed in \Cref{alg:lara_transition_distance}. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}{0.66\linewidth}
+    \centering
+    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+    \fbox{%
+    \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+        \centering
+        \small
+        \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
+        Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
+        and the consistency path $a\to b\to c$ with a shared predictor.
+    \end{minipage}}
+    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated.}
+    \label{fig:realign_transition_predictor}
+    \end{minipage}
+\end{figure}
+
+\FloatBarrier
 
 \subsection{Transition Consistency}
 
@@ -99,27 +119,25 @@ d\left(
 \end{equation}
 Only the online predictor is updated by this term. The source activation and the composed EMA target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
 
-\begin{figure}[!htbp]
-    \centering
-    \begin{minipage}{0.66\linewidth}
+\subsection{Diversity Regularization}
+
+\begin{wrapfigure}{r}{0.34\textwidth}
+    \vspace{-1.0em}
     \centering
     \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
     \fbox{%
-    \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+    \begin{minipage}[c][0.17\textheight][c]{0.30\textwidth}
         \centering
         \small
-        \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
-        Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
-        and the consistency path $a\to b\to c$ with a shared predictor.
+        \textbf{[PLACEHOLDER: layer cosine heatmaps]}\\[0.4em]
+        Before / after $\cos^2$ regularization.
     \end{minipage}}
-    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated.}
-    \label{fig:realign_transition_predictor}
-    \end{minipage}
-\end{figure}
+    \caption{\textbf{Layer diversity.} Pairwise layer-cosine heatmaps before and after the cosine-squared regularizer.}
+    \label{fig:cosine_squared_heatmap}
+    \vspace{-0.8em}
+\end{wrapfigure}
 
-\subsection{Diversity Regularization}
-
-We also use a lightweight diversity regularizer inspired by DiverseDiT~\citep{yang2026diversedit}. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
+LARA also uses a lightweight diversity regularizer inspired by DiverseDiT~\citep{yang2026diversedit}. Transition prediction encourages layers to share useful structure, but unrestricted sharing can make nearby depths carry redundant information. We therefore penalize high pairwise cosine similarity as a simple proxy for excessive mutual information between layer activations. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
 =
@@ -129,7 +147,7 @@ We also use a lightweight diversity regularizer inspired by DiverseDiT~\citep{ya
 \right].
 \label{eq:diversity_loss}
 \end{equation}
-This term discourages excessive layer homogenization. It keeps different depths from carrying indistinguishable information, reducing ambiguity while preserving the shared structure that the transition predictor exploits.
+This term discourages excessive layer homogenization and leaves different depths room to encode complementary features. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes the intended effect: reduce layer collapse while preserving the shared structure that the transition predictor exploits.
 
 \subsection{Full Objective}
 

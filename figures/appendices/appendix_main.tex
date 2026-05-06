@@ -55,7 +55,7 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
     \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))\\
     &\quad+\lambda_{\mathrm{cons}}d(\hat A_{a\to c}^t,\mathrm{sg}(\tilde A_{a\to b\to c}^t))\\
     &\quad+\lambda_{\mathrm{div}}\mathbb{E}_{i<j}
-    \operatorname{cos}_{\mathrm{tok}}^2(A_i^t,A_j^t),
+    \operatorname{cos}^2(A_i^t,A_j^t),
     \qquad A_i^t,A_j^t\in\mathcal{H}.
     \end{aligned}
     \]
@@ -65,40 +65,50 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Tokenwise distances.}
-For two token activations $U,V\in\mathbb{R}^{N\times C}$, LARA computes cosine similarity independently at each token and then averages over tokens:
+\paragraph{Predictor-induced transition distance.}
+The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
+
+\begin{algorithm}[!htbp]
+\caption{\textbf{Predictor-induced transition distance in LARA.}}
+\label{alg:lara_transition_distance}
+\small
+\begin{algorithmic}[1]
+\Require source state $A_a^t$; target state $A_b^t$; transition predictor $g_\psi$; conditioning tuple $(a,b,t,y)$.
+\State $\widehat A_{a\to b}^{\,t}\gets g_\psi(A_a^t;a,b,t,y)$
+\State $R_b^t\gets \operatorname{sg}(A_b^t)$
+\For{$n=1,\ldots,N$}
+    \State $u_n\gets \widehat A_{a\to b,n}^{\,t}/(\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon)$
+    \State $v_n\gets R_{b,n}^{t}/(\|R_{b,n}^{t}\|_2+\varepsilon)$
+    \State $\delta_n\gets 1-\langle u_n,v_n\rangle$
+\EndFor
+\State $d\gets \frac{1}{N}\sum_{n=1}^{N}\delta_n$
+\State \Return $d$
+\end{algorithmic}
+\end{algorithm}
+
+Equivalently, the transition distance used in \Cref{alg:realign_training} is
 \begin{equation}
-\operatorname{cos}_{\mathrm{tok}}(U,V)
-=
-\frac{1}{N}\sum_{n=1}^{N}
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}.
-\label{eq:appendix_token_cosine}
-\end{equation}
-The transition distance used in \Cref{alg:realign_training} is the corresponding tokenwise cosine distance,
-\begin{equation}
-d(U,V)
-=
+\begin{aligned}
+\bar A_{a\to b,n}^{\,t}
+&=
+\frac{\widehat A_{a\to b,n}^{\,t}}
+{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
+&
+\bar R_{b,n}^{t}
+&=
+\frac{\operatorname{sg}(A_{b,n}^t)}
+{\|\operatorname{sg}(A_{b,n}^t)\|_2+\varepsilon},\\
+d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
+&=
 \frac{1}{N}\sum_{n=1}^{N}
 \left(
 1-
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}
+\left\langle \bar A_{a\to b,n}^{\,t},\bar R_{b,n}^{t}\right\rangle
 \right).
+\end{aligned}
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
-The diversity term uses the same cached activations and squares the tokenwise cosine before averaging:
-\begin{equation}
-\operatorname{cos}_{\mathrm{tok}}^2(U,V)
-=
-\frac{1}{N}\sum_{n=1}^{N}
-\left(
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}
-\right)^2.
-\label{eq:appendix_token_cosine_squared}
-\end{equation}
-Thus $\mathcal{L}_{\mathrm{div}}$ is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
+The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
 \subsection{Optional Inference Interface}
 
@@ -133,20 +143,22 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Training Compute}
+\label{app:training_compute}
+
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Training compute and speed.} Placeholder table for measuring training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
+    \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
     \label{tab:appendix_compute_overhead}
     \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lccccccc@{}}
+    \setlength{\tabcolsep}{6pt}
+    \begin{tabular*}{0.58\textwidth}{@{\extracolsep{\fill}}lc@{}}
         \toprule
-        Method & Extra params & Train TFLOPs/img & Train TFLOPs/step & Sec./step & Images/sec. & Rel. speed & Infer. cost \\
+        Method & Train TFLOPs/step \\
         \midrule
-        SiT baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ & $1.00\times$ \\
-        LayerSync & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        LARA & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        LARA interface Euler & 5--10\% & -- & -- & -- & -- & -- & \textbf{[TBD]} \\
+        SiT baseline & \textbf{[TBD]} \\
+        LayerSync & \textbf{[TBD]} \\
+        LARA & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -327,29 +339,25 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
 \paragraph{Task.}
 Given a sentence that describes a motion as a sequence of actions, the task is to generate a corresponding human motion. Each motion sequence consists of a series of human poses, where each pose is represented by 22 joints defined as 3D points in space.
 
-\paragraph{Dataset.}
-We rely on the HumanML3D dataset~\citep{guo2022generating}, which contains 44,970 motion annotations across 14,646 motion sequences from the AMASS~\citep{mahmood2019amass} and HumanAct12~\citep{guo2020action2motion} datasets, along with corresponding text descriptions. HumanML3D is widely used for text-conditional human motion generation. Motions in HumanML3D follow the SMPL skeleton structure~\citep{loper2015smpl} with 22 joints. Each pose $p$ in the motion sequence is represented by a vector of size 237,
-\[
-    (r^a,\dot r^x,\dot r^z,r^y,j^p,j^v,j^r,c^f),
-\]
-where $r^a\in\mathbb{R}$ is the root (pelvis joint) angular velocity along the Y-axis; $(\dot r^x,\dot r^z)\in\mathbb{R}^2$ are the root linear velocities in the XZ-plane; $r^y\in\mathbb{R}$ is the root height; $j^p\in\mathbb{R}^{3J}$, $j^v\in\mathbb{R}^{3J}$, and $j^r\in\mathbb{R}^{6J}$ are the local joint positions, velocities, and rotations in the root space, with $J$ indicating the number of joints; and $c^f\in\mathbb{R}^4$ represents foot-ground contact features.
+\paragraph{Benchmark.}
+We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
 \paragraph{Implementation details.}
-We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iterations and align block 3 with block 6.
+The motion backbone has six transformer blocks and is trained for 600K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone and budget, but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{HumanML3D setup.} Motion-generation configuration used by the baseline, LayerSync, and LARA variants.}
+    \caption{\textbf{HumanML3D protocol.} All rows use the same MDM data processing and evaluator; only the internal alignment objective changes.}
     \label{tab:appendix_humanml3d_setup}
     \small
     \setlength{\tabcolsep}{5pt}
     \begin{tabular}{lccccc}
         \toprule
-        Method & Backbone layers & Iter. & Transition pairs & Evaluator & Metrics \\
+        Method & Layers & Iter. & Internal supervision & Evaluator & Metrics \\
         \midrule
-        MDM & 6 & 600K & -- & Standard MDM & FID, R-Precision \\
-        MDM + LayerSync & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
-        MDM + LARA & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
+        MDM & 6 & 600K & none & Standard MDM & FID, R-Precision \\
+        MDM + LayerSync & 6 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
+        MDM + LARA & 6 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -374,7 +382,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms change. & \citep{heusel2017gans} \\
+        \Cref{tab:realign_ablation,tab:appendix_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms or loss weights change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -402,7 +410,7 @@ For hidden-state diagnostics, let $X,Y\in\mathbb{R}^{M\times C}$ denote flattene
 \frac{\|X_c^{\top}Y_c\|_F^2}
 {\|X_c^{\top}X_c\|_F\|Y_c^{\top}Y_c\|_F+\varepsilon},
 \end{equation}
-following \citet{kornblith2019similarity}; we use it for transformer-layer comparisons in the same diagnostic spirit as \citet{raghu2021visiontransformers}. Stable rank is $\|Z\|_F^2/\|Z\|_2^2$ after channelwise normalization, and PCA visualizations use the leading principal components of the same normalized activations. Pseudo-mask IoU and Boundary-F1 compare spatial structures recovered from activations with a reference partition or boundary map. Transition prediction error is
+following \citet{kornblith2019similarity}; we use it for transformer-layer comparisons in the same diagnostic spirit as \citet{raghu2021visiontransformers}. Stable rank is $\|Z\|_F^2/\|Z\|_2^2$ after channelwise normalization, and PCA visualizations use the leading principal components of the same normalized activations. Transition prediction error is
 \begin{equation}
 E_{\mathrm{pred}}(a,b)
 =
@@ -411,7 +419,7 @@ E_{\mathrm{pred}}(a,b)
 d\left(g_\psi(A_a^t;a,b,t),\operatorname{sg}(A_b^t)\right)
 \right],
 \end{equation}
-where $d$ follows the tokenwise cosine distance in \Cref{eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
+where $d$ follows the predictor-first transition distance in \Cref{alg:lara_transition_distance,eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
 
 \section{Additional Ablations and Scaling}
 \label{app:realign_ablation_protocols}
@@ -466,32 +474,86 @@ We sweep source and target blocks while keeping compute, batch size, and trainin
     \end{tabular}
 \end{table}
 
-\subsection{Predictor Capacity and Optimization Controls}
+\subsection{Predictor Architecture and Capacity Controls}
 
-We compare small and large predictors, pair-specific projectors, and matched-learning-rate controls. These runs separate cross-depth transition learning from raw auxiliary capacity.
+We first specify the transition predictor used by LARA, since the capacity sweep is only meaningful once the module being scaled is fixed. The predictor is a compact ConvNeXt-style residual transition module. It takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for separating transition learning from capacity or optimization effects.}
+    \caption{\textbf{Transition predictor configuration.} The same architectural template is used across the main experiments; capacity controls vary width, depth, or parameter budget while keeping the conditioning interface fixed.}
+    \label{tab:appendix_predictor_config}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}lll@{}}
+        \toprule
+        Component & Role & Setting \\
+        \midrule
+        Input state & source activation tokens & $A_a^t\in\mathbb{R}^{N\times C}$ \\
+        Conditioning & identify transition and denoising time & source layer, target layer, timestep, optional condition \\
+        Stem & map source features to predictor width & linear / $1{\times}1$ projection, width \textbf{[TBD]} \\
+        Core & shared transition computation & ConvNeXt-style residual token-mixing blocks, depth \textbf{[TBD]} \\
+        Output head & return target-layer coordinates & projection back to $C$ channels \\
+        Target path & stable internal reference & $\operatorname{sg}(A_b^t)$, no predictor update through target \\
+        Parameter budget & auxiliary capacity & selected in the 5--10\% backbone range \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
+We then vary the predictor capacity while holding the backbone, training budget, data pipeline, and layer-pair sampler fixed. These controls separate the value of a shared cross-depth transition function from two simpler explanations: adding many auxiliary parameters, or using pair-specific projection heads that only solve selected pairs.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for selecting the transition-predictor budget while separating transition learning from raw capacity or optimization effects.}
     \label{tab:appendix_predictor_capacity_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lccccc}
         \toprule
-        Variant & Pred. params & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+        Variant & Pred. budget & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
         \midrule
         Baseline & -- & -- & \textbf{[TBD]} & -- & -- \\
-        Small shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Large shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Pair-specific projectors & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Small shared predictor & $<5\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Selected shared predictor & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Large shared predictor & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Pair-specific projectors & matched total & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         Matched learning-rate baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
 
+We choose the 5--10\% predictor range as the default budget because it is the smallest regime intended to make the transition task nontrivial without turning LARA into a second backbone. A smaller predictor can underfit long or mid-depth transitions, while a much larger predictor may reduce auxiliary prediction error without giving a proportional generation gain. The selected range therefore keeps the module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
+
 \subsection{Loss-Weight, Max-Gap, and Schedule Controls}
 
 These controls tune the final recipe without changing the main LARA mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Loss-weight tuning on SiT-B/2.} We tune one parameter at a time and keep the other weights fixed at the current best setting. This isolates which value of each component weight gives the best trade-off between generation quality and transition prediction.}
+    \label{tab:appendix_hyperparameter_tuning}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.86}
+    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}llccc@{}}
+        \toprule
+        Tuned weight & Candidate value & Fixed weights & FID-10K $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+        \midrule
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        \midrule
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
+        \midrule
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
+        \midrule
+        Final LARA & selected & -- & [TBD] & [TBD] \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
 \begin{table}[!htbp]
     \centering
@@ -643,24 +705,6 @@ This ablation tests whether projection heads extract useful recoverable signal o
         \bottomrule
     \end{tabular}}
 \end{table}
-
-\subsection{Layout-Recoverable Spatial Information}
-\label{app:layout_recoverable_information}
-
-Spatial probes ask whether activations preserve layout in a recoverable form. We convert activations into spatial partitions or boundaries and compare them with DINO-derived pseudo masks, image edges, or object masks when available. Same-image, different-image, and token-shuffle controls check whether the score reflects image-specific layout.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: layout-recoverable spatial information]}\\[0.5em]
-        Panels: PCA maps, spatial-normalized PCA maps, DINO pseudo-mask IoU, Boundary-F1,\\
-        region agreement, and same/different-image controls.
-    \end{minipage}}
-    \caption{\textbf{Layout-recoverable spatial information.} Placeholder for measuring spatial structure in internal activations alongside raw feature similarity.}
-    \label{fig:appendix_layout_recoverable}
-\end{figure}
 
 \subsection{Transition Generalization}
 \label{app:transition_generalization}

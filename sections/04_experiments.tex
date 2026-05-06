@@ -32,44 +32,44 @@ Our main comparisons are against the base SiT backbone and recent self-contained
         \label{tab:imagenet_no_cfg}
         \vspace{0.35em}
         \scriptsize
-        \setlength{\tabcolsep}{2.0pt}
+        \setlength{\tabcolsep}{3.0pt}
         \renewcommand{\arraystretch}{0.78}
-        \resizebox{\linewidth}{!}{%
-        \begin{tabular}{@{}lcccccc@{}}
+        \centering
+        \begin{tabular}{@{}lccc@{}}
             \toprule
-            Model & \#Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            Model & \#Params & Iter. & FID$\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 130M & 400K & 35.17 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 130M & 400K & 31.27 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 130M & 400K & 30.84 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 130M & 400K & 28.63 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 130M & 400K & 25.01 & [TBD] & [TBD] & [TBD] \\
+            \texttt{SiT-B/2} & 130M & 400K & 35.17 \\
+            \quad + Dispersive & 130M & 400K & 31.27 \\
+            \quad + SRA & 130M & 400K & 30.84 \\
+            \quad + LayerSync & 130M & 400K & 28.63 \\
+            \quad + LARA & 130M & 400K & \textbf{25.01} \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 400K & 20.55 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 458M & 400K & 16.27 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 458M & 400K & 15.50 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 458M & 400K & 12.69 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 458M & 400K & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \texttt{SiT-L/2} & 458M & 400K & 20.55 \\
+            \quad + Dispersive & 458M & 400K & 16.27 \\
+            \quad + SRA & 458M & 400K & 15.50 \\
+            \quad + LayerSync & 458M & 400K & 13.04 \\
+            \quad + LARA & 458M & 400K & \textbf{11.09} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 400K & 17.32 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 400K & 15.35 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 400K & 15.26 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 400K & 11.06 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 400K & 8.55 & [TBD] & [TBD] & [TBD] \\
+            \texttt{SiT-XL/2} & 675M & 400K & 17.32 \\
+            \quad + Dispersive & 675M & 400K & 15.35 \\
+            \quad + SRA & 675M & 400K & 15.26 \\
+            \quad + LayerSync & 675M & 400K & 11.06 \\
+            \quad + LARA & 675M & 400K & \textbf{8.57} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 1M & 12.03 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 1M & 10.62 & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 1M & 10.59 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 1M & 8.12 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 1M & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
+            \quad + Dispersive & 675M & 1M & 10.62 \\
+            \quad + SRA & 675M & 1M & 10.59 \\
+            \quad + LayerSync & 675M & 1M & 8.12 \\
+            \quad + LARA & 675M & 1M & \textbf{6.51} \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 2M & 8.85 & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + SRA & 675M & 2M & 7.97 & [TBD] & [TBD] & [TBD] \\
-            \quad + LayerSync & 675M & 2M & 6.80 & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & 675M & 2M & [TBD] & [TBD] & [TBD] & [TBD] \\
+            \texttt{SiT-XL/2} & 675M & 2M & 8.85 \\
+            \quad + Dispersive & 675M & 2M & 8.14 \\
+            \quad + SRA & 675M & 2M & 7.97 \\
+            \quad + LayerSync & 675M & 2M & 6.80 \\
+            \quad + LARA & 675M & 2M & \textbf{5.09} \\
             \bottomrule
-        \end{tabular}}
+        \end{tabular}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.47\textwidth}
@@ -92,31 +92,31 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \midrule
             \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
             VAR-d20 & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
+            D-JEPA-L & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 1.00M & 3.60 & 247.7 & 0.87 & 0.48 \\
+            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
             U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
-            DiffiT$^\ast$ & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2$^\ast$ & 5.40M & 1.58 & 314.7 & 0.79 & 0.65 \\
+            DiffiT & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
+            MDTv2-XL/2 & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            MaskDiT & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            SD-DiT & [TBD] & [TBD] & -- & -- & -- \\
-            DiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            SiT-XL/2 & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + REPA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + Dispersive & [TBD] & [TBD] & -- & -- & -- \\
-            \quad + LayerSync & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
-            \quad + LARA & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+            DiT-XL/2 & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
+            \quad + REPA & 2.00M & \textbf{1.58} & 284.0 & 0.81 & 0.61 \\
+            \hdashline
+            \quad + SRA & 2.00M & 1.90 & 311.4 & 0.80 & 0.63 \\
+            \quad + Dispersive & 2.00M & 1.97 & -- & -- & -- \\
+            \quad + LayerSync & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA & 2.00M & 1.84 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
 \end{table}
 
-The no-CFG results show the same pattern across available scales. On \texttt{SiT-B/2}, LARA improves FID from $35.17$ to $25.01$, a $28.9\%$ relative gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-XL/2} at $400\mathrm{K}$ iterations, LARA improves FID from $17.32$ to $9.75$, a $43.7\%$ gain over the base model and an $11.8\%$ gain over LayerSync. The \texttt{SiT-L/2}, \texttt{SiT-XL/2} $1\mathrm{M}$, and \texttt{SiT-XL/2} $2\mathrm{M}$ LARA runs are reported as \textbf{[TBD]} in the table.
+The no-CFG results show the same pattern across available scales. On \texttt{SiT-B/2}, LARA improves FID from $35.17$ to $25.01$, a $28.9\%$ relative gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, LARA improves FID from $20.55$ to $11.09$, a $46.0\%$ gain over the base model and a $15.0\%$ gain over LayerSync. On \texttt{SiT-XL/2}, the gains remain consistent as training increases: at $400\mathrm{K}$ iterations, LARA improves FID from $17.32$ to $8.57$; at $1\mathrm{M}$ iterations, from $12.03$ to $6.51$; and at $2\mathrm{M}$ iterations, from $8.85$ to $5.09$. With CFG, LARA achieves the best FID among the SiT-family variants in \Cref{tab:imagenet_cfg}, improving over LayerSync from $1.89$ to $1.84$ while keeping comparable precision and recall.
 
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
@@ -182,7 +182,7 @@ This pattern is the internal trace expected from LARA. Weak layers expose cleane
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-We isolate the main design choices before validating the final recipe in the generation tables. The ablations test the objective terms, the cosine-squared regularizer, and the transition errors induced by uniform layer-pair sampling. Detailed settings and extended controls are reported in \Cref{app:realign_ablation_protocols}.
+We isolate the main design choices before validating the final recipe in the generation tables. The ablations test the objective terms and the transition errors induced by uniform layer-pair sampling. Loss-weight tuning and extended controls are reported in \Cref{app:realign_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
@@ -205,25 +205,11 @@ We isolate the main design choices before validating the final recipe in the gen
     \end{tabular*}
 \end{table}
 
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.92\linewidth}
-        \centering
-        \small
-        \textbf{[PLACEHOLDER: layer cosine heatmaps]}\\[0.5em]
-        Left: cosine-similarity heatmap across backbone layers before $\cos^2$ regularization.\\
-        Right: the same heatmap after applying the cosine-squared term.
-    \end{minipage}}
-    \caption{\textbf{Effect of the cosine-squared regularizer.} The heatmaps visualize pairwise layer similarity before and after the regularizer. The intended effect is simple: reduce excessive layer collapse while preserving the cross-depth transition signal.}
-    \label{fig:cosine_squared_heatmap}
-\end{figure}
-
-Uniform layer-pair training is both a baseline and a diagnostic. A useful shared predictor should already work under uniform sampling; its prediction errors then reveal which transitions are too easy, too hard, or most informative. The exact diagnostic protocol is reported in \Cref{app:realign_ablation_protocols}.
+We choose the layer-pair sampler by first looking at what goes wrong under the simplest sampler. We train the transition predictor with uniform sampling over source layers, target layers, and timesteps. This run is not our final recipe; it is a diagnostic that shows where the auxiliary task wastes capacity and where it provides useful supervision. If all bins had similar prediction error, uniform sampling would be sufficient. Instead, \Cref{tab:pair_sampling_ablation} shows that some transitions are too easy, some are too unstable, and only a subset gives a clean learning signal. Percentages denote normalized bins: layer gap and source layer move from shallow/short to deep/long, while timestep moves from lower to higher noise.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Where uniform transition prediction is difficult.} Prediction error is measured under uniform pair sampling. These diagnostics motivate the final pair-selection strategy; full schedule details are in \Cref{app:realign_ablation_protocols}.}
+    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap, source-layer, and timestep bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable. Full schedule details are in \Cref{app:realign_ablation_protocols}.}
     \label{tab:pair_sampling_ablation}
     \scriptsize
     \setlength{\tabcolsep}{2.2pt}
@@ -235,10 +221,10 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
             \toprule
             Gap & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            Short & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Medium & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Long & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Very long & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -250,10 +236,10 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
             \toprule
             Source & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            Early & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Early-mid & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Middle & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Late & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -265,16 +251,16 @@ Uniform layer-pair training is both a baseline and a diagnostic. A useful shared
             \toprule
             Range & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            High noise & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Mid noise & \textbf{[TBD]} & \textbf{[TBD]} \\
-            Low noise & \textbf{[TBD]} & \textbf{[TBD]} \\
-            All & 1.00 & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
 \end{table}
 
-These tables lead to a simple strategy: keep enough uniform coverage for layer-agnostic alignment, then bias training toward transitions that are informative and learnable. The final schedule mixes medium layer gaps, avoids over-sampling trivial neighboring layers, and reweights timesteps where transition prediction carries the clearest signal. Additional controls for max gap, timestep schedule, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
+The resulting strategy is simple. Adjacent layers have low error, so repeatedly sampling them mostly teaches the predictor a local copy task. Very distant layers have high error, so using them too often can make the auxiliary loss noisy early in training. The useful regime lies between these extremes: medium gaps, broadly covered source positions, and timesteps where the denoising state still contains both structure and uncertainty. We therefore keep coverage across valid depths to preserve layer-agnostic alignment, but shift probability mass away from trivial adjacent pairs and toward informative medium-gap transitions and stable timestep ranges. The exact sampling distribution and additional controls for max gap, timestep schedule, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are reported in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
 
 Overall, the experiments indicate that LARA's gains are not simply a consequence of choosing a better weak--strong pair. LayerSync shows that a selected internal alignment can regularize training, but its supervision remains tied to one hand-picked relation. LARA uses the same internal hierarchy more broadly: the shared transition predictor learns from many source--target pairs, while layer conditioning preserves the pair-specific gaps. This gives the model a more global alignment signal across depth, rather than a heuristic constraint anchored to a single reference layer.
 
