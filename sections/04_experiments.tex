@@ -43,76 +43,77 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \quad + Dispersive & 130M & 400K & 31.27 \\
             \quad + SRA & 130M & 400K & 30.84 \\
             \quad + LayerSync & 130M & 400K & 28.63 \\
-            \quad + LARA & 130M & 400K & \textbf{25.01} \\
+            \quad + LARA (Ours) & 130M & 400K & \textbf{25.01} \\
             \midrule
             \texttt{SiT-L/2} & 458M & 400K & 20.55 \\
             \quad + Dispersive & 458M & 400K & 16.27 \\
             \quad + SRA & 458M & 400K & 15.50 \\
             \quad + LayerSync & 458M & 400K & 13.04 \\
-            \quad + LARA & 458M & 400K & \textbf{11.09} \\
+            \quad + LARA (Ours) & 458M & 400K & \textbf{11.09} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400K & 17.32 \\
             \quad + Dispersive & 675M & 400K & 15.35 \\
             \quad + SRA & 675M & 400K & 15.26 \\
             \quad + LayerSync & 675M & 400K & 11.06 \\
-            \quad + LARA & 675M & 400K & \textbf{8.57} \\
+            \quad + LARA (Ours) & 675M & 400K & \textbf{8.57} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
             \quad + Dispersive & 675M & 1M & 10.62 \\
             \quad + SRA & 675M & 1M & 10.59 \\
             \quad + LayerSync & 675M & 1M & 8.12 \\
-            \quad + LARA & 675M & 1M & \textbf{6.51} \\
+            \quad + LARA (Ours) & 675M & 1M & \textbf{6.51} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 2M & 8.85 \\
             \quad + Dispersive & 675M & 2M & 8.14 \\
             \quad + SRA & 675M & 2M & 7.97 \\
             \quad + LayerSync & 675M & 2M & 6.80 \\
-            \quad + LARA & 675M & 2M & \textbf{5.09} \\
+            \quad + LARA (Ours) & 675M & 2M & \textbf{5.09} \\
             \bottomrule
         \end{tabular}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.47\textwidth}
         \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.}}
+        \captionof{table}{\textbf{System-level comparison on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} \#Params reports inference-generator parameters; training-only auxiliary modules are not counted.}
         \label{tab:imagenet_cfg}
         \vspace{0.35em}
         \scriptsize
-        \setlength{\tabcolsep}{1.8pt}
+        \setlength{\tabcolsep}{1.6pt}
         \renewcommand{\arraystretch}{0.80}
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+        \resizebox{\linewidth}{!}{%
+        \begin{tabular}{@{}lcccccc@{}}
             \toprule
-            Model & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            Model & \#Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
             \midrule
-            \multicolumn{6}{@{}l}{\textit{Pixel diffusion}} \\
-            ADM-U & 2.00M & 3.94 & 186.7 & 0.82 & 0.52 \\
-            VDM++ & 2.80M & 2.40 & 225.3 & -- & -- \\
-            Simple diffusion & 4.00M & 2.77 & 211.8 & -- & -- \\
-            CDM & 10.80M & 4.88 & 158.7 & -- & -- \\
+            \multicolumn{7}{@{}l}{\textit{Pixel diffusion}} \\
+            ADM-U & 554M & 2.00M & 3.94 & 186.7 & 0.82 & 0.52 \\
+            VDM++ & 2.0B & 2.80M & 2.40 & 225.3 & -- & -- \\
+            Simple diffusion & 2.0B & 4.00M & 2.77 & 211.8 & -- & -- \\
+            CDM & -- & 10.80M & 4.88 & 158.7 & -- & -- \\
             \midrule
-            \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
-            VAR-d20 & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
+            \multicolumn{7}{@{}l}{\textit{Autoregressive image generation}} \\
+            VAR-d20 & 600M & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
+            D-JEPA-L & 687M & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
             \midrule
-            \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, U-Net}} \\
+            LDM-4 & 400M & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
             \midrule
-            \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
-            U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
-            DiffiT & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2 & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
+            U-ViT-H/2 & 501M & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
+            DiffiT & 561M & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
+            MDTv2-XL/2 & 676M & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
-            \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            DiT-XL/2 & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
-            SiT-XL/2 & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 2.00M & \textbf{1.58} & 284.0 & 0.81 & 0.61 \\
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
+            DiT-XL/2 & 675M & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 675M & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
+            \quad + REPA & 675M & 2.00M & 1.82 & 284.0 & 0.81 & 0.61 \\
             \hdashline
-            \quad + SRA & 2.00M & 1.90 & 311.4 & 0.80 & 0.63 \\
-            \quad + Dispersive & 2.00M & 1.97 & -- & -- & -- \\
-            \quad + LayerSync & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA & 2.00M & 1.84 & 276.48 & 0.81 & 0.61 \\
+            \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
+            \quad + Dispersive & 675M & 2.00M & 1.97 & -- & -- & -- \\
+            \quad + LayerSync & 675M & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.84 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
-        \end{tabular*}
+        \end{tabular}}
     \end{minipage}
 \end{table}
 
@@ -182,7 +183,7 @@ This pattern is the internal trace expected from LARA. Weak layers expose cleane
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-We isolate the main design choices before validating the final recipe in the generation tables. The ablations test the objective terms and the transition errors induced by uniform layer-pair sampling. Loss-weight tuning and extended controls are reported in \Cref{app:realign_ablation_protocols}.
+We isolate the main design choices before validating the final recipe in the generation tables. The ablations test the objective terms, the default hyperparameters, and the transition errors induced by uniform layer-pair sampling. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
@@ -198,12 +199,85 @@ We isolate the main design choices before validating the final recipe in the gen
         Vanilla & -- & -- & -- & \textbf{[TBD]} \\
         LayerSync & -- & -- & -- & \textbf{[TBD]} \\
         Cosine squared only & -- & -- & \checkmark & \textbf{[TBD]} \\
-        LARA pred. & \checkmark & -- & -- & \textbf{[TBD]} \\
-        LARA pred. + cons. & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
-        Full LARA & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        LARA pred. (Ours) & \checkmark & -- & -- & \textbf{[TBD]} \\
+        LARA pred. + cons. (Ours) & \checkmark & \checkmark & -- & \textbf{[TBD]} \\
+        Full LARA (Ours) & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} FID is computed with $10\mathrm{K}$ samples under the same training budget. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
+    \label{tab:main_hyperparameter_tuning}
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.84}
+    \begin{minipage}[t]{0.48\linewidth}
+        \centering
+        \textbf{Timestep sampler}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Sampler & FID-10K $\downarrow$ \\
+            \midrule
+            \cellcolor{gray!20}uniform$(0,1)$ & \cellcolor{gray!20}\textbf{[TBD]} \\
+            logit-normal$(-0.2,1.0)$ & \textbf{[TBD]} \\
+            logit-normal$(-0.2,1.2)$ & \textbf{[TBD]} \\
+            logit-normal$(-0.4,1.0)$ & \textbf{[TBD]} \\
+            logit-normal$(-0.4,1.2)$ & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Setting & Value & FID-10K $\downarrow$ \\
+            \midrule
+            low & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
+            high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+
+    \vspace{0.65em}
+
+    \begin{minipage}[t]{0.48\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Setting & Value & FID-10K $\downarrow$ \\
+            \midrule
+            off & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
+            high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{div}}$}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Setting & Value & FID-10K $\downarrow$ \\
+            \midrule
+            off & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \cellcolor{gray!20}default & \cellcolor{gray!20}\textbf{[TBD]} & \cellcolor{gray!20}\textbf{[TBD]} \\
+            high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            very high & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+\end{table}
+
+The sweep keeps the default training timestep sampler uniform. Logit-normal timestep samplers are included only as controls, while the remaining panels tune the three LARA loss weights one at a time around the default configuration.
 
 We choose the layer-pair sampler by first looking at what goes wrong under the simplest sampler. We train the transition predictor with uniform sampling over source layers, target layers, and timesteps. This run is not our final recipe; it is a diagnostic that shows where the auxiliary task wastes capacity and where it provides useful supervision. If all bins had similar prediction error, uniform sampling would be sufficient. Instead, \Cref{tab:pair_sampling_ablation} shows that some transitions are too easy, some are too unstable, and only a subset gives a clean learning signal. Percentages denote normalized bins: layer gap and source layer move from shallow/short to deep/long, while timestep moves from lower to higher noise.
 
@@ -260,7 +334,7 @@ We choose the layer-pair sampler by first looking at what goes wrong under the s
     \end{minipage}
 \end{table}
 
-The resulting strategy is simple. Adjacent layers have low error, so repeatedly sampling them mostly teaches the predictor a local copy task. Very distant layers have high error, so using them too often can make the auxiliary loss noisy early in training. The useful regime lies between these extremes: medium gaps, broadly covered source positions, and timesteps where the denoising state still contains both structure and uncertainty. We therefore keep coverage across valid depths to preserve layer-agnostic alignment, but shift probability mass away from trivial adjacent pairs and toward informative medium-gap transitions and stable timestep ranges. The exact sampling distribution and additional controls for max gap, timestep schedule, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are reported in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
+The resulting strategy is simple. Adjacent layers have low error, so repeatedly sampling them mostly teaches the predictor a local copy task. Very distant layers have high error, so using them too often can make the auxiliary loss noisy early in training. The useful layer-pair regime lies between these extremes: medium gaps with broadly covered source positions. We therefore keep coverage across valid depths to preserve layer-agnostic alignment, keep the training timestep sampler uniform, and shift layer-pair probability mass away from trivial adjacent pairs toward informative medium-gap transitions. Additional controls for max gap, timestep sampler, predictor architecture, loss weights, PCA diagnostics, qualitative samples, and standard-versus-interface inference are reported in \Cref{app:realign_ablation_protocols,app:layer_statistics_projection,app:qualitative_examples}.
 
 Overall, the experiments indicate that LARA's gains are not simply a consequence of choosing a better weak--strong pair. LayerSync shows that a selected internal alignment can regularize training, but its supervision remains tied to one hand-picked relation. LARA uses the same internal hierarchy more broadly: the shared transition predictor learns from many source--target pairs, while layer conditioning preserves the pair-specific gaps. This gives the model a more global alignment signal across depth, rather than a heuristic constraint anchored to a single reference layer.
 
