@@ -25,6 +25,18 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 
 Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
 
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}{1\textwidth}
+        \centering
+        \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+        \includegraphics[width=\linewidth]{figures/PCA.png}
+        \caption{\textbf{Shared spatial structure across depth.} PCA visualizations show that different layers preserve a common spatial scaffold while changing semantic abstraction. LARA uses this shared structure to support layer-aware transitions across many source--target pairs.}
+        \label{fig:projection_layout_observation}
+    \end{minipage}
+\end{figure}
+\FloatBarrier
+
 \paragraph{Motivation from shared structure.}
 SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
 
