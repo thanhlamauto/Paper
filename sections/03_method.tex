@@ -66,7 +66,7 @@ d\left(
 \right],
 \label{eq:align_loss}
 \end{equation}
-where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
+where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. In implementation, the predictor output is formed before token normalization, as detailed in \Cref{alg:lara_transition_distance}. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
 
 \begin{figure}[!htbp]
     \centering

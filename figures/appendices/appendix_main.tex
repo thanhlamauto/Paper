@@ -65,26 +65,47 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Tokenwise distances.}
-For two token activations $U,V\in\mathbb{R}^{N\times C}$, LARA computes cosine similarity independently at each token and then averages over tokens:
+\paragraph{Predictor-induced transition distance.}
+The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
+
+\begin{algorithm}[!htbp]
+\caption{\textbf{Predictor-induced transition distance in LARA.}}
+\label{alg:lara_transition_distance}
+\small
+\begin{algorithmic}[1]
+\Require source state $A_a^t$; target state $A_b^t$; transition predictor $g_\psi$; conditioning tuple $(a,b,t,y)$.
+\State $\widehat A_{a\to b}^{\,t}\gets g_\psi(A_a^t;a,b,t,y)$
+\State $R_b^t\gets \operatorname{sg}(A_b^t)$
+\For{$n=1,\ldots,N$}
+    \State $u_n\gets \widehat A_{a\to b,n}^{\,t}/(\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon)$
+    \State $v_n\gets R_{b,n}^{t}/(\|R_{b,n}^{t}\|_2+\varepsilon)$
+    \State $\delta_n\gets 1-\langle u_n,v_n\rangle$
+\EndFor
+\State $d\gets \frac{1}{N}\sum_{n=1}^{N}\delta_n$
+\State \Return $d$
+\end{algorithmic}
+\end{algorithm}
+
+Equivalently, the transition distance used in \Cref{alg:realign_training} is
 \begin{equation}
-\operatorname{cos}_{\mathrm{tok}}(U,V)
-=
-\frac{1}{N}\sum_{n=1}^{N}
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}.
-\label{eq:appendix_token_cosine}
-\end{equation}
-The transition distance used in \Cref{alg:realign_training} is the corresponding tokenwise cosine distance,
-\begin{equation}
-d(U,V)
-=
+\begin{aligned}
+\bar A_{a\to b,n}^{\,t}
+&=
+\frac{\widehat A_{a\to b,n}^{\,t}}
+{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
+&
+\bar R_{b,n}^{t}
+&=
+\frac{\operatorname{sg}(A_{b,n}^t)}
+{\|\operatorname{sg}(A_{b,n}^t)\|_2+\varepsilon},\\
+d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
+&=
 \frac{1}{N}\sum_{n=1}^{N}
 \left(
 1-
-\frac{\langle U_n,V_n\rangle}
-{\|U_n\|_2\|V_n\|_2+\varepsilon}
+\left\langle \bar A_{a\to b,n}^{\,t},\bar R_{b,n}^{t}\right\rangle
 \right).
+\end{aligned}
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
@@ -391,7 +412,7 @@ For hidden-state diagnostics, let $X,Y\in\mathbb{R}^{M\times C}$ denote flattene
 \frac{\|X_c^{\top}Y_c\|_F^2}
 {\|X_c^{\top}X_c\|_F\|Y_c^{\top}Y_c\|_F+\varepsilon},
 \end{equation}
-following \citet{kornblith2019similarity}; we use it for transformer-layer comparisons in the same diagnostic spirit as \citet{raghu2021visiontransformers}. Stable rank is $\|Z\|_F^2/\|Z\|_2^2$ after channelwise normalization, and PCA visualizations use the leading principal components of the same normalized activations. Pseudo-mask IoU and Boundary-F1 compare spatial structures recovered from activations with a reference partition or boundary map. Transition prediction error is
+following \citet{kornblith2019similarity}; we use it for transformer-layer comparisons in the same diagnostic spirit as \citet{raghu2021visiontransformers}. Stable rank is $\|Z\|_F^2/\|Z\|_2^2$ after channelwise normalization, and PCA visualizations use the leading principal components of the same normalized activations. Transition prediction error is
 \begin{equation}
 E_{\mathrm{pred}}(a,b)
 =
@@ -400,7 +421,7 @@ E_{\mathrm{pred}}(a,b)
 d\left(g_\psi(A_a^t;a,b,t),\operatorname{sg}(A_b^t)\right)
 \right],
 \end{equation}
-where $d$ follows the tokenwise cosine distance in \Cref{eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
+where $d$ follows the predictor-first transition distance in \Cref{alg:lara_transition_distance,eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
 
 \section{Additional Ablations and Scaling}
 \label{app:realign_ablation_protocols}
@@ -660,24 +681,6 @@ This ablation tests whether projection heads extract useful recoverable signal o
         \bottomrule
     \end{tabular}}
 \end{table}
-
-\subsection{Layout-Recoverable Spatial Information}
-\label{app:layout_recoverable_information}
-
-Spatial probes ask whether activations preserve layout in a recoverable form. We convert activations into spatial partitions or boundaries and compare them with DINO-derived pseudo masks, image edges, or object masks when available. Same-image, different-image, and token-shuffle controls check whether the score reflects image-specific layout.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: layout-recoverable spatial information]}\\[0.5em]
-        Panels: PCA maps, spatial-normalized PCA maps, DINO pseudo-mask IoU, Boundary-F1,\\
-        region agreement, and same/different-image controls.
-    \end{minipage}}
-    \caption{\textbf{Layout-recoverable spatial information.} Placeholder for measuring spatial structure in internal activations alongside raw feature similarity.}
-    \label{fig:appendix_layout_recoverable}
-\end{figure}
 
 \subsection{Transition Generalization}
 \label{app:transition_generalization}
