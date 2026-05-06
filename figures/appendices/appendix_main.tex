@@ -77,9 +77,8 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 \State $\widehat A_{a\to b}^{\,t}\gets g_\psi(A_a^t;a,b,t,y)$
 \State $R_b^t\gets \operatorname{sg}(A_b^t)$
 \For{$n=1,\ldots,N$}
-    \State $u_n\gets \widehat A_{a\to b,n}^{\,t}/(\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon)$
-    \State $v_n\gets R_{b,n}^{t}/(\|R_{b,n}^{t}\|_2+\varepsilon)$
-    \State $\delta_n\gets 1-\langle u_n,v_n\rangle$
+    \State $s_n\gets \operatorname{cos\_sim}(\widehat A_{a\to b,n}^{\,t},R_{b,n}^{t})$
+    \State $\delta_n\gets 1-s_n$
 \EndFor
 \State $d\gets \frac{1}{N}\sum_{n=1}^{N}\delta_n$
 \State \Return $d$
@@ -88,24 +87,13 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 
 Equivalently, the transition distance used in \Cref{alg:realign_training} is
 \begin{equation}
-\begin{aligned}
-\bar A_{a\to b,n}^{\,t}
-&=
-\frac{\widehat A_{a\to b,n}^{\,t}}
-{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
-&
-\bar R_{b,n}^{t}
-&=
-\frac{\operatorname{sg}(A_{b,n}^t)}
-{\|\operatorname{sg}(A_{b,n}^t)\|_2+\varepsilon},\\
 d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
-&=
+=
 \frac{1}{N}\sum_{n=1}^{N}
 \left(
 1-
-\left\langle \bar A_{a\to b,n}^{\,t},\bar R_{b,n}^{t}\right\rangle
+\operatorname{cos\_sim}\left(\widehat A_{a\to b,n}^{\,t},\operatorname{sg}(A_{b,n}^{t})\right)
 \right).
-\end{aligned}
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
@@ -146,7 +134,7 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
 \subsection{Training Compute}
 \label{app:training_compute}
 
-\begin{table}[!htbp]
+\begin{table}[H]
     \centering
     \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
     \label{tab:appendix_compute_overhead}
@@ -158,7 +146,7 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
         \midrule
         SiT baseline & \textbf{[TBD]} \\
         LayerSync & \textbf{[TBD]} \\
-        LARA & \textbf{[TBD]} \\
+        LARA (Ours) & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -357,7 +345,7 @@ The motion backbone has six transformer blocks and is trained for 600K iteration
         \midrule
         MDM & 6 & 600K & none & Standard MDM & FID, R-Precision \\
         MDM + LayerSync & 6 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
-        MDM + LARA & 6 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
+        MDM + LARA (Ours) & 6 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -382,7 +370,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:appendix_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms or loss weights change. & \citep{heusel2017gans} \\
+        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:appendix_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms, timestep sampler, or loss weights change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -550,7 +538,7 @@ These controls tune the final recipe without changing the main LARA mechanism. W
         $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
         $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
         \midrule
-        Final LARA & selected & -- & [TBD] & [TBD] \\
+        Final LARA (Ours) & selected & -- & [TBD] & [TBD] \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -602,11 +590,11 @@ Scaling runs test whether the same LARA recipe transfers across \texttt{B/2}, \t
         Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
         \midrule
         \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{B/2} & \textbf{[TBD]} & Baseline + LARA & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{B/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline + LARA & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{L/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
         \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline + LARA & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{XL/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -700,8 +688,8 @@ This ablation tests whether projection heads extract useful recoverable signal o
         Projection-augmented alignment & Near & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Projection-augmented alignment & Far & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
         Pair-specific projector & Far & Per-pair projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        LARA (Ours) & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        LARA (Ours) & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -722,7 +710,7 @@ This diagnostic distinguishes a shared transition interface from a collection of
         \midrule
         Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        LARA shared transition (Ours) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}

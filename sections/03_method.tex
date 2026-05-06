@@ -137,7 +137,7 @@ Only the online predictor is updated by this term. The source activation and the
     \vspace{-0.8em}
 \end{wrapfigure}
 
-LARA also uses a lightweight diversity regularizer inspired by DiverseDiT~\citep{yang2026diversedit}. Transition prediction encourages layers to share useful structure, but unrestricted sharing can make nearby depths carry redundant information. We therefore penalize high pairwise cosine similarity as a simple proxy for excessive mutual information between layer activations. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
+LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
 =
@@ -147,7 +147,7 @@ LARA also uses a lightweight diversity regularizer inspired by DiverseDiT~\citep
 \right].
 \label{eq:diversity_loss}
 \end{equation}
-This term discourages excessive layer homogenization and leaves different depths room to encode complementary features. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes the intended effect: reduce layer collapse while preserving the shared structure that the transition predictor exploits.
+Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
 
 \subsection{Full Objective}
 
