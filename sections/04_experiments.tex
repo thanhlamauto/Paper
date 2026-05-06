@@ -43,31 +43,31 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \quad + Dispersive & 130M & 400K & 31.27 \\
             \quad + SRA & 130M & 400K & 30.84 \\
             \quad + LayerSync & 130M & 400K & 28.63 \\
-            \quad + LARA & 130M & 400K & 25.01 \\
+            \quad + LARA & 130M & 400K & \textbf{25.01} \\
             \midrule
             \texttt{SiT-L/2} & 458M & 400K & 20.55 \\
             \quad + Dispersive & 458M & 400K & 16.27 \\
             \quad + SRA & 458M & 400K & 15.50 \\
             \quad + LayerSync & 458M & 400K & 13.04 \\
-            \quad + LARA & 458M & 400K & 11.09 \\
+            \quad + LARA & 458M & 400K & \textbf{11.09} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 400K & 17.32 \\
             \quad + Dispersive & 675M & 400K & 15.35 \\
             \quad + SRA & 675M & 400K & 15.26 \\
             \quad + LayerSync & 675M & 400K & 11.06 \\
-            \quad + LARA & 675M & 400K & 8.57 \\
+            \quad + LARA & 675M & 400K & \textbf{8.57} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 1M & 12.03 \\
             \quad + Dispersive & 675M & 1M & 10.62 \\
             \quad + SRA & 675M & 1M & 10.59 \\
             \quad + LayerSync & 675M & 1M & 8.12 \\
-            \quad + LARA & 675M & 1M & 6.51 \\
+            \quad + LARA & 675M & 1M & \textbf{6.51} \\
             \midrule
             \texttt{SiT-XL/2} & 675M & 2M & 8.85 \\
             \quad + Dispersive & 675M & 2M & 8.14 \\
             \quad + SRA & 675M & 2M & 7.97 \\
             \quad + LayerSync & 675M & 2M & 6.80 \\
-            \quad + LARA & 675M & 2M & 5.09 \\
+            \quad + LARA & 675M & 2M & \textbf{5.09} \\
             \bottomrule
         \end{tabular}
     \end{minipage}
@@ -92,20 +92,21 @@ Our main comparisons are against the base SiT backbone and recent self-contained
             \midrule
             \multicolumn{6}{@{}l}{\textit{Autoregressive image generation}} \\
             VAR-d20 & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
+            D-JEPA-L & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 1.00M & 3.60 & 247.7 & 0.87 & 0.48 \\
+            LDM-4 & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
             U-ViT-H/2 & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
             DiffiT & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2 & 5.40M & 1.58 & 314.7 & 0.79 & 0.65 \\
+            MDTv2-XL/2 & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
             \multicolumn{6}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             DiT-XL/2 & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
             SiT-XL/2 & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 2.00M & 1.58 & 284.0 & 0.81 & 0.61 \\
+            \quad + REPA & 2.00M & \textbf{1.58} & 284.0 & 0.81 & 0.61 \\
+            \hdashline
             \quad + SRA & 2.00M & 1.90 & 311.4 & 0.80 & 0.63 \\
             \quad + Dispersive & 2.00M & 1.97 & -- & -- & -- \\
             \quad + LayerSync & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\

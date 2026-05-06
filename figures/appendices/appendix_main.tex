@@ -143,20 +143,22 @@ Standard generation uses the usual Euler integrator with the full backbone. The 
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Training Compute}
+\label{app:training_compute}
+
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Training compute and speed.} Placeholder table for measuring training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
+    \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
     \label{tab:appendix_compute_overhead}
     \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lccccccc@{}}
+    \setlength{\tabcolsep}{6pt}
+    \begin{tabular*}{0.58\textwidth}{@{\extracolsep{\fill}}lc@{}}
         \toprule
-        Method & Extra params & Train TFLOPs/img & Train TFLOPs/step & Sec./step & Images/sec. & Rel. speed & Infer. cost \\
+        Method & Train TFLOPs/step \\
         \midrule
-        SiT baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ & $1.00\times$ \\
-        LayerSync & -- & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        LARA & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & $1.00\times$ \\
-        LARA interface Euler & 5--10\% & -- & -- & -- & -- & -- & \textbf{[TBD]} \\
+        SiT baseline & \textbf{[TBD]} \\
+        LayerSync & \textbf{[TBD]} \\
+        LARA & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -337,29 +339,25 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
 \paragraph{Task.}
 Given a sentence that describes a motion as a sequence of actions, the task is to generate a corresponding human motion. Each motion sequence consists of a series of human poses, where each pose is represented by 22 joints defined as 3D points in space.
 
-\paragraph{Dataset.}
-We rely on the HumanML3D dataset~\citep{guo2022generating}, which contains 44,970 motion annotations across 14,646 motion sequences from the AMASS~\citep{mahmood2019amass} and HumanAct12~\citep{guo2020action2motion} datasets, along with corresponding text descriptions. HumanML3D is widely used for text-conditional human motion generation. Motions in HumanML3D follow the SMPL skeleton structure~\citep{loper2015smpl} with 22 joints. Each pose $p$ in the motion sequence is represented by a vector of size 237,
-\[
-    (r^a,\dot r^x,\dot r^z,r^y,j^p,j^v,j^r,c^f),
-\]
-where $r^a\in\mathbb{R}$ is the root (pelvis joint) angular velocity along the Y-axis; $(\dot r^x,\dot r^z)\in\mathbb{R}^2$ are the root linear velocities in the XZ-plane; $r^y\in\mathbb{R}$ is the root height; $j^p\in\mathbb{R}^{3J}$, $j^v\in\mathbb{R}^{3J}$, and $j^r\in\mathbb{R}^{6J}$ are the local joint positions, velocities, and rotations in the root space, with $J$ indicating the number of joints; and $c^f\in\mathbb{R}^4$ represents foot-ground contact features.
+\paragraph{Benchmark.}
+We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
 \paragraph{Implementation details.}
-We use the exact setup as MDM~\citep{tevet2022mdm}. We train up to 600K iterations and align block 3 with block 6.
+The motion backbone has six transformer blocks and is trained for 600K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone and budget, but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{HumanML3D setup.} Motion-generation configuration used by the baseline, LayerSync, and LARA variants.}
+    \caption{\textbf{HumanML3D protocol.} All rows use the same MDM data processing and evaluator; only the internal alignment objective changes.}
     \label{tab:appendix_humanml3d_setup}
     \small
     \setlength{\tabcolsep}{5pt}
     \begin{tabular}{lccccc}
         \toprule
-        Method & Backbone layers & Iter. & Transition pairs & Evaluator & Metrics \\
+        Method & Layers & Iter. & Internal supervision & Evaluator & Metrics \\
         \midrule
-        MDM & 6 & 600K & -- & Standard MDM & FID, R-Precision \\
-        MDM + LayerSync & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
-        MDM + LARA & 6 & 600K & (3,6) & Standard MDM & FID, R-Precision \\
+        MDM & 6 & 600K & none & Standard MDM & FID, R-Precision \\
+        MDM + LayerSync & 6 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
+        MDM + LARA & 6 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -476,28 +474,54 @@ We sweep source and target blocks while keeping compute, batch size, and trainin
     \end{tabular}
 \end{table}
 
-\subsection{Predictor Capacity and Optimization Controls}
+\subsection{Predictor Architecture and Capacity Controls}
 
-We compare small and large predictors, pair-specific projectors, and matched-learning-rate controls. These runs separate cross-depth transition learning from raw auxiliary capacity.
+We first specify the transition predictor used by LARA, since the capacity sweep is only meaningful once the module being scaled is fixed. The predictor is a compact ConvNeXt-style residual transition module. It takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for separating transition learning from capacity or optimization effects.}
+    \caption{\textbf{Transition predictor configuration.} The same architectural template is used across the main experiments; capacity controls vary width, depth, or parameter budget while keeping the conditioning interface fixed.}
+    \label{tab:appendix_predictor_config}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}lll@{}}
+        \toprule
+        Component & Role & Setting \\
+        \midrule
+        Input state & source activation tokens & $A_a^t\in\mathbb{R}^{N\times C}$ \\
+        Conditioning & identify transition and denoising time & source layer, target layer, timestep, optional condition \\
+        Stem & map source features to predictor width & linear / $1{\times}1$ projection, width \textbf{[TBD]} \\
+        Core & shared transition computation & ConvNeXt-style residual token-mixing blocks, depth \textbf{[TBD]} \\
+        Output head & return target-layer coordinates & projection back to $C$ channels \\
+        Target path & stable internal reference & $\operatorname{sg}(A_b^t)$, no predictor update through target \\
+        Parameter budget & auxiliary capacity & selected in the 5--10\% backbone range \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
+We then vary the predictor capacity while holding the backbone, training budget, data pipeline, and layer-pair sampler fixed. These controls separate the value of a shared cross-depth transition function from two simpler explanations: adding many auxiliary parameters, or using pair-specific projection heads that only solve selected pairs.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for selecting the transition-predictor budget while separating transition learning from raw capacity or optimization effects.}
     \label{tab:appendix_predictor_capacity_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lccccc}
         \toprule
-        Variant & Pred. params & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+        Variant & Pred. budget & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
         \midrule
         Baseline & -- & -- & \textbf{[TBD]} & -- & -- \\
-        Small shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Large shared predictor & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Pair-specific projectors & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Small shared predictor & $<5\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Selected shared predictor & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Large shared predictor & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Pair-specific projectors & matched total & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         Matched learning-rate baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
         \bottomrule
     \end{tabular}
 \end{table}
+
+We choose the 5--10\% predictor range as the default budget because it is the smallest regime intended to make the transition task nontrivial without turning LARA into a second backbone. A smaller predictor can underfit long or mid-depth transitions, while a much larger predictor may reduce auxiliary prediction error without giving a proportional generation gain. The selected range therefore keeps the module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
 
 \subsection{Loss-Weight, Max-Gap, and Schedule Controls}
 
