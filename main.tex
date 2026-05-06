@@ -94,7 +94,7 @@
 \end{abstract}
 
 \vspace{-0.6em}
-\begin{center}
+\begin{figure}[!t]
   \centering
 
   \newcommand{\panelimg}[1]{%
@@ -107,37 +107,28 @@
     }%
   }
 
-  \begin{minipage}[t]{0.32\linewidth}
+  \begin{minipage}[t]{0.48\linewidth}
     \centering
     \panelimg{figures/lara_group3.png}
-    
+
     \vspace{0.5em}
     {\small\textbf{(a) LayerSync}}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.32\linewidth}
+  \begin{minipage}[t]{0.48\linewidth}
     \centering
     \panelimg{figures/lara_group4.png}
-    
+
     \vspace{0.5em}
     {\small\textbf{(b) Layer-aware transition}}
   \end{minipage}
-  \hfill
-  \begin{minipage}[t]{0.32\linewidth}
-    \centering
-    \panelimg{figures/lara_curve_placeholder.png}
-    
-    \vspace{0.5em}
-    {\small\textbf{(c) Training curve}}
-  \end{minipage}
 
   \vspace{0.5em}
-  \captionof{figure}{\textbf{Layer-aware representation alignment.}
+  \caption{\textbf{Layer-aware representation alignment.}
   \textbf{Left:} LayerSync aligns selected internal layer pairs.
-  \textbf{Middle:} LARA uses a shared layer-aware transition predictor across source--target depths.
-  \textbf{Right:} Placeholder for matched-budget FID curves.}
+  \textbf{Right:} LARA uses a shared layer-aware transition predictor across source--target depths.}
   \label{fig:projection_as_transition}
-\end{center}
+\end{figure}
 \vspace{-0.6em}
 
 \clearpage

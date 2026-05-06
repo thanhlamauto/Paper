@@ -58,20 +58,32 @@ where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ st
 
 \begin{figure}[!htbp]
     \centering
-    \begin{minipage}{0.66\linewidth}
-    \centering
     \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \fbox{%
-    \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+    \begin{minipage}[t]{0.62\linewidth}
+        \vspace{0pt}
         \centering
-        \small
-        \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
-        Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
-        and the consistency path $a\to b\to c$ with a shared predictor.
-    \end{minipage}}
-    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated.}
-    \label{fig:realign_transition_predictor}
+        \fbox{%
+        \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+            \centering
+            \small
+            \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
+            Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
+            and the consistency path $a\to b\to c$ with a shared predictor.
+        \end{minipage}}
     \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \vspace{0pt}
+        \centering
+        \includegraphics[
+            width=\linewidth,
+            trim=0 230 0 0,
+            clip
+        ]{figures/lara_curve_placeholder.png}
+    \end{minipage}
+    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated. The right panel is a placeholder for the matched-budget ImageNet training curve.}
+    \label{fig:realign_transition_predictor}
+    \label{fig:training_curve}
 \end{figure}
 
 \FloatBarrier
@@ -105,7 +117,7 @@ d\left(
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-Only the online predictor is updated by this term; the EMA predictor provides a stop-gradient target. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers. Each sampled triplet requires three lightweight predictor forwards: online $a\to b$, online $a\to c$, and EMA $\widehat A_{a\to b}\to c$ using the cached intermediate.
+Only the online predictor is updated by this term; the EMA predictor provides a stop-gradient target. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
 
 \subsection{Diversity Regularization}
 

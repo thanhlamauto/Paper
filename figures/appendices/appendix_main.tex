@@ -215,7 +215,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
     \setlength{\tabcolsep}{5pt}
     \begin{tabular}{lccc}
         \toprule
-        & Figure 3 (SiT-XL) & Table 6 (SiT-XL and SiT-B) & Table 7 (SiT-B) \\
+        & \Cref{fig:training_curve} (SiT-XL) & Table 6 (SiT-XL and SiT-B) & Table 7 (SiT-B) \\
         \midrule
         \multicolumn{4}{l}{\textbf{Architecture}} \\
         Input dim. & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ \\
@@ -361,54 +361,10 @@ Standard generation metrics follow the cited benchmark protocols. FID compares G
 \end{equation}
 where lower is better. IS is computed using the Inception classifier convention of \citet{salimans2016improved}. Precision and recall follow the improved generative-model support estimate of \citet{kynkaanniemi2019precision}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
 
-For hidden-state diagnostics, let $X,Y\in\mathbb{R}^{M\times C}$ denote flattened token activations, where $M$ indexes images and spatial tokens. Activation RMS is $\sqrt{(MC)^{-1}\sum_{m,c}X_{m,c}^2}$, and token norm is $M^{-1}\sum_m\|X_{m,:}\|_2$. Pairwise cosine heatmaps use row-normalized features $\tilde X_m=X_m/(\|X_m\|_2+\varepsilon)$ and report the average token cosine between layer pairs. Linear CKA is
-\begin{equation}
-\operatorname{CKA}(X,Y)
-=
-\frac{\|X_c^{\top}Y_c\|_F^2}
-{\|X_c^{\top}X_c\|_F\|Y_c^{\top}Y_c\|_F+\varepsilon},
-\end{equation}
-following \citet{kornblith2019similarity}; we use it for transformer-layer comparisons in the same diagnostic spirit as \citet{raghu2021visiontransformers}. Stable rank is $\|Z\|_F^2/\|Z\|_2^2$ after channelwise normalization, and PCA visualizations use the leading principal components of the same normalized activations. Transition prediction error is
-\begin{equation}
-E_{\mathrm{pred}}(a,b)
-=
-\mathbb{E}_{x,t}
-\left[
-d\left(G_\psi(A_a^t;e_a,e_b,e_t),\operatorname{sg}(A_b^t)\right)
-\right],
-\end{equation}
-where $d$ follows the predictor-first transition distance in \Cref{alg:lara_transition_distance,eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
-
-\section{Additional Ablations and Scaling}
+\section{Additional Ablations}
 \label{app:realign_ablation_protocols}
 
 The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper.
-
-\subsection{Appendix-Only Control Map}
-
-The following controls support the main ablation story without becoming separate claims. They document configuration choices, sensitivity to schedules and weights, and supplementary visual diagnostics.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Appendix-only controls.} Placeholder map for secondary experiments kept outside the main ablation section.}
-    \label{tab:appendix_control_map}
-    \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}p{0.24\linewidth}p{0.36\linewidth}p{0.28\linewidth}@{}}
-        \toprule
-        Control & Purpose & Report \\
-        \midrule
-        Standard vs. transition-interface inference & Check the optional inference interface separately from the standard-sampling main claim & FID-4K / FID-10K, cost \\
-        Magnitude-calibrated layer skipping & Test whether a predictor state, with stop-grad magnitude calibration, can replace skipped blocks & FID, relative cost, skipped pair \\
-        External alignment compatibility & Test whether LARA remains useful when combined with REPA-style external targets & FID, representation probes, training cost \\
-        Timestep PCA & Visualize how representations and predictor outputs evolve across denoising time & PCA maps, timestep panels \\
-        Predictor output vs. target layer & Check whether predicted states recover target-layer structure & PCA, cosine heatmap, CKA \\
-        Architecture and strategy config & Document the final predictor architecture and pair-selection rule & ConvNeXt-style predictor / selected schedule \\
-        Qualitative samples & Show matched-seed visual differences & Image grids \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
 
 \subsection{Uniform Transition-Prediction Diagnostic}
 \label{app:uniform_transition_diagnostic}
@@ -502,6 +458,32 @@ All rows use the same backbone, data pipeline, optimizer, training length, and s
 
 If the combined row improves over both single-objective rows, the result indicates that external semantic anchoring and internal transition learning provide complementary supervision. If the gain is marginal, LARA should still be interpreted as the self-contained recipe used in the main experiments rather than as a required add-on to external alignment.
 
+\subsection{Transition-Pair Selection}
+\label{app:transition_pair_selection}
+
+We sweep source and target blocks while keeping compute, batch size, and training iterations fixed. Generation metrics are reported together with transition-level metrics, since a low prediction loss can also indicate that the pair is easy.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Ablation on transition-pair selection.} Placeholder for testing source/target ranges and layer gaps.}
+    \label{tab:appendix_pair_selection}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{lccccc}
+        \toprule
+        Backbone & Source range & Target range & Gap & FID $\downarrow$ & Comp. error $\downarrow$ \\
+        \midrule
+        \textbf{[TBD]} & weak blocks & middle blocks & short & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \textbf{[TBD]} & weak blocks & middle blocks & medium & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \textbf{[TBD]} & weak blocks & decoder blocks & long & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \textbf{[TBD]} & random valid pairs & mixed & mixed & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Optional Inference and Layer-Skip Diagnostics}
+\label{app:optional_inference_diagnostics}
+
 \subsection{Optional Transition-Interface Inference}
 \label{app:optional_transition_inference}
 
@@ -535,46 +517,7 @@ Each diagnostic must report the skip rate, chosen layer jumps, and whether the s
 \subsection{Magnitude-Calibrated Layer-Skip Diagnostic}
 \label{app:magnitude_layer_skip}
 
-The transition loss mainly supervises direction in feature space. For the layer-skip diagnostic, direction alone may be insufficient because the suffix blocks expect the target layer to have the correct activation scale. We therefore attach a small magnitude head $h_\omega$ to the predictor output. This head is trained during the same run, but its loss is fully detached from both the backbone and the transition predictor.
-
-Given the predicted state $\widehat A_{a\to b}^{\,t}=G_\psi(A_a^t;e_a,e_b,e_t)$, the head predicts the log token norm of the target state:
-\begin{equation}
-\hat m_{a\to b,n}^{t}
-=
-h_\omega\!\left(\operatorname{sg}(\widehat A_{a\to b,n}^{\,t});e_a,e_b,e_t\right),
-\qquad
-m_{b,n}^{t}
-=
-\log\left(\|A_{b,n}^{t}\|_2+\varepsilon\right).
-\end{equation}
-Its auxiliary loss is
-\begin{equation}
-\mathcal{L}_{\mathrm{mag}}(\omega)
-=
-\mathbb{E}_{a<b,t,n}
-\left[
-\left\|
-\hat m_{a\to b,n}^{t}
--
-\operatorname{sg}(m_{b,n}^{t})
-\right\|_2^2
-\right],
-\qquad
-\nabla_{\theta,\psi}\mathcal{L}_{\mathrm{mag}}=0.
-\end{equation}
-Thus $\mathcal{L}_{\mathrm{mag}}$ updates only $h_\omega$: it does not backpropagate into the main diffusion backbone $v_\theta$ or the transition predictor $G_\psi$. At evaluation, the predicted direction is rescaled by the magnitude head before being passed to the remaining suffix blocks:
-\begin{equation}
-\widehat A_{a\to b,n}^{\,\mathrm{skip},t}
-=
-\exp(\hat m_{a\to b,n}^{t})
-\frac{\widehat A_{a\to b,n}^{\,t}}
-{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
-\qquad
-\hat v_{\mathrm{skip}}
-=
-F_{\theta,b:L}\!\left(\widehat A_{a\to b}^{\,\mathrm{skip},t},t,y\right).
-\end{equation}
-This diagnostic asks whether the calibrated predicted state can replace a skipped block range without severely damaging generation quality.
+This diagnostic tests whether a predicted target-layer state can replace skipped blocks. Because the cosine transition loss mainly controls direction, we attach a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. This route is appendix-only and is not used for the main generation results.
 
 \begin{table}[!htbp]
     \centering
@@ -594,31 +537,10 @@ This diagnostic asks whether the calibrated predicted state can replace a skippe
     \end{tabular*}
 \end{table}
 
-\subsection{Transition-Pair Selection}
+\section{Transition Predictor Configuration and Capacity}
+\label{app:predictor_architecture_capacity}
 
-We sweep source and target blocks while keeping compute, batch size, and training iterations fixed. Generation metrics are reported together with transition-level metrics, since a low prediction loss can also indicate that the pair is easy.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Ablation on transition-pair selection.} Placeholder for testing source/target ranges and layer gaps.}
-    \label{tab:appendix_pair_selection}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{lccccc}
-        \toprule
-        Backbone & Source range & Target range & Gap & FID $\downarrow$ & Comp. error $\downarrow$ \\
-        \midrule
-        \textbf{[TBD]} & weak blocks & middle blocks & short & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & weak blocks & middle blocks & medium & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & weak blocks & decoder blocks & long & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & random valid pairs & mixed & mixed & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsection{Predictor Architecture and Capacity Controls}
-
-We first specify the transition predictor used by LARA, since the capacity sweep is only meaningful once the module being scaled is fixed. The predictor is a compact ConvNeXt-style residual transition module. It takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
+We first specify the transition predictor used by LARA, since the capacity sweep is only meaningful once the module being scaled is fixed. We use a compact ConvNet/ConvNeXt-style transition module rather than an MLP or transformer adapter. Diffusion-transformer tokens still form a spatial latent grid, so local convolutional mixing is parameter-efficient and can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
@@ -633,7 +555,7 @@ We first specify the transition predictor used by LARA, since the capacity sweep
         Input state & source activation tokens & $A_a^t\in\mathbb{R}^{N\times C}$ \\
         Conditioning & identify transition and denoising time & source layer, target layer, timestep, optional condition \\
         Stem & map source features to predictor width & linear / $1{\times}1$ projection, width \textbf{[TBD]} \\
-        Core & shared transition computation & ConvNeXt-style residual token-mixing blocks, depth \textbf{[TBD]} \\
+        Spatial core & preserve latent layout at low cost & depthwise ConvNet / ConvNeXt-style residual blocks, depth \textbf{[TBD]} \\
         Output head & return target-layer coordinates & projection back to $C$ channels \\
         Target path & stable internal reference & $\operatorname{sg}(A_b^t)$, no predictor update through target \\
         Parameter budget & auxiliary capacity & selected in the 5--10\% backbone range \\
@@ -641,64 +563,28 @@ We first specify the transition predictor used by LARA, since the capacity sweep
     \end{tabular*}
 \end{table}
 
-We then vary the predictor capacity while holding the backbone, training budget, data pipeline, and layer-pair sampler fixed. These controls separate the value of a shared cross-depth transition function from two simpler explanations: adding many auxiliary parameters, or using pair-specific projection heads that only solve selected pairs.
+We then vary predictor model size while holding the backbone, training budget, data pipeline, and layer-pair sampler fixed. These controls test whether the selected budget is large enough to model cross-layer transitions without turning the predictor into a second backbone.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor capacity and optimization controls.} Placeholder for selecting the transition-predictor budget while separating transition learning from raw capacity or optimization effects.}
+    \caption{\textbf{Predictor model-size sweep.} Placeholder for selecting the transition-predictor budget. All rows use the same ConvNet-style template; width/depth are changed to vary parameter count.}
     \label{tab:appendix_predictor_capacity_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lccccc}
         \toprule
-        Variant & Pred. budget & Loss weights & FID $\downarrow$ & Align. $\downarrow$ & Comp. $\downarrow$ \\
+        Predictor size & Width / depth & Params vs. backbone & FID $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ & Comp. $\downarrow$ \\
         \midrule
-        Baseline & -- & -- & \textbf{[TBD]} & -- & -- \\
-        Small shared predictor & $<5\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Selected shared predictor & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Large shared predictor & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Pair-specific projectors & matched total & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Matched learning-rate baseline & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- & -- \\
+        No predictor & -- & 0\% & \textbf{[TBD]} & -- & -- \\
+        Tiny & \textbf{[TBD]} & $<3\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Small & \textbf{[TBD]} & 3--5\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Selected & \textbf{[TBD]} & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Large & \textbf{[TBD]} & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-We choose the 5--10\% predictor range as the default budget because it is the smallest regime intended to make the transition task nontrivial without turning LARA into a second backbone. A smaller predictor can underfit long or mid-depth transitions, while a much larger predictor may reduce auxiliary prediction error without giving a proportional generation gain. The selected range therefore keeps the module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
-
-\subsection{Scaling Across Backbones and Model Sizes}
-\label{app:scaling_experiments}
-
-Scaling runs test whether the same LARA recipe transfers across \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} backbones. The comparison uses matched training settings within each size.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.88\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: training curves]}\\[0.5em]
-        Plot baseline vs. LARA across training iterations. Suggested axes: FID, validation loss, or representation metric.
-    \end{minipage}}
-    \caption{\textbf{Training dynamics across model scales.} Placeholder for convergence curves comparing baseline and LARA-augmented backbones.}
-    \label{fig:appendix_training_curves}
-\end{figure}
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{LARA across model sizes.} Placeholder table for comparing baseline and LARA variants under matched training settings.}
-    \label{tab:appendix_model_scaling}
-    \begin{tabular}{lcccc}
-        \toprule
-        Backbone & Params & Objective & FID $\downarrow$ & Throughput / steps \\
-        \midrule
-        \texttt{B/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{B/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{L/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \texttt{XL/2} & \textbf{[TBD]} & Baseline + LARA (Ours) & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+We choose the 5--10\% predictor range as the default budget. Smaller predictors can underfit mid-depth transitions, while larger ones may reduce auxiliary error without a proportional FID gain. The selected range keeps the transition module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
