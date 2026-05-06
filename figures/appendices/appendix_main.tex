@@ -301,7 +301,7 @@ Given a sentence that describes a motion as a sequence of actions, the task is t
 We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
 \paragraph{Implementation details.}
-The motion backbone has six transformer blocks and is trained for 600K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone and budget, but replaces direct matching with the transition predictor described in \Cref{sec:method}.
+The motion backbone has eight transformer blocks and is trained for 600K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone and budget, but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
@@ -313,9 +313,9 @@ The motion backbone has six transformer blocks and is trained for 600K iteration
         \toprule
         Method & Layers & Iter. & Internal supervision & Evaluator & Metrics \\
         \midrule
-        MDM & 6 & 600K & none & Standard MDM & FID, R-Precision \\
-        MDM + LayerSync & 6 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
-        MDM + LARA (Ours) & 6 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
+        MDM & 8 & 600K & none & Standard MDM & FID, R-Precision \\
+        MDM + LayerSync & 8 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
+        MDM + LARA (Ours) & 8 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -383,14 +383,14 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
     \begin{minipage}[t]{0.32\linewidth}
         \centering
         \textbf{Layer gap}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Gap & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            Gap & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -398,14 +398,14 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
     \begin{minipage}[t]{0.32\linewidth}
         \centering
         \textbf{Source layer}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Source & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            Source & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -413,14 +413,14 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
     \begin{minipage}[t]{0.32\linewidth}
         \centering
         \textbf{Timestep}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
             \toprule
-            Range & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            Range & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            0--25\% & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -561,29 +561,6 @@ We first specify how the transition predictor is attached to the SiT backbones, 
         \bottomrule
     \end{tabular*}
 \end{table}
-
-We then vary predictor model size while holding the backbone, training budget, data pipeline, and layer-pair sampler fixed. These controls test whether the selected budget is large enough to model cross-layer transitions without turning the predictor into a second backbone.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Predictor model-size sweep.} Placeholder for selecting the transition-predictor budget. All rows use the same LARA predictor template while varying parameter count.}
-    \label{tab:appendix_predictor_capacity_controls}
-    \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabular}{lcccc}
-        \toprule
-        Predictor size & Params vs. backbone & FID $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ & Comp. $\downarrow$ \\
-        \midrule
-        No predictor & 0\% & \textbf{[TBD]} & -- & -- \\
-        Tiny & $<3\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Small & 3--5\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Selected & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Large & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-We choose the 5--10\% predictor range as the default budget. Smaller predictors can underfit mid-depth transitions, while larger ones may reduce auxiliary error without a proportional FID gain. The selected range keeps the transition module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
