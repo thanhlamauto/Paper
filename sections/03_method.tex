@@ -26,7 +26,7 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
 
 \paragraph{Motivation from shared structure.}
-SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
+SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold, while stable-rank curves show that feature diversity changes systematically with layer depth and timestep. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
 
 \subsection{Layer-Aware Transition Prediction}
 
@@ -62,26 +62,15 @@ where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ st
     \begin{minipage}[t]{0.62\linewidth}
         \vspace{0pt}
         \centering
-        \fbox{%
-        \begin{minipage}[c][0.16\textheight][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
-            \centering
-            \small
-            \textbf{[PLACEHOLDER: LARA transition predictor]}\\[0.45em]
-            Visualize $G_\psi(A_a^t,e_a,e_b,e_t)$ for $a\to b$, direct $a\to c$,\\
-            and the consistency path $a\to b\to c$ with a shared predictor.
-        \end{minipage}}
+        \includegraphics[width=\linewidth]{figures/lara_transition_interface.png}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.32\linewidth}
         \vspace{0pt}
         \centering
-        \includegraphics[
-            width=\linewidth,
-            trim=0 230 0 0,
-            clip
-        ]{figures/lara_curve_placeholder.png}
+        \includegraphics[width=\linewidth]{figures/imagenet256_fid_lara_sit7m_compressed.png}
     \end{minipage}
-    \caption{\textbf{Shared conditional transition interface.} LARA predicts target-layer activations from source-layer activations and keeps direct and composed transitions coordinated. The right panel is a placeholder for the matched-budget ImageNet training curve.}
+    \caption{\textbf{Shared conditional transition interface.} The left panel illustrates LARA's shared predictor for $a\to b$, direct $a\to c$, and composed $a\to b\to c$ transitions. The right panel shows the matched-budget ImageNet $256\times256$ FID curve for SiT-XL/2, LayerSync, and LARA.}
     \label{fig:realign_transition_predictor}
     \label{fig:training_curve}
 \end{figure}
@@ -121,22 +110,8 @@ Only the online predictor is updated by this term; the EMA predictor provides a 
 
 \subsection{Diversity Regularization}
 
-\begin{wrapfigure}{r}{0.34\textwidth}
-    \vspace{-1.0em}
-    \centering
-    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \fbox{%
-    \begin{minipage}[c][0.17\textheight][c]{0.30\textwidth}
-        \centering
-        \small
-        \textbf{[PLACEHOLDER: layer cosine heatmaps]}\\[0.4em]
-        Before / after $\cos^2$ regularization.
-    \end{minipage}}
-    \caption{\textbf{Layer diversity.} Pairwise layer-cosine heatmaps before and after the cosine-squared regularizer.}
-    \label{fig:cosine_squared_heatmap}
-    \vspace{-0.8em}
-\end{wrapfigure}
-
+\noindent
+\begin{minipage}[t]{0.62\linewidth}
 LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
@@ -148,6 +123,31 @@ LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{ya
 \label{eq:diversity_loss}
 \end{equation}
 Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.33\linewidth}
+    \vspace{0pt}
+    \centering
+    \captionsetup{type=figure,font=small,justification=raggedright,singlelinecheck=false}
+    \fbox{%
+    \begin{minipage}[c][0.78\linewidth][c]{0.78\linewidth}
+        \centering
+        \small
+        \textbf{[PLACEHOLDER]}\\[0.25em]
+        Before $\cos^2$
+    \end{minipage}}\\[0.45em]
+    \fbox{%
+    \begin{minipage}[c][0.78\linewidth][c]{0.78\linewidth}
+        \centering
+        \small
+        \textbf{[PLACEHOLDER]}\\[0.25em]
+        After $\cos^2$
+    \end{minipage}}
+    \vspace{-0.3em}
+    \captionof{figure}{\textbf{Layer diversity.} Pairwise layer-cosine heatmaps before and after the cosine-squared regularizer.}
+    \label{fig:cosine_squared_heatmap}
+\end{minipage}
+\vspace{0.5em}
 
 \subsection{Full Objective}
 
