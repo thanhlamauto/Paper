@@ -90,7 +90,7 @@ where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ st
 
 \subsection{Transition Consistency}
 
-A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. For $a<b<c$, we define
+It is quite challenging to directly learn a single long transition. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. For $a<b<c$, we define
 \begin{equation}
 \widehat A_{a\to c}^{\,t}
 =
