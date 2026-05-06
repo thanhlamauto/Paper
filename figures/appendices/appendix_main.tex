@@ -121,6 +121,29 @@ The diversity term is computed directly from the hidden-state cache $\mathcal{H}
     \end{tabular*}
 \end{table}
 
+\subsection{Comparison with Self-Representation Alignment Using EMA}
+\label{app:sra_layersync_lara_compute}
+
+We additionally profile internal self-alignment methods that do not use an external representation model. The matched compute comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, batch size, and step count. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor. Wall-clock and FLOP numbers should be filled from the same TPU profiling run.
+
+\begin{table}[H]
+    \centering
+    \caption{\textbf{Comparison between SRA, LayerSync, and LARA.} Per-step profiling for self-contained internal alignment methods under the same \texttt{SiT-XL/2} TPU v4-16 setting.}
+    \label{tab:appendix_sra_layersync_lara_compute}
+    \scriptsize
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular*}{0.78\textwidth}{@{\extracolsep{\fill}}lccc@{}}
+        \toprule
+        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & TFLOPs/step $\downarrow$ \\
+        \midrule
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
 \subsection{Transition Pair and Predictor Design}
 \label{app:transition_pair_predictor_design}
 
@@ -341,7 +364,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
-        \Cref{fig:projection_layout_observation} & PCA maps, z-score stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and z-score stable rank is computed per layer from the same normalized feature matrix. & \citep{sanyal2020stable} \\
+        \Cref{fig:projection_layout_observation} & PCA maps, z-score stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and z-score stable rank is computed per layer from the same normalized feature matrix. & \citep{sanyal2020stable,daneshmand2020batchnormrankcollapse,feng2022rankdiminishing} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
@@ -361,7 +384,7 @@ Standard generation metrics follow the cited benchmark protocols. FID compares G
 \end{equation}
 where lower is better. IS is computed using the Inception classifier convention of \citet{salimans2016improved}. Precision and recall follow the improved generative-model support estimate of \citet{kynkaanniemi2019precision}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
 
-For the curves in \Cref{fig:projection_layout_observation}, we use z-score stable rank: image and spatial tokens are flattened into a feature matrix, each channel is z-scored over the flattened token axis, and the resulting matrix $Z$ is summarized by $\|Z\|_F^2 / \|Z\|_2^2$ for each layer and timestep. Stable rank is commonly used as a soft-rank proxy in deep learning~\citep{sanyal2020stable}.
+For the curves in \Cref{fig:projection_layout_observation}, we use z-score stable rank: image and spatial tokens are flattened into a feature matrix, each channel is z-scored over the flattened token axis, and the resulting matrix $Z$ is summarized by $\|Z\|_F^2 / \|Z\|_2^2$ for each layer and timestep. Stable rank is commonly used as a soft-rank proxy in deep learning and as a diagnostic for representation collapse~\citep{sanyal2020stable,daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}.
 
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
@@ -542,7 +565,7 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
 \section{Transition Predictor Configuration and Capacity}
 \label{app:predictor_architecture_capacity}
 
-We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact spatial predictor on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
+We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNeXt-style spatial predictor~\citep{liu2022convnext} on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
@@ -667,7 +690,7 @@ This diagnostic distinguishes a shared transition interface from a collection of
 Class-conditional ImageNet samples from \texttt{SiT-XL/2} + LARA trained for $400\mathrm{K}$ iterations, sampled with CFG $=4$.
 
 \newcommand{\laraqualclass}[2]{%
-    \includegraphics[width=0.92\textwidth,height=0.305\textheight,keepaspectratio]{#1}\\[-0.15em]
+    \includegraphics[width=\textwidth,height=0.375\textheight,keepaspectratio]{#1}\\[-0.10em]
     \captionof{figure}{Generated samples from LARA at $400\mathrm{K}$ iterations with CFG $=4$. Class: ``#2''.}
 }
 
