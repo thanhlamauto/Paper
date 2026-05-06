@@ -98,38 +98,69 @@ d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
-\subsection{Optional Inference Interface}
+\subsection{Magnitude-Calibrated Layer-Skip Diagnostic}
+\label{app:magnitude_layer_skip}
 
-Standard generation uses the usual Euler integrator with the full backbone. The learned transition interface can also be evaluated inside the sampler by choosing a strategy $\pi_{\mathrm{skip}}$ that specifies which Euler steps use the predictor and which layer jump $(a_k,b_k)$ is used. This appendix reports the interface cleanly; the main paper evaluates LARA under standard sampling. The strategy should be reported with its skip rate and pair rule, such as fixed-pair, gap-balanced, or the final layer-aware rule from \Cref{tab:pair_sampling_ablation}. Both variants use the same state update; they differ only in how $\hat v_k$ is computed.
+The cosine transition loss mainly supervises direction in feature space. For a layer-skip diagnostic, direction alone may be insufficient because the suffix blocks also expect the target layer to have the correct activation scale. We therefore attach a small magnitude head $h_\omega$ to the predictor output. This head is trained during the same run, but its loss is fully detached from both the backbone and the transition predictor.
 
-\begin{algorithm}[!htbp]
-\caption{\textbf{Euler inference and optional transition-interface evaluation.}}
-\label{alg:realign_inference}
-\small
-\begin{algorithmic}[1]
-\Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $F_\zeta$; optional predictor $g_\psi$ and strategy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
-\Statex \textbf{Part I: standard Euler.}
-\State Sample $z_K\sim\mathcal{N}(0,I)$.
-\For{$k=K,\ldots,1$}
-    \State $\hat v_k=F_\zeta(z_k,t_k,y)$.
-    \State $z_{k-1}=z_k+(t_{k-1}-t_k)\hat v_k$.
-\EndFor
-\Statex \textbf{Part II: transition-interface Euler.}
-\State Set $\tilde z_K=z_K$ for paired comparison.
-\For{$k=K,\ldots,1$}
-    \State Select $s_k=\pi(k)$ and compute one velocity estimate.
-    \If{$s_k=\mathrm{full}$}
-        \State $\hat v_k=F_\zeta(\tilde z_k,t_k,y)$.
-    \Else
-        \State $(a,b)=s_k$.
-        \State $A_a^{t_k}=F_{\zeta,1:a}(\tilde z_k,t_k,y)$.
-        \State $\hat A_{a\to b}^{t_k}=g_\psi(A_a^{t_k};a,b,t_k)$.
-        \State $\hat v_k=F_{\zeta,b:L}(\hat A_{a\to b}^{t_k},t_k,y)$.
-    \EndIf
-    \State $\tilde z_{k-1}=\tilde z_k+(t_{k-1}-t_k)\hat v_k$.
-\EndFor
-\end{algorithmic}
-\end{algorithm}
+Given the predicted state $\widehat A_{a\to b}^{\,t}=g_\psi(A_a^t;a,b,t,y)$, the head predicts the log token norm of the target state:
+\begin{equation}
+\hat m_{a\to b,n}^{t}
+=
+h_\omega\!\left(\operatorname{sg}(\widehat A_{a\to b,n}^{\,t});a,b,t,y\right),
+\qquad
+m_{b,n}^{t}
+=
+\log\left(\|A_{b,n}^{t}\|_2+\varepsilon\right).
+\end{equation}
+Its auxiliary loss is
+\begin{equation}
+\mathcal{L}_{\mathrm{mag}}(\omega)
+=
+\mathbb{E}_{a<b,t,n}
+\left[
+\left\|
+\hat m_{a\to b,n}^{t}
+-
+\operatorname{sg}(m_{b,n}^{t})
+\right\|_2^2
+\right],
+\qquad
+\nabla_{\zeta,\psi}\mathcal{L}_{\mathrm{mag}}=0.
+\end{equation}
+Thus $\mathcal{L}_{\mathrm{mag}}$ updates only $h_\omega$: it does not backpropagate into the main diffusion backbone $F_\zeta$ or the transition predictor $g_\psi$. The head is used only to test whether the learned transition can support layer skipping after training.
+
+At evaluation, the predicted direction is rescaled by the magnitude head before being passed to the remaining suffix blocks:
+\begin{equation}
+\widehat A_{a\to b,n}^{\,\mathrm{skip},t}
+=
+\exp(\hat m_{a\to b,n}^{t})
+\frac{\widehat A_{a\to b,n}^{\,t}}
+{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
+\qquad
+\hat v_{\mathrm{skip}}
+=
+F_{\zeta,b:L}\!\left(\widehat A_{a\to b}^{\,\mathrm{skip},t},t,y\right).
+\end{equation}
+This diagnostic asks a different question from the main results. In spirit it is a block-dropping test: not only whether the predicted state aligns with the target layer, but whether the calibrated predicted state can replace a skipped block range without severely damaging generation quality.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint and sampler; only the internal route changes.}
+    \label{tab:appendix_magnitude_layer_skip}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular*}{0.94\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+        \toprule
+        Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
+        \midrule
+        Full backbone & -- & -- & \textbf{[TBD]} & 1.00$\times$ \\
+        Direction-only skip & \textbf{[TBD]} & off & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Calibrated short skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Calibrated medium skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
 \subsection{Training Compute}
 \label{app:training_compute}
@@ -430,6 +461,7 @@ The following controls support the main ablation story without becoming separate
         Control & Purpose & Report \\
         \midrule
         Standard vs. transition-interface inference & Check the optional inference interface separately from the standard-sampling main claim & FID-4K / FID-10K, cost \\
+        Magnitude-calibrated layer skipping & Test whether a predictor state, with stop-grad magnitude calibration, can replace skipped blocks & FID, relative cost, skipped pair \\
         Timestep PCA & Visualize how representations and predictor outputs evolve across denoising time & PCA maps, timestep panels \\
         Predictor output vs. target layer & Check whether predicted states recover target-layer structure & PCA, cosine heatmap, CKA \\
         Architecture and strategy config & Document the final predictor architecture and pair-selection rule & ConvNeXt-style predictor / selected schedule \\
@@ -439,6 +471,36 @@ The following controls support the main ablation story without becoming separate
         \bottomrule
     \end{tabular*}
 \end{table}
+
+\subsection{Optional Transition-Interface Inference}
+\label{app:optional_transition_inference}
+
+The main paper uses the standard full-backbone sampler. The transition interface is evaluated only as an appendix diagnostic: at each Euler step, a route policy $\pi(k)$ either keeps the full backbone or replaces a block range $(a,b)$ with the predictor followed by the suffix blocks. Setting $\pi(k)=\mathrm{full}$ for all $k$ recovers standard Euler exactly.
+
+\begin{algorithm}[!htbp]
+\caption{\textbf{Optional transition-interface Euler sampler.}}
+\label{alg:realign_inference}
+\small
+\begin{algorithmic}[1]
+\Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $F_\zeta$; predictor $g_\psi$; route policy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
+\State Sample $z_K\sim\mathcal{N}(0,I)$.
+\For{$k=K,\ldots,1$}
+    \State $r_k\gets\pi(k)$.
+    \If{$r_k=\mathrm{full}$}
+        \State $\hat v_k\gets F_\zeta(z_k,t_k,y)$.
+    \Else
+        \State $(a,b)\gets r_k$.
+        \State $A_a^{t_k}\gets F_{\zeta,1:a}(z_k,t_k,y)$.
+        \State $\widehat A_b^{t_k}\gets g_\psi(A_a^{t_k};a,b,t_k,y)$.
+        \State $\hat v_k\gets F_{\zeta,b:L}(\widehat A_b^{t_k},t_k,y)$.
+    \EndIf
+    \State $z_{k-1}\gets z_k+(t_{k-1}-t_k)\hat v_k$.
+\EndFor
+\State \Return $z_0$
+\end{algorithmic}
+\end{algorithm}
+
+Each diagnostic must report the skip rate, chosen layer jumps, and whether the same route is used at all timesteps or only at selected Euler steps. The comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
 
 \subsection{Transition-Pair Selection}
 
