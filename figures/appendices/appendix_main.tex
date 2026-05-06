@@ -612,22 +612,6 @@ This ablation tests whether projection heads extract useful recoverable signal o
 
 This diagnostic distinguishes a shared transition interface from a collection of pair-specific heads. We train on a subset of layer pairs and evaluate prediction and composition error on held-out pairs at the same denoising timestep. Lower held-out and composition errors indicate that the shared predictor captures reusable cross-depth structure.
 
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Held-out transition generalization.} Placeholder for testing whether LARA generalizes across unseen layer pairs better than pair-specific projectors.}
-    \label{tab:appendix_transition_generalization}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccc}
-        \toprule
-        Method & Held-out layer error $\downarrow$ & Composition error $\downarrow$ & FID $\downarrow$ \\
-        \midrule
-        Pair-specific projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Shared transition without consistency & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA shared transition (Ours) & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}}
-\end{table}
-
 \clearpage
 \section{Qualitative Examples}
 \label{app:qualitative_examples}
