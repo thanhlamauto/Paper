@@ -624,24 +624,6 @@ These diagnostics compare the predicted target state with the actual target laye
     \label{fig:appendix_predictor_output_diagnostics}
 \end{figure}
 
-\subsection{Layerwise Statistical Mismatch}
-\label{app:layerwise_statistical_mismatch}
-
-This diagnostic measures how representation statistics change across depth. We report RMS activation, token norm, channelwise variance, stable rank, effective rank, cosine similarity, SVCCA, and CKA by layer index and by layer distance. Larger shifts for distant pairs indicate stronger feature-space mismatch and make a learned transition interface more useful before the alignment signal reaches the backbone.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: layerwise statistical mismatch]}\\[0.5em]
-        Panels: RMS activation, variance, stable rank, cosine similarity, and CKA.\\
-        Axes: layer index and layer distance; curves for baseline, LayerSync variants, and LARA.
-    \end{minipage}}
-    \caption{\textbf{Layerwise statistical mismatch.} Placeholder for measuring how representation statistics change across depth and timestep.}
-    \label{fig:appendix_layerwise_statistics}
-\end{figure}
-
 \subsection{Projection Capacity and Layer Gap}
 \label{app:projection_capacity_layer_gap}
 
@@ -701,20 +683,35 @@ This diagnostic distinguishes a shared transition interface from a collection of
     \end{tabular}}
 \end{table}
 
+\clearpage
 \section{Qualitative Examples}
 \label{app:qualitative_examples}
 
-Qualitative examples use matched noise, sampler, guidance, and checkpoints across baseline, Dispersive, LayerSync-style alignment, and LARA. They supplement the quantitative metrics by showing visible failure modes and sample-level differences under the same random seed.
+Class-conditional ImageNet samples from \texttt{SiT-XL/2} + LARA trained for $400\mathrm{K}$ iterations, sampled with CFG $=4$.
 
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: qualitative ImageNet samples]}\\[0.5em]
-        Rows: baseline, Dispersive, LayerSync-style alignment, LARA.\\
-        Columns: matched class labels and identical initial noise.
-    \end{minipage}}
-    \caption{\textbf{Qualitative ImageNet comparison.} Placeholder for matched-seed samples used as supplementary visual evidence.}
-    \label{fig:appendix_qualitative_samples}
-\end{figure}
+\newcommand{\laraqualclass}[2]{%
+    \includegraphics[width=0.92\textwidth,height=0.305\textheight,keepaspectratio]{#1}\\[-0.15em]
+    \captionof{figure}{Generated samples from LARA at $400\mathrm{K}$ iterations with CFG $=4$. Class: ``#2''.}
+}
+
+\newcommand{\laraqualpage}[4]{%
+    \begin{center}
+    \captionsetup{font=small,justification=centering,singlelinecheck=false}
+    \laraqualclass{#1}{#2}
+    \end{center}
+    \vfill
+    \begin{center}
+    \captionsetup{font=small,justification=centering,singlelinecheck=false}
+    \laraqualclass{#3}{#4}
+    \end{center}
+    \clearpage
+}
+
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_01.png}{goldfish}{figures/qualitative/lara_400k_cfg4/sample_02.png}{quail}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_03.png}{golden retriever}{figures/qualitative/lara_400k_cfg4/sample_04.png}{tabby cat}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_05.png}{tiger}{figures/qualitative/lara_400k_cfg4/sample_06.png}{giant panda}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_07.png}{pickup truck}{figures/qualitative/lara_400k_cfg4/sample_08.png}{guacamole}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_09.png}{cheeseburger}{figures/qualitative/lara_400k_cfg4/sample_10.png}{volcano}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_11.png}{mantis}{figures/qualitative/lara_400k_cfg4/sample_12.png}{spindle}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_13.png}{rattlesnake}{figures/qualitative/lara_400k_cfg4/sample_14.png}{Norwich terrier}
+\laraqualpage{figures/qualitative/lara_400k_cfg4/sample_15.png}{hummingbird}{figures/qualitative/lara_400k_cfg4/sample_16.png}{coffee mug}
