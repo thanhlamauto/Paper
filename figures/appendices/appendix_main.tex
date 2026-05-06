@@ -106,7 +106,7 @@ The diversity term is computed directly from the hidden-state cache $\mathcal{H}
 
 \begin{table}[H]
     \centering
-    \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
+    \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost on \texttt{SiT-XL/2} for all three methods, under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
     \label{tab:appendix_compute_overhead}
     \scriptsize
     \setlength{\tabcolsep}{6pt}
@@ -284,7 +284,7 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
         \toprule
         Backbone & Layers & Hidden dim. & Heads & Patch size & Params \\
         \midrule
-        \texttt{SiT-B/2} & 12 & 768 & 12 & 2 & 130M \\
+        \texttt{SiT-B/2} & 12 & 768 & 12 & 2 & 137M \\
         \texttt{SiT-L/2} & 24 & 1024 & 16 & 2 & 458M \\
         \texttt{SiT-XL/2} & 28 & 1152 & 16 & 2 & 675M \\
         \bottomrule
@@ -340,10 +340,9 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms, timestep sampler, or loss weights change. & \citep{heusel2017gans} \\
-        \Cref{fig:projection_layout_observation} & PCA maps, stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and stable rank is computed per layer from the same normalized feature matrix. & this work \\
+        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
+        \Cref{fig:projection_layout_observation} & PCA maps, z-score stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and z-score stable rank is computed per layer from the same normalized feature matrix. & \citep{sanyal2020stable} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
-        \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
@@ -362,7 +361,7 @@ Standard generation metrics follow the cited benchmark protocols. FID compares G
 \end{equation}
 where lower is better. IS is computed using the Inception classifier convention of \citet{salimans2016improved}. Precision and recall follow the improved generative-model support estimate of \citet{kynkaanniemi2019precision}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
 
-For the stable-rank curves in \Cref{fig:projection_layout_observation}, we flatten image and spatial tokens into a feature matrix $Z$, normalize channels, and report $\|Z\|_F^2 / \|Z\|_2^2$ for each layer and timestep.
+For the curves in \Cref{fig:projection_layout_observation}, we use z-score stable rank: image and spatial tokens are flattened into a feature matrix, each channel is z-scored over the flattened token axis, and the resulting matrix $Z$ is summarized by $\|Z\|_F^2 / \|Z\|_2^2$ for each layer and timestep. Stable rank is commonly used as a soft-rank proxy in deep learning~\citep{sanyal2020stable}.
 
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
@@ -452,9 +451,9 @@ All rows use the same backbone, data pipeline, optimizer, training length, and s
         Variant & External target & LARA & FID $\downarrow$ & Probe avg. $\uparrow$ \\
         \midrule
         SiT baseline & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA & DINOv2 / JEPA & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        REPA & DINOv2 & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
         LARA (Ours) & -- & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA + LARA (Ours) & DINOv2 / JEPA & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+        REPA + LARA (Ours) & DINOv2 & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -543,25 +542,22 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
 \section{Transition Predictor Configuration and Capacity}
 \label{app:predictor_architecture_capacity}
 
-We first specify the transition predictor used by LARA, since the capacity sweep is only meaningful once the module being scaled is fixed. We use a compact ConvNet/ConvNeXt-style transition module rather than an MLP or transformer adapter. Diffusion-transformer tokens still form a spatial latent grid, so local convolutional mixing is parameter-efficient and can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
+We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact spatial predictor on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Transition predictor configuration.} The same architectural template is used across the main experiments; capacity controls vary width, depth, or parameter budget while keeping the conditioning interface fixed.}
+    \caption{\textbf{Transition predictor configuration for SiT.} The same LARA interface is used across the main ImageNet experiments; capacity controls vary the auxiliary parameter budget while keeping the conditioning and target interface fixed.}
     \label{tab:appendix_predictor_config}
     \scriptsize
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}lll@{}}
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}lcccp{0.30\linewidth}p{0.18\linewidth}@{}}
         \toprule
-        Component & Role & Setting \\
+        Backbone & Blocks & Hidden dim. & Token grid & Predictor state interface & Default budget \\
         \midrule
-        Input state & source activation tokens & $A_a^t\in\mathbb{R}^{N\times C}$ \\
-        Conditioning & identify transition and denoising time & source layer, target layer, timestep, optional condition \\
-        Stem & map source features to predictor width & linear / $1{\times}1$ projection, width \textbf{[TBD]} \\
-        Spatial core & preserve latent layout at low cost & depthwise ConvNet / ConvNeXt-style residual blocks, depth \textbf{[TBD]} \\
-        Output head & return target-layer coordinates & projection back to $C$ channels \\
-        Target path & stable internal reference & $\operatorname{sg}(A_b^t)$, no predictor update through target \\
-        Parameter budget & auxiliary capacity & selected in the 5--10\% backbone range \\
+        SiT-B/2 & 12 & 768 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times768}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times768}$; condition on $(e_a,e_b,e_t,y)$; target $\operatorname{sg}(A_b^t)$ & 5--10\% of 137M \\
+        SiT-L/2 & 24 & 1024 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1024}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1024}$; same conditioning and stopped target & 5--10\% of 458M \\
+        SiT-XL/2 & 28 & 1152 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1152}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1152}$; same conditioning and stopped target & 5--10\% of 675M \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -570,19 +566,19 @@ We then vary predictor model size while holding the backbone, training budget, d
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor model-size sweep.} Placeholder for selecting the transition-predictor budget. All rows use the same ConvNet-style template; width/depth are changed to vary parameter count.}
+    \caption{\textbf{Predictor model-size sweep.} Placeholder for selecting the transition-predictor budget. All rows use the same LARA predictor template while varying parameter count.}
     \label{tab:appendix_predictor_capacity_controls}
     \scriptsize
     \setlength{\tabcolsep}{3pt}
-    \begin{tabular}{lccccc}
+    \begin{tabular}{lcccc}
         \toprule
-        Predictor size & Width / depth & Params vs. backbone & FID $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ & Comp. $\downarrow$ \\
+        Predictor size & Params vs. backbone & FID $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ & Comp. $\downarrow$ \\
         \midrule
-        No predictor & -- & 0\% & \textbf{[TBD]} & -- & -- \\
-        Tiny & \textbf{[TBD]} & $<3\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Small & \textbf{[TBD]} & 3--5\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Selected & \textbf{[TBD]} & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Large & \textbf{[TBD]} & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        No predictor & 0\% & \textbf{[TBD]} & -- & -- \\
+        Tiny & $<3\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Small & 3--5\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Selected & 5--10\% & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Large & $>10\%$ & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}
 \end{table}
