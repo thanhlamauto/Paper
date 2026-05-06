@@ -114,9 +114,9 @@ The diversity term is computed directly from the hidden-state cache $\mathcal{H}
         \toprule
         Method & Train TFLOPs/step \\
         \midrule
-        SiT baseline & \textbf{[TBD]} \\
-        LayerSync & \textbf{[TBD]} \\
-        LARA (Ours) & \textbf{[TBD]} \\
+        SiT baseline & \textbf{0.23 | 30,305} \\
+        LayerSync & \textbf{0.25 | 30,305} \\
+        LARA (Ours) & \textbf0.30 | {35,342} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -137,8 +137,8 @@ We additionally profile the internal alignment methods used in our speed analysi
         \toprule
         Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & GFLOPs/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} & \textbf{40,643} \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,305} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.23} & \textbf{30,305} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,923} \\
         \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} & \textbf{35,342} \\
         \bottomrule
     \end{tabular*}
