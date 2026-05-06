@@ -111,7 +111,7 @@ Only the online predictor is updated by this term; the EMA predictor provides a 
 \subsection{Diversity Regularization}
 
 \noindent
-\begin{minipage}[t]{0.62\linewidth}
+\begin{minipage}[t]{0.60\linewidth}
 LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
@@ -125,29 +125,29 @@ LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{ya
 Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.33\linewidth}
+\begin{minipage}[t]{0.35\linewidth}
     \vspace{0pt}
     \centering
     \captionsetup{type=figure,font=small,justification=raggedright,singlelinecheck=false}
     \begin{tabular}{@{}c@{\hspace{0.25em}}c@{}}
     \begin{tabular}[t]{@{}c@{}}
     \includegraphics[
-        width=0.70\linewidth,
-        trim=50 41 97 32,
+        width=0.74\linewidth,
+        trim=42 34 88 24,
         clip
     ]{figures/layer_cosine_similarity_before.png}\\[0.30em]
     \includegraphics[
-        width=0.70\linewidth,
-        trim=34 32 88 28,
+        width=0.74\linewidth,
+        trim=28 24 78 20,
         clip
     ]{figures/layer_cosine_similarity_after.png}
     \end{tabular}
     &
     \begin{tabular}[t]{@{}c@{}}
-    \raisebox{-0.70\linewidth}{%
+    \raisebox{-0.73\linewidth}{%
     \includegraphics[
-        height=1.43\linewidth,
-        trim=411 32 0 28,
+        height=1.50\linewidth,
+        trim=411 0 0 0,
         clip
     ]{figures/layer_cosine_similarity_after.png}}
     \end{tabular}

@@ -99,8 +99,8 @@ ImageNet provides the main testbed because it exposes both optimization quality 
             MDTv2-XL/2 & 676M & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
             \midrule
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            DiT-XL/2 & 675M & 2.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
-            SiT-XL/2 & 675M & 2.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
+            DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
             \quad + REPA & 675M & 2.00M & 1.80 & 284.0 & 0.81 & 0.61 \\
             \hdashline
             \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
@@ -290,7 +290,7 @@ Once the objective is fixed, the remaining concern is whether it depends on a na
     \end{tabular*}
 \end{table}
 
-Predictor capacity controls a different trade-off. A very small predictor cannot match the geometry of different target layers and gives weak transition supervision. A very large predictor can instead memorize layer representations, weakening the regularization signal while adding overhead. We therefore use a moderate predictor and treat roughly $5$--$10\%$ of the backbone size as the practical range.
+The sweep uses a compact ConvNet predictor. This choice follows the same spatial intuition as i-REPA~\citep{singh2025irepa}: SiT latents keep a grid layout, so local convolutional mixing can capture shared perceptual structure between layers while adding few parameters. Capacity then controls a separate trade-off. A very small predictor cannot match the geometry of different target layers and gives weak transition supervision. A very large predictor can instead memorize layer representations, weakening the regularization signal while adding overhead. We therefore use a moderate predictor and treat roughly $5$--$10\%$ of the backbone size as the practical range.
 
 Sampling also affects performance through the layer gap, the source layer, and the timestep schedule. We choose the final sampler from a uniform diagnostic over these axes: it favors informative medium-gap transitions, keeps broad source-depth coverage, and leaves the training timestep sampler uniform. The full diagnostic and schedule are given in \Cref{app:uniform_transition_diagnostic,app:realign_ablation_protocols}.
 
