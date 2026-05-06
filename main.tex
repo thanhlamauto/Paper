@@ -144,6 +144,17 @@
 
 \input{sections/01_introduction}
 \input{sections/02_related_works}
+
+\FloatBarrier
+\begin{figure}[H]
+    \centering
+    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
+    \includegraphics[width=0.88\linewidth]{figures/PCA.png}
+    \caption{\textbf{Shared spatial structure across depth.} PCA visualizations show that different layers preserve a common spatial scaffold while changing semantic abstraction. LARA uses this shared structure to support layer-aware transitions across many source--target pairs.}
+    \label{fig:projection_layout_observation}
+\end{figure}
+\vspace{-0.8em}
+
 \input{sections/03_method}
 \input{sections/04_experiments}
 \input{sections/05_conclusion}

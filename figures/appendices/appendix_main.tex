@@ -12,28 +12,29 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
 \label{alg:realign_training}
 \small
 \begin{algorithmic}[1]
-\Require backbone $F_\zeta$ with suffix $F_{\zeta,b:L}$; predictor $g_\psi$; EMA predictor $g_{\mathrm{ema}}$.
-\Require pair law $q(a,b,c)$; depth-shortcut subset $\mathcal{B}_{\mathrm{ds}}$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
+\Require backbone $v_\theta$ with prefix/suffix maps $F_{\theta,1:a},F_{\theta,b:L}$; online predictor $G_\psi$ and EMA predictor $G_{\bar\psi}$.
+\Require timestep law $p_t$; pair law $q(a,b,c)$; depth-shortcut subset $\mathcal{B}_{\mathrm{ds}}$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
 \Repeat
-    \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim\mathcal{U}(0,1)$.
+    \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim p_t$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
     \State Run the full backbone and cache hidden states:
     \[
-    (\hat v,\mathcal{H})\leftarrow F_\zeta(x_t,t,y),\qquad
+    (\hat v,\mathcal{H})\leftarrow v_\theta(x_t,t,y),\qquad
     \mathcal{H}=\{A_\ell^t\}_{\ell=0}^{L}.
     \]
     \State Sample $(a,b,c)\sim q(a,b,c)$ with $a<b<c$, and compute transitions from cached states:
     \[
     \begin{aligned}
-    \hat A_{a\to b}^t &= g_\psi(A_a^t;a,b,t,y),\\
-    \hat A_{a\to c}^t &= g_\psi(A_a^t;a,c,t,y),\\
+    \hat A_{a\to b}^t &= G_\psi(A_a^t;e_a,e_b,e_t),\\
+    \hat A_{a\to c}^t &= G_\psi(\mathrm{sg}(A_a^t);e_a,e_c,e_t),\\
     \tilde A_{a\to b\to c}^t
-    &= g_{\mathrm{ema}}\!\left(g_{\mathrm{ema}}(\mathrm{sg}(A_a^t);a,b,t,y);b,c,t,y\right).
+    &= G_{\bar\psi}\!\left(\mathrm{sg}(\hat A_{a\to b}^t);e_b,e_c,e_t\right).
     \end{aligned}
     \]
+    \Statex \hspace{\algorithmicindent}\textit{This uses two online predictor forwards and one EMA predictor forward; the inner $a\to b$ state is cached, not recomputed.}
     \State Compute the routed velocity for the depth-shortcut subset:
     \[
-    \tilde v=F_{\zeta,b:L}(\hat A_{a\to b}^t,t,y).
+    \tilde v=F_{\theta,b:L}(\hat A_{a\to b}^t,t,y).
     \]
     \State Compute the unified flow-matching loss:
     \[
@@ -59,11 +60,13 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
     \qquad A_i^t,A_j^t\in\mathcal{H}.
     \end{aligned}
     \]
-    \State Update $\zeta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\mathcal{L}_{\mathrm{LARA}}$.
-    \State Update $\psi_{\mathrm{ema}}\leftarrow\tau\psi_{\mathrm{ema}}+(1-\tau)\psi$.
+    \State Update $\theta,\psi$ with $\mathcal{L}_{\mathrm{FM}}+\mathcal{L}_{\mathrm{LARA}}$.
+    \State Update the EMA predictor $\bar\psi\leftarrow \mu\bar\psi+(1-\mu)\psi$.
 \Until{training budget is reached}
 \end{algorithmic}
 \end{algorithm}
+
+The timestep law $p_t$ is a protocol choice rather than part of the transition objective. Main LARA runs use the default training sampler reported in \Cref{tab:appendix_imagenet_protocol}; timestep-sampler alternatives are evaluated separately in \Cref{tab:main_hyperparameter_tuning}.
 
 \paragraph{Predictor-induced transition distance.}
 The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
@@ -73,8 +76,8 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 \label{alg:lara_transition_distance}
 \small
 \begin{algorithmic}[1]
-\Require source state $A_a^t$; target state $A_b^t$; transition predictor $g_\psi$; conditioning tuple $(a,b,t,y)$.
-\State $\widehat A_{a\to b}^{\,t}\gets g_\psi(A_a^t;a,b,t,y)$
+\Require source state $A_a^t$; target state $A_b^t$; transition predictor $G_\psi$; conditioning tuple $(e_a,e_b,e_t)$.
+\State $\widehat A_{a\to b}^{\,t}\gets G_\psi(A_a^t;e_a,e_b,e_t)$
 \State $R_b^t\gets \operatorname{sg}(A_b^t)$
 \For{$n=1,\ldots,N$}
     \State $s_n\gets \operatorname{cos\_sim}(\widehat A_{a\to b,n}^{\,t},R_{b,n}^{t})$
@@ -97,70 +100,6 @@ d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
-
-\subsection{Magnitude-Calibrated Layer-Skip Diagnostic}
-\label{app:magnitude_layer_skip}
-
-The cosine transition loss mainly supervises direction in feature space. For a layer-skip diagnostic, direction alone may be insufficient because the suffix blocks also expect the target layer to have the correct activation scale. We therefore attach a small magnitude head $h_\omega$ to the predictor output. This head is trained during the same run, but its loss is fully detached from both the backbone and the transition predictor.
-
-Given the predicted state $\widehat A_{a\to b}^{\,t}=g_\psi(A_a^t;a,b,t,y)$, the head predicts the log token norm of the target state:
-\begin{equation}
-\hat m_{a\to b,n}^{t}
-=
-h_\omega\!\left(\operatorname{sg}(\widehat A_{a\to b,n}^{\,t});a,b,t,y\right),
-\qquad
-m_{b,n}^{t}
-=
-\log\left(\|A_{b,n}^{t}\|_2+\varepsilon\right).
-\end{equation}
-Its auxiliary loss is
-\begin{equation}
-\mathcal{L}_{\mathrm{mag}}(\omega)
-=
-\mathbb{E}_{a<b,t,n}
-\left[
-\left\|
-\hat m_{a\to b,n}^{t}
--
-\operatorname{sg}(m_{b,n}^{t})
-\right\|_2^2
-\right],
-\qquad
-\nabla_{\zeta,\psi}\mathcal{L}_{\mathrm{mag}}=0.
-\end{equation}
-Thus $\mathcal{L}_{\mathrm{mag}}$ updates only $h_\omega$: it does not backpropagate into the main diffusion backbone $F_\zeta$ or the transition predictor $g_\psi$. The head is used only to test whether the learned transition can support layer skipping after training.
-
-At evaluation, the predicted direction is rescaled by the magnitude head before being passed to the remaining suffix blocks:
-\begin{equation}
-\widehat A_{a\to b,n}^{\,\mathrm{skip},t}
-=
-\exp(\hat m_{a\to b,n}^{t})
-\frac{\widehat A_{a\to b,n}^{\,t}}
-{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
-\qquad
-\hat v_{\mathrm{skip}}
-=
-F_{\zeta,b:L}\!\left(\widehat A_{a\to b}^{\,\mathrm{skip},t},t,y\right).
-\end{equation}
-This diagnostic asks a different question from the main results. In spirit it is a block-dropping test: not only whether the predicted state aligns with the target layer, but whether the calibrated predicted state can replace a skipped block range without severely damaging generation quality.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint and sampler; only the internal route changes.}
-    \label{tab:appendix_magnitude_layer_skip}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular*}{0.94\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
-        \toprule
-        Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
-        \midrule
-        Full backbone & -- & -- & \textbf{[TBD]} & 1.00$\times$ \\
-        Direction-only skip & \textbf{[TBD]} & off & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Calibrated short skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Calibrated medium skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
 
 \subsection{Training Compute}
 \label{app:training_compute}
@@ -190,20 +129,20 @@ Layer-pair sampling replaces the fixed layer choice used by direct self-alignmen
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
 
-Each run reports the predictor architecture, layer-pair distribution, loss weights, EMA decay, diversity weight, and training cost. Ablations use the same backbone and budget unless the table states otherwise.
+Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. Ablations use the same backbone and budget unless the table states otherwise.
 
 \begin{table}[!htbp]
     \centering
     \caption{\textbf{LARA hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
     \label{tab:appendix_realign_hparams}
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccccccccc}
+    \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & EMA decay & Target detach & Extra cost \\
+        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
         \midrule
-        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
-        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} \\
+        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
+        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
 \end{table}
@@ -401,7 +340,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:appendix_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms, timestep sampler, or loss weights change. & \citep{heusel2017gans} \\
+        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning} & FID-10K & Use the same TPU budget, batch size, iterations, sampler, VAE, and reference statistics; only objective terms, timestep sampler, or loss weights change. & \citep{heusel2017gans} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{tab:pair_sampling_ablation} & Grouped prediction error & Train with uniform layer-pair sampling, then group $\mathcal{L}_{\mathrm{pred}}$ by layer gap, source layer, or timestep range. & this work \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -435,7 +374,7 @@ E_{\mathrm{pred}}(a,b)
 =
 \mathbb{E}_{x,t}
 \left[
-d\left(g_\psi(A_a^t;a,b,t),\operatorname{sg}(A_b^t)\right)
+d\left(G_\psi(A_a^t;e_a,e_b,e_t),\operatorname{sg}(A_b^t)\right)
 \right],
 \end{equation}
 where $d$ follows the predictor-first transition distance in \Cref{alg:lara_transition_distance,eq:appendix_token_cosine_distance} unless stated otherwise. The grouped prediction-error tables in \Cref{tab:pair_sampling_ablation} average this quantity over the specified layer-gap bin, source-layer bin, or timestep bin. Linear classification probes use frozen intermediate features and a linear head; segmentation probes use frozen spatial features and a linear pixel classifier on PASCAL VOC~\citep{everingham2010pascal}. For diagnostics not tied to a named benchmark, captions report the normalization axes, sample count, timestep range, layer-pair rule, and whether higher or lower is better.
@@ -462,15 +401,106 @@ The following controls support the main ablation story without becoming separate
         \midrule
         Standard vs. transition-interface inference & Check the optional inference interface separately from the standard-sampling main claim & FID-4K / FID-10K, cost \\
         Magnitude-calibrated layer skipping & Test whether a predictor state, with stop-grad magnitude calibration, can replace skipped blocks & FID, relative cost, skipped pair \\
+        External alignment compatibility & Test whether LARA remains useful when combined with REPA-style external targets & FID, representation probes, training cost \\
         Timestep PCA & Visualize how representations and predictor outputs evolve across denoising time & PCA maps, timestep panels \\
         Predictor output vs. target layer & Check whether predicted states recover target-layer structure & PCA, cosine heatmap, CKA \\
         Architecture and strategy config & Document the final predictor architecture and pair-selection rule & ConvNeXt-style predictor / selected schedule \\
-        Loss-weight tuning & Set the component weights without changing the main recipe & FID, prediction error, stability \\
-        Max-gap and pair schedule & Separate max layer gap from timestep schedule effects & FID, $\mathcal{L}_{\mathrm{pred}}$ \\
         Qualitative samples & Show matched-seed visual differences & Image grids \\
         \bottomrule
     \end{tabular*}
 \end{table}
+
+\subsection{Uniform Transition-Prediction Diagnostic}
+\label{app:uniform_transition_diagnostic}
+
+Before selecting the final layer-pair sampler, we run a diagnostic with uniform sampling over valid source--target pairs and uniform timesteps. We then group the predictor error by normalized layer gap, source-layer position, and timestep range. This diagnostic is used to choose the sampler qualitatively: adjacent layers tend to be easy but uninformative, very distant layers tend to be unstable, and medium gaps provide a stronger training signal.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap, source-layer, and timestep bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable.}
+    \label{tab:pair_sampling_ablation}
+    \scriptsize
+    \setlength{\tabcolsep}{2.2pt}
+    \renewcommand{\arraystretch}{0.88}
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Layer gap}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Gap & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            \midrule
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Source layer}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Source & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            \midrule
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \textbf{Timestep}\\[0.25em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc@{}}
+            \toprule
+            Range & Share & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
+            \midrule
+            0--25\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            25--50\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            50--75\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            75--100\% & \textbf{[TBD]} & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+\end{table}
+
+\subsection{Compatibility with External Alignment}
+\label{app:external_alignment_compatibility}
+
+LARA is designed as an internal alignment signal, so it is natural to ask whether it can be added on top of an external representation-alignment method such as REPA~\citep{yu2024repa}. The two objectives supervise different relations: REPA anchors selected hidden states to features from an external visual encoder, while LARA learns transitions among the diffusion transformer's own layers. This control therefore tests complementarity rather than replacing one method with the other.
+
+\begin{equation}
+\mathcal{L}_{\mathrm{train}}
+=
+\mathcal{L}_{\mathrm{FM}}
++\lambda_{\mathrm{REPA}}\mathcal{L}_{\mathrm{REPA}}
++\lambda_{\mathrm{LARA}}\mathcal{L}_{\mathrm{LARA}}.
+\end{equation}
+All rows use the same backbone, data pipeline, optimizer, training length, and sampler. The REPA teacher and aligned layer follow the REPA protocol; LARA keeps the same predictor, layer-pair sampler, and loss weights as the internal-only run.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Compatibility with external representation alignment.} Appendix control for testing whether LARA can be combined with REPA-style external targets.}
+    \label{tab:appendix_external_alignment_compatibility}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+        \toprule
+        Variant & External target & LARA & FID $\downarrow$ & Probe avg. $\uparrow$ \\
+        \midrule
+        SiT baseline & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        REPA & DINOv2 / JEPA & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
+        LARA (Ours) & -- & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+        REPA + LARA (Ours) & DINOv2 / JEPA & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
+If the combined row improves over both single-objective rows, the result indicates that external semantic anchoring and internal transition learning provide complementary supervision. If the gain is marginal, LARA should still be interpreted as the self-contained recipe used in the main experiments rather than as a required add-on to external alignment.
 
 \subsection{Optional Transition-Interface Inference}
 \label{app:optional_transition_inference}
@@ -482,17 +512,17 @@ The main paper uses the standard full-backbone sampler. The transition interface
 \label{alg:realign_inference}
 \small
 \begin{algorithmic}[1]
-\Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $F_\zeta$; predictor $g_\psi$; route policy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
+\Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $v_\theta$ with prefix/suffix maps $F_{\theta,1:a},F_{\theta,b:L}$; predictor $G_\psi$; route policy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
 \State Sample $z_K\sim\mathcal{N}(0,I)$.
 \For{$k=K,\ldots,1$}
     \State $r_k\gets\pi(k)$.
     \If{$r_k=\mathrm{full}$}
-        \State $\hat v_k\gets F_\zeta(z_k,t_k,y)$.
+        \State $\hat v_k\gets v_\theta(z_k,t_k,y)$.
     \Else
         \State $(a,b)\gets r_k$.
-        \State $A_a^{t_k}\gets F_{\zeta,1:a}(z_k,t_k,y)$.
-        \State $\widehat A_b^{t_k}\gets g_\psi(A_a^{t_k};a,b,t_k,y)$.
-        \State $\hat v_k\gets F_{\zeta,b:L}(\widehat A_b^{t_k},t_k,y)$.
+        \State $A_a^{t_k}\gets F_{\theta,1:a}(z_k,t_k,y)$.
+        \State $\widehat A_b^{t_k}\gets G_\psi(A_a^{t_k};e_a,e_b,e_{t_k})$.
+        \State $\hat v_k\gets F_{\theta,b:L}(\widehat A_b^{t_k},t_k,y)$.
     \EndIf
     \State $z_{k-1}\gets z_k+(t_{k-1}-t_k)\hat v_k$.
 \EndFor
@@ -501,6 +531,68 @@ The main paper uses the standard full-backbone sampler. The transition interface
 \end{algorithm}
 
 Each diagnostic must report the skip rate, chosen layer jumps, and whether the same route is used at all timesteps or only at selected Euler steps. The comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
+
+\subsection{Magnitude-Calibrated Layer-Skip Diagnostic}
+\label{app:magnitude_layer_skip}
+
+The transition loss mainly supervises direction in feature space. For the layer-skip diagnostic, direction alone may be insufficient because the suffix blocks expect the target layer to have the correct activation scale. We therefore attach a small magnitude head $h_\omega$ to the predictor output. This head is trained during the same run, but its loss is fully detached from both the backbone and the transition predictor.
+
+Given the predicted state $\widehat A_{a\to b}^{\,t}=G_\psi(A_a^t;e_a,e_b,e_t)$, the head predicts the log token norm of the target state:
+\begin{equation}
+\hat m_{a\to b,n}^{t}
+=
+h_\omega\!\left(\operatorname{sg}(\widehat A_{a\to b,n}^{\,t});e_a,e_b,e_t\right),
+\qquad
+m_{b,n}^{t}
+=
+\log\left(\|A_{b,n}^{t}\|_2+\varepsilon\right).
+\end{equation}
+Its auxiliary loss is
+\begin{equation}
+\mathcal{L}_{\mathrm{mag}}(\omega)
+=
+\mathbb{E}_{a<b,t,n}
+\left[
+\left\|
+\hat m_{a\to b,n}^{t}
+-
+\operatorname{sg}(m_{b,n}^{t})
+\right\|_2^2
+\right],
+\qquad
+\nabla_{\theta,\psi}\mathcal{L}_{\mathrm{mag}}=0.
+\end{equation}
+Thus $\mathcal{L}_{\mathrm{mag}}$ updates only $h_\omega$: it does not backpropagate into the main diffusion backbone $v_\theta$ or the transition predictor $G_\psi$. At evaluation, the predicted direction is rescaled by the magnitude head before being passed to the remaining suffix blocks:
+\begin{equation}
+\widehat A_{a\to b,n}^{\,\mathrm{skip},t}
+=
+\exp(\hat m_{a\to b,n}^{t})
+\frac{\widehat A_{a\to b,n}^{\,t}}
+{\|\widehat A_{a\to b,n}^{\,t}\|_2+\varepsilon},
+\qquad
+\hat v_{\mathrm{skip}}
+=
+F_{\theta,b:L}\!\left(\widehat A_{a\to b}^{\,\mathrm{skip},t},t,y\right).
+\end{equation}
+This diagnostic asks whether the calibrated predicted state can replace a skipped block range without severely damaging generation quality.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint and sampler; only the internal route changes.}
+    \label{tab:appendix_magnitude_layer_skip}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular*}{0.94\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+        \toprule
+        Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
+        \midrule
+        Full backbone & -- & -- & \textbf{[TBD]} & 1.00$\times$ \\
+        Direction-only skip & \textbf{[TBD]} & off & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Calibrated short skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Calibrated medium skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
 \subsection{Transition-Pair Selection}
 
@@ -572,59 +664,6 @@ We then vary the predictor capacity while holding the backbone, training budget,
 \end{table}
 
 We choose the 5--10\% predictor range as the default budget because it is the smallest regime intended to make the transition task nontrivial without turning LARA into a second backbone. A smaller predictor can underfit long or mid-depth transitions, while a much larger predictor may reduce auxiliary prediction error without giving a proportional generation gain. The selected range therefore keeps the module expressive enough to model cross-layer changes, but small enough that the main DiT remains the dominant model and the added training cost stays modest.
-
-\subsection{Loss-Weight, Max-Gap, and Schedule Controls}
-
-These controls tune the final recipe without changing the main LARA mechanism. We report them in the appendix because they select practical hyperparameters and keep the main paper focused.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Loss-weight tuning on SiT-B/2.} We tune one parameter at a time and keep the other weights fixed at the current best setting. This isolates which value of each component weight gives the best trade-off between generation quality and transition prediction.}
-    \label{tab:appendix_hyperparameter_tuning}
-    \scriptsize
-    \setlength{\tabcolsep}{4pt}
-    \renewcommand{\arraystretch}{0.86}
-    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}llccc@{}}
-        \toprule
-        Tuned weight & Candidate value & Fixed weights & FID-10K $\downarrow$ & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-        \midrule
-        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{pred}}$ & [TBD] & $\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        \midrule
-        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{cons}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{div}}$ & [TBD] & [TBD] \\
-        \midrule
-        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
-        $\lambda_{\mathrm{div}}$ & [TBD] & $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}}$ & [TBD] & [TBD] \\
-        \midrule
-        Final LARA (Ours) & selected & -- & [TBD] & [TBD] \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Loss-weight and schedule controls.} Placeholder for tuning LARA component weights, maximum layer gap, and pair/timestep schedule.}
-    \label{tab:appendix_loss_weight_schedule_controls}
-    \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.96\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
-        \toprule
-        Setting & Loss weights & Max gap & Pair / timestep schedule & FID $\downarrow$ \\
-        \midrule
-        Low weights & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        Default & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        High weights & \textbf{[TBD]} & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        Short max gap & default & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        Long max gap & default & \textbf{[TBD]} & final & \textbf{[TBD]} \\
-        Alternative schedule & default & default & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
 
 \subsection{Scaling Across Backbones and Model Sizes}
 \label{app:scaling_experiments}
