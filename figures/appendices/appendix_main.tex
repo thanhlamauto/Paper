@@ -547,45 +547,10 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
 
 We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNet-style spatial predictor, implemented with ConvNeXt-style residual blocks~\citep{liu2022convnext}, on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects source-layer, target-layer, and timestep conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}.
 
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Transition predictor configuration for SiT.} The same LARA interface is used across the main ImageNet experiments; capacity controls vary the auxiliary parameter budget while keeping the conditioning and target interface fixed.}
-    \label{tab:appendix_predictor_config}
-    \scriptsize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}lcccp{0.30\linewidth}p{0.18\linewidth}@{}}
-        \toprule
-        Backbone & Blocks & Hidden dim. & Token grid & Predictor state interface & Default budget \\
-        \midrule
-        SiT-B/2 & 12 & 768 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times768}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times768}$; condition on $(e_a,e_b,e_t,y)$; target $\operatorname{sg}(A_b^t)$ & 5--10\% of 137M \\
-        SiT-L/2 & 24 & 1024 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1024}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1024}$; same conditioning and stopped target & 5--10\% of 458M \\
-        SiT-XL/2 & 28 & 1152 & $16{\times}16$ & $A_a^t\in\mathbb{R}^{256\times1152}\mapsto\widehat A_{a\to b}^{\,t}\in\mathbb{R}^{256\times1152}$; same conditioning and stopped target & 5--10\% of 675M \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
-
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
 
-This section collects the diagnostics behind \Cref{sec:representation_analysis} and the shared-structure motivation in \Cref{fig:projection_layout_observation}. The main paper reports the compact version; the appendix gives protocols, controls, and additional views.
-
-\subsection{Diagnostic Protocol}
-\label{app:diagnostic_protocol}
-
-Diagnostics use the same checkpoints, dataset split, resolution, VAE, and layer sampling scheme as the main experiments. The comparison set is:
-\begin{itemize}[leftmargin=*]
-    \item baseline DiT/SiT backbone without auxiliary representation guidance;
-    \item LayerSync-style direct cosine alignment;
-    \item LayerSync-style alignment with a small projection head;
-    \item pair-specific projectors for selected layer pairs;
-    \item LARA with a shared conditional transition predictor.
-\end{itemize}
-For each method, report layer pairs, timestep ranges, projection or predictor architecture, loss weights, and whether an EMA target is used. Source groups are defined by block index for a backbone with $L$ blocks: $\mathcal{S}_{\mathrm{early}}=\{1,\dots,\lfloor0.2L\rfloor\}$, $\mathcal{S}_{\mathrm{mid}}=\{\lfloor0.4L\rfloor,\dots,\lfloor0.6L\rfloor\}$, and $\mathcal{S}_{\mathrm{late}}=\{\lceil0.8L\rceil,\dots,L\}$.
-
-\subsection{Layerwise Probe Protocol}
-
-For the representation analysis in \Cref{sec:representation_analysis}, we report probes across all backbone blocks. Linear classification uses frozen hidden states with a lightweight linear head. Segmentation probes use the same frozen features with a linear pixel classifier after spatial reshaping. CKA compares centered token activations with DINOv2 features on the same images and timesteps. Matched-FID checkpoints are preferred for the main figure so that the layerwise comparison reflects representation organization under comparable sample quality.
+This section collects the additional diagnostics behind \Cref{sec:representation_analysis} and the shared-structure motivation in \Cref{fig:projection_layout_observation}. The main paper reports the compact version; the appendix provides the remaining controls and qualitative views.
 
 \subsection{Predictor-Output Diagnostics}
 
