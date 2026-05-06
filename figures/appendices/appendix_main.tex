@@ -101,26 +101,6 @@ d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
-\subsection{Training Compute}
-\label{app:training_compute}
-
-\begin{table}[H]
-    \centering
-    \caption{\textbf{Training compute.} Placeholder table for measuring per-step training cost on \texttt{SiT-XL/2} for all three methods, under the same input resolution, batch size, precision, hardware, and step count. TFLOPs include forward and backward passes and exclude data loading and cached VAE encoding.}
-    \label{tab:appendix_compute_overhead}
-    \scriptsize
-    \setlength{\tabcolsep}{6pt}
-    \begin{tabular*}{0.58\textwidth}{@{\extracolsep{\fill}}lc@{}}
-        \toprule
-        Method & Train TFLOPs/step \\
-        \midrule
-        SiT baseline & \textbf{0.23 | 30,305} \\
-        LayerSync & \textbf{0.25 | 30,305} \\
-        LARA (Ours) & \textbf0.30 | {35,342} \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
-
 \subsection{Compute Comparison with SRA and LayerSync}
 \label{app:sra_layersync_lara_compute}
 
