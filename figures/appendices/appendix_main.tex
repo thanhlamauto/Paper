@@ -127,29 +127,43 @@ We additionally profile the internal alignment methods used in our speed analysi
 \subsection{Transition Pair and Predictor Design}
 \label{app:transition_pair_predictor_design}
 
-Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use depth-centered gap sampling: draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Gap-only, depth-center-only, and full-uniform alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
+Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use depth-centered gap sampling: draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Full-uniform and depth-center-only alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
 
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
 
-Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the pair sampler and timestep conditioning are summarized in \Cref{app:transition_pair_predictor_design}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Ablations use the same backbone and budget unless the table states otherwise.
+Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the pair sampler and timestep conditioning are summarized in \Cref{app:transition_pair_predictor_design}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Local filesystem paths, logging flags, and checkpoint directories are omitted because they do not affect the method.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{LARA hyperparameter setup.} Placeholder table for the architecture and loss settings used in main results and ablations.}
+    \caption{\textbf{LARA ImageNet training hyperparameters.} Key settings used for the main \texttt{SiT-B/2}, \texttt{SiT-L/2}, and \texttt{SiT-XL/2} LARA runs. All runs use ImageNet $256\times256$ VAE latents, AdamW with learning rate $10^{-4}$ for both backbone and predictor, weight decay $0.1$, EMA decay $0.9999$, gradient clipping at $1.0$, class-dropout rate $0.1$, 50K-sample FID evaluation, and 250-step ODE sampling with CFG scale $1.0$.}
     \label{tab:appendix_realign_hparams}
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.86}
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccccccccc}
+    \begin{tabular}{@{}lccc@{}}
         \toprule
-        Experiment & Pred. & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
+        Setting & \texttt{SiT-B/2} & \texttt{SiT-L/2} & \texttt{SiT-XL/2} \\
         \midrule
-        Main ImageNet & \textbf{[TBD]} & depth-centered gap & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
-        Component ablation & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
-        HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        Training budget & $400\mathrm{K}$ & $400\mathrm{K}$ & $2\mathrm{M}$ \\
+        Batch size & 256 & 256 & 256 \\
+        Predictor & hybrid\_deep\_10 & hybrid\_depth30m & hybrid\_depth30m \\
+        Predictor details & implementation default & depth 11, dilation $1,2,4$ & hidden 480, depth 12, heads 8, dilation $1,2,4$ \\
+        Conditioning & timestep + class, additive fusion & timestep + class, additive fusion & timestep + class, additive fusion \\
+        Timestep sampler & logit-normal $(0,1)$ & logit-normal $(0,1)$ & logit-normal $(0,1)$ \\
+        Pair sampler & $g\sim\mathcal{TN}(3.0,2.0)$, $\sigma_m=2.0$ & $g\sim\mathcal{TN}(6.0,4.0)$, $\sigma_m=4.0$ & $g\sim\mathcal{TN}(7.0,4.7)$, $\sigma_m=4.7$ \\
+        Max sampled gap & 10 & 20 & 23 \\
+        Direct pairs & 1 joint pair & 1 joint pair & 1 joint pair \\
+        Direction / boot weights & $1.0$ / $0.25$ & $1.0$ / $0.25$ & $1.0$ / $0.25$ \\
+        Magnitude weights & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ \\
+        Magnitude scale / center / abs-scale & $3.0$ / $5.5$ / $1.5$ & $3.3$ / $5.4$ / $1.0$ & $4.9$ / $7.5$ / $1.4$ \\
+        Magnitude clip & $[3.0,8.0]$ & $[3.3,7.3]$ & $[4.0,10.0]$ \\
+        Output distillation & ratio $0.10$, weight $0.05$ & ratio $0.10$, weight $0.05$ & ratio $0.10$, weight $0.05$ \\
+        Private/diversity loss & weight $1.0$, max 4 pairs & weight $1.0$, max 4 pairs & weight $1.0$, max 4 pairs \\
+        Evaluation checkpoints & 50K, 100K, 200K, 400K & 50K, 400K & 50K, 2M \\
         \bottomrule
     \end{tabular}}
-    \vspace{0.25em}
-    \caption*{\scriptsize Predictor entries use compact labels; full predictor architecture, conditioning, and capacity details are given in \Cref{app:predictor_architecture_capacity}.}
 \end{table}
 
 \section{Experimental Protocols}
@@ -159,7 +173,7 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 \label{app:image_generation_details}
 
 \paragraph{Compute.}
-We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_realign_hparams,tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
 \paragraph{Existing assets.}
 We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
@@ -251,7 +265,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
         \multicolumn{2}{@{}l}{\textbf{LARA recipe}} \\
         Timestep sampler & logitN$(-0.2,1.0)$ unless varied \\
         Pair sampling & depth-centered gap: $g\sim\mathcal{TN}(3,2)$; $m\sim\mathcal{N}(L/2,\sigma_m)$ \\
-        Pair-law variants & full uniform, gap-only, depth-centered gap \\
+        Pair-law variants & full uniform, depth-center only, depth-centered gap \\
         Loss weights & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
         Predictor & Base ConvNet transition predictor with layer and timestep conditioning \\
         Consistency path & cached online $a\to b$; EMA $b\to c$ target \\
@@ -572,7 +586,7 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint and sampler; only the internal route changes.}
+    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint, ODE sampler, and 250 sampling steps; only the internal route changes. Relative cost counts transformer blocks for a 12-block backbone, so jump $(3,7)$ skips $4/12$ blocks.}
     \label{tab:appendix_magnitude_layer_skip}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -580,10 +594,10 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
         \toprule
         Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
         \midrule
-        Full backbone & -- & -- & \textbf{[TBD]} & 1.00$\times$ \\
-        Direction-only skip & \textbf{[TBD]} & off & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Calibrated short skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
-        Calibrated medium skip & \textbf{[TBD]} & on, stop-grad & \textbf{[TBD]} & \textbf{[TBD]} \\
+        Full backbone & -- & -- & \textbf{35.12} & 1.00$\times$ \\
+        Direction-only skip & $(3,7)$ & off & 65.37 & 0.67$\times$ \\
+        Calibrated skip (250 steps) & $(3,7)$ & on, stop-grad & 54.17 & 0.67$\times$ \\
+        Calibrated skip (first 125) & $(3,7)$ & on, stop-grad & 45.84 & 0.83$\times$ \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -597,23 +611,6 @@ We first specify how the transition predictor is attached to the SiT backbones, 
 \label{app:layer_statistics_projection}
 
 This section collects the additional diagnostics behind \Cref{sec:representation_analysis} and the shared-structure motivation in \Cref{fig:projection_layout_observation}. The main paper reports the compact version; the appendix provides the remaining controls and qualitative views.
-
-\subsection{Predictor-Output Diagnostics}
-
-These diagnostics compare the predicted target state with the actual target layer across layer depth and denoising time. They show whether the transition predictor recovers useful target-layer structure alongside the scalar prediction loss.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.24\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: predictor-output diagnostics]}\\[0.5em]
-        Panels: PCA of actual target layer, PCA of predictor output, timestep PCA,\\
-        predictor-target cosine heatmap, and layerwise CKA.
-    \end{minipage}}
-    \caption{\textbf{Predictor output versus target layer.} Placeholder for visualizing whether the learned transition recovers target-layer structure across depth and denoising time.}
-    \label{fig:appendix_predictor_output_diagnostics}
-\end{figure}
 
 \subsection{Projection Capacity and Layer Gap}
 \label{app:projection_capacity_layer_gap}

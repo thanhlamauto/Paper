@@ -168,19 +168,45 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-\textbf{Representation quality.} Generation metrics measure the final samples, but LARA acts inside the transformer hierarchy. We therefore evaluate whether the hidden states themselves become more useful under matched-FID checkpoints--an \texttt{SiT-XL/2} trained with LARA for \textbf{[TBD]} iterations and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} iterations. The probes test complementary properties: Tiny ImageNet classification measures semantic exposure, PASCAL VOC segmentation measures spatial localization, and DINOv2 CKA measures alignment with strong visual features. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
+\textbf{Representation quality.} Generation metrics measure the final samples, but LARA acts inside the transformer hierarchy. We therefore probe \texttt{SiT-XL/2} hidden states from the SiT baseline at $2\mathrm{M}$ iterations, LayerSync at $800\mathrm{K}$, and LARA at $500\mathrm{K}$. The probes test complementary properties: Tiny ImageNet classification measures semantic exposure, PASCAL VOC segmentation measures spatial localization, and DINOv2 CKA measures alignment with strong visual features. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.98\linewidth]{figures/representation_analysis_placeholder.png}
-    \caption{\textbf{Layerwise representation quality.} Schematic placeholder for matched-FID probes across backbone depth: Tiny ImageNet linear classification, PASCAL VOC linear segmentation, and DINOv2 CKA. The measured curves and gains are filled after running the appendix protocol; the intended readout is whether LARA (Ours) exposes stronger weak- and middle-layer representations than the baseline under the same generation-quality setting.}
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/representation_classification.pdf}\\[-0.15em]
+        {\footnotesize \textbf{a) Classification.} Tiny ImageNet}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/representation_segmentation.pdf}\\[-0.15em]
+        {\footnotesize \textbf{b) Segmentation.} PASCAL VOC}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.32\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/representation_alignment.pdf}\\[-0.15em]
+        {\footnotesize \textbf{c) Alignment.} DINOv2-g CKA}
+    \end{minipage}
+    \caption{\textbf{Layerwise representation quality.} Linear probes across \texttt{SiT-XL/2} depth for Tiny ImageNet classification, PASCAL VOC segmentation, and DINOv2-g CKA. Curves compare SiT at $2\mathrm{M}$ iterations, LayerSync at $800\mathrm{K}$, and LARA at $500\mathrm{K}$; dashed lines mark each method's layer average.}
     \label{fig:representation_analysis}
 \end{figure}
 
 \textbf{Layerwise behavior.}
-LARA improves average representation quality over LayerSync while using roughly half the training iterations: linear classification improves by \textbf{[TBD]}, segmentation mIoU by \textbf{[TBD]}, and DINOv2 CKA by \textbf{[TBD]}. The layerwise profile is also smoother. LayerSync tends to peak around the manually aligned source--target pair, while LARA spreads the gain across more depths because it trains over many adaptive source--target pairs.
+\Cref{fig:representation_analysis} shows that LARA strengthens the hidden hierarchy even under a smaller training budget. LARA is evaluated at $500\mathrm{K}$ iterations, whereas LayerSync uses $800\mathrm{K}$ and the SiT baseline uses $2\mathrm{M}$. Averaged over layers, LARA improves over SiT by $54.8\%$ on Tiny ImageNet classification, $113.6\%$ on PASCAL VOC segmentation, and $155.6\%$ on DINOv2-g CKA. It also improves over LayerSync by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The best layer improves as well, reaching $55.71$ classification accuracy, $47.15$ segmentation mIoU, and $0.287$ CKA.
 
-This suggests that LARA shares representational knowledge without forcing one layer to imitate a fixed reference. The predictor learns reusable cross-depth structure while allowing each layer to keep its semantic role, yielding a stronger and more balanced hierarchy.
+The shape of the curves gives a more useful diagnostic than the averages alone. LayerSync raises representation quality around the region influenced by its selected alignment pair, which produces a relatively sharp layerwise profile. LARA instead spreads the improvement across a wider portion of the network. This is expected from an adaptive transition objective: the predictor is trained on many source--target pairs, so the supervision is not concentrated on one manually chosen path. The resulting representations are stronger, smoother across depth, and less dependent on a single reference layer, suggesting that LARA shares useful structure while preserving the different semantic roles of individual blocks.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.88\linewidth]{figures/predictor_output_behavior.pdf}
+    \caption{\textbf{Predictor-output visualization.} LARA predicts target-layer states that preserve the spatial layout while adapting the representation to the requested target depth.}
+    \label{fig:predictor_output_behavior}
+\end{figure}
+
+\textbf{Predictor-output behavior.}
+\Cref{fig:predictor_output_behavior} inspects whether the predicted target states resemble the actual target-layer activations, rather than only reducing a scalar loss. Across layer depths and denoising timesteps, the useful diagnostic is whether $\widehat A_{a\to b}^{\,t}$ recovers the spatial layout and semantic level of $A_b^t$ while still being conditioned on the source layer $a$. This directly probes the mechanism behind the smoother layerwise profile: LARA should learn reusable transitions into many target-layer coordinate systems, not a set of isolated layer copies.
 
 \FloatBarrier
 
@@ -216,7 +242,7 @@ This suggests that LARA shares representational knowledge without forcing one la
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} For a sampled source--target pair $(a,b)$ with $a<b$, the gap is $g=b-a$ and the midpoint is $m=(a+b)/2$; $L$ denotes the number of transformer blocks. Full uniform samples both quantities uniformly; Gap-only biases only $g$ toward medium gaps; Depth-centered gap sampling biases both $g$ and $m$. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} For a sampled source--target pair $(a,b)$ with $a<b$, the gap is $g=b-a$ and the midpoint is $m=(a+b)/2$; $L$ denotes the number of transformer blocks. Full uniform samples both quantities uniformly; depth-center only keeps $g$ uniform but centers $m$ near $L/2$; depth-centered gap sampling biases both $g$ and $m$. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:pair_sampling_strategy_fid}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -227,13 +253,13 @@ This suggests that LARA shares representational knowledge without forcing one la
         \midrule
         LayerSync & -- & -- & 43.26 \\
         Full uniform & uniform & uniform & 39.24 \\
-        Gap-only & $\mathcal{TN}(3,2)$ & uniform & 37.07 \\
+        Depth-center only & uniform & $\mathcal{N}(L/2,\sigma_m)$ & 37.07 \\
         Depth-centered gap (Ours) & $\mathcal{TN}(3,2)$ & $\mathcal{N}(L/2,\sigma_m)$ & \textbf{35.12} \\
         \bottomrule
     \end{tabular*}
 \end{table}
 
-\textbf{Layer-pair sampling.} \Cref{tab:pair_sampling_strategy_fid} separates two choices: how far apart the source and target layers are, and where that pair sits in the network. Full uniform already improves over LayerSync because LARA trains over many pairs rather than one fixed pair. Gap-only improves further by reducing the probability of very long transitions, which are harder to predict according to \Cref{tab:pair_sampling_ablation}. Depth-centered gap sampling performs best by also centering the pair location near the middle of the hierarchy, giving $\mathcal{L}_{\mathrm{pred}}$ cleaner supervision while still covering many source--target pairs.
+\textbf{Layer-pair sampling.} \Cref{tab:pair_sampling_strategy_fid} separates two choices: how far apart the source and target layers are, and where that pair sits in the network. Full uniform already improves over LayerSync because LARA trains over many pairs rather than one fixed pair. Depth-center only improves further by placing more pairs around the middle of the hierarchy while still sampling varied gaps. Depth-centered gap sampling performs best by combining this centered pair location with a medium-gap bias, giving $\mathcal{L}_{\mathrm{pred}}$ cleaner supervision while still covering many source--target pairs.
 
 \begin{table}[!htbp]
     \centering
@@ -251,10 +277,10 @@ This suggests that LARA shares representational knowledge without forcing one la
     \end{tabular*}
 \end{table}
 
-\textbf{Compatibility with external alignment.} LARA is designed as an internal transition signal, so it can be tested together with an external representation-alignment method such as REPA~\citep{yu2024repa}. This control separates complementarity from replacement: REPA anchors selected hidden states to DINOv2 features, while LARA learns transitions among the diffusion transformer's own layers.
+\textbf{Compatibility with external alignment.} LARA remains complementary to REPA~\citep{yu2024repa}: REPA anchors hidden states to DINOv2 features, while LARA aligns transitions inside the diffusion transformer.
 
-\textbf{Predictor capacity.} The capacity sweep in \Cref{tab:main_predictor_size_ablation} shows that LARA benefits from a compact transition module rather than a high-capacity shortcut, so we keep the main ablation focused on the pair-sampling strategy and report predictor-size details in the appendix.
+\textbf{Predictor capacity.} \Cref{tab:main_predictor_size_ablation} shows that a compact transition module is sufficient; larger predictors do not explain the gain.
 
-\textbf{Takeaway.} Together, the ablations rule out the simplest alternatives: the gain is not only diversity regularization, not only a larger auxiliary branch, and not only a better fixed layer pair. LARA improves because the shared predictor learns reusable cross-depth structure while layer conditioning preserves pair-specific semantic gaps, and the external-alignment control tests whether this internal signal remains complementary to ERM-based supervision.
+\textbf{Takeaway.} The gains come from reusable, layer-conditioned transition learning rather than only decorrelation, capacity, or a better fixed pair.
 
 \FloatBarrier
