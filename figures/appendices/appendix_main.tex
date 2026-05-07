@@ -115,10 +115,10 @@ We additionally profile the internal alignment methods used in our speed analysi
     \renewcommand{\arraystretch}{0.9}
     \begin{tabular*}{0.78\textwidth}{@{\extracolsep{\fill}}lccc@{}}
         \toprule
-        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & GFLOPs/step $\downarrow$ \\
+        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & TFLOPs/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.23} & \textbf{30,305} \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,923} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} & \textbf{40,643} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,305} \\
         \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} & \textbf{35,342} \\
         \bottomrule
     \end{tabular*}
@@ -304,7 +304,7 @@ Given a sentence that describes a motion as a sequence of actions, the task is t
 We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
 \paragraph{Implementation details.}
-The motion backbone has eight transformer blocks and is trained for 600K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone and budget, but replaces direct matching with the transition predictor described in \Cref{sec:method}.
+The motion backbone has eight transformer blocks. MDM and LayerSync are trained for 600K iterations, while LARA is trained for 300K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
@@ -318,7 +318,7 @@ The motion backbone has eight transformer blocks and is trained for 600K iterati
         \midrule
         MDM & 8 & 600K & none & Standard MDM & FID, R-Precision \\
         MDM + LayerSync & 8 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
-        MDM + LARA (Ours) & 8 & 600K & transition predictor & Standard MDM & FID, R-Precision \\
+        MDM + LARA (Ours) & 8 & 300K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -390,10 +390,10 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             \toprule
             Gap & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} \\
+            0--25\% & 0.025 \\
+            25--50\% & 0.039 \\
+            50--75\% & 0.057 \\
+            75--100\% & 0.152 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -405,10 +405,10 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             \toprule
             Source & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} \\
+            0--25\% & 0.060 \\
+            25--50\% & 0.023 \\
+            50--75\% & 0.027 \\
+            75--100\% & 0.110 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -420,10 +420,10 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             \toprule
             Range & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
             \midrule
-            0--25\% & \textbf{[TBD]} \\
-            25--50\% & \textbf{[TBD]} \\
-            50--75\% & \textbf{[TBD]} \\
-            75--100\% & \textbf{[TBD]} \\
+            0--25\% & -- \\
+            25--50\% & -- \\
+            50--75\% & -- \\
+            75--100\% & -- \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
