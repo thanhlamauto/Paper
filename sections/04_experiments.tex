@@ -101,18 +101,18 @@ ImageNet provides the main testbed because it exposes both optimization quality 
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
             SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 675M & 2.00M & 1.80 & 284.0 & 0.81 & 0.61 \\
+            \quad + REPA & 675M & 2.00M & 1.84 & 284.0 & 0.81 & 0.61 \\
             \hdashline
-            \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
-            \quad + Dispersive & 675M & 2.00M & 1.97 & -- & -- & -- \\
-            \quad + LayerSync & 675M & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.82 & 276.48 & 0.81 & 0.61 \\
+            \quad + SRA & 675M & 2.00M & 2.01 & 311.4 & 0.80 & 0.63 \\
+            \quad + Dispersive & 675M & 2.00M & 2.04 & -- & -- & -- \\
+            \quad + LayerSync & 675M & 2.00M & 1.93 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.88 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular}}
     \end{minipage}
 \end{table}
 
-The improvement is not confined to one backbone or training length. On \texttt{SiT-B/2}, LARA reduces FID from $35.17$ to $25.01$, a $28.9\%$ gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, FID improves from $20.55$ to $11.09$. The same pattern remains on \texttt{SiT-XL/2} as training increases: $17.32\!\to\!8.57$ at $400\mathrm{K}$, $12.03\!\to\!6.51$ at $1\mathrm{M}$, and $8.85\!\to\!5.09$ at $2\mathrm{M}$. With CFG, LARA also improves over LayerSync from $1.89$ to $1.82$ while maintaining comparable precision and recall. The consistent gains support the central claim that layer-aware transition supervision scales beyond a single hand-picked alignment pair.
+The improvement is not confined to one backbone or training length. On \texttt{SiT-B/2}, LARA reduces FID from $35.17$ to $25.01$, a $28.9\%$ gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, FID improves from $20.55$ to $11.09$. The same pattern remains on \texttt{SiT-XL/2} as training increases: $17.32\!\to\!8.57$ at $400\mathrm{K}$, $12.03\!\to\!6.51$ at $1\mathrm{M}$, and $8.85\!\to\!5.09$ at $2\mathrm{M}$. With CFG, LARA also improves over LayerSync from $1.93$ to $1.88$ while maintaining comparable precision and recall. The consistent gains support the central claim that layer-aware transition supervision scales beyond a single hand-picked alignment pair.
 
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}

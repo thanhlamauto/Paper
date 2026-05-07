@@ -113,13 +113,13 @@ We additionally profile the internal alignment methods used in our speed analysi
     \scriptsize
     \setlength{\tabcolsep}{6pt}
     \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.78\textwidth}{@{\extracolsep{\fill}}lccc@{}}
+    \begin{tabular*}{0.66\textwidth}{@{\extracolsep{\fill}}lcc@{}}
         \toprule
-        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ & TFLOPs/step $\downarrow$ \\
+        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} & \textbf{40,643} \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,305} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} & \textbf{35,342} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -132,7 +132,7 @@ Layer-pair sampling replaces the fixed layer choice used by direct self-alignmen
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
 
-Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. Ablations use the same backbone and budget unless the table states otherwise.
+Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the pair sampler and timestep conditioning are summarized in \Cref{app:transition_pair_predictor_design}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Ablations use the same backbone and budget unless the table states otherwise.
 
 \begin{table}[!htbp]
     \centering
@@ -141,13 +141,15 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccccc}
         \toprule
-        Experiment & Predictor & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
+        Experiment & Pred. & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
         \midrule
         Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
         HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
+    \vspace{0.25em}
+    \caption*{\scriptsize Predictor entries use compact labels; full predictor architecture, conditioning, and capacity details are given in \Cref{app:predictor_architecture_capacity}.}
 \end{table}
 
 \section{Experimental Protocols}
@@ -374,16 +376,16 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 \subsection{Uniform Transition-Prediction Diagnostic}
 \label{app:uniform_transition_diagnostic}
 
-Before selecting the final layer-pair sampler, we run a diagnostic with uniform sampling over valid source--target pairs and uniform timesteps. We then group the predictor error by normalized layer gap, source-layer position, and timestep range. This diagnostic is used to choose the sampler qualitatively: adjacent layers tend to be easy but uninformative, very distant layers tend to be unstable, and medium gaps provide a stronger training signal.
+Before selecting the final layer-pair sampler, we run a diagnostic with uniform sampling over valid source--target pairs and uniform timesteps. We then group the predictor error by normalized layer gap and source-layer position. This diagnostic is used to choose the sampler qualitatively: adjacent layers tend to be easy but uninformative, very distant layers tend to be unstable, and medium gaps provide a stronger training signal.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap, source-layer, and timestep bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable.}
+    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap and source-layer bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable.}
     \label{tab:pair_sampling_ablation}
     \scriptsize
     \setlength{\tabcolsep}{2.2pt}
     \renewcommand{\arraystretch}{0.88}
-    \begin{minipage}[t]{0.32\linewidth}
+    \begin{minipage}[t]{0.46\linewidth}
         \centering
         \textbf{Layer gap}\\[0.25em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -398,7 +400,7 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.32\linewidth}
+    \begin{minipage}[t]{0.46\linewidth}
         \centering
         \textbf{Source layer}\\[0.25em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -409,21 +411,6 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             25--50\% & 0.023 \\
             50--75\% & 0.027 \\
             75--100\% & 0.110 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.32\linewidth}
-        \centering
-        \textbf{Timestep}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Range & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & -- \\
-            25--50\% & -- \\
-            50--75\% & -- \\
-            75--100\% & -- \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -462,29 +449,6 @@ All rows use the same backbone, data pipeline, optimizer, training length, and s
 \end{table}
 
 If the combined row improves over both single-objective rows, the result indicates that external semantic anchoring and internal transition learning provide complementary supervision. If the gain is marginal, LARA should still be interpreted as the self-contained recipe used in the main experiments rather than as a required add-on to external alignment.
-
-\subsection{Transition-Pair Selection}
-\label{app:transition_pair_selection}
-
-We sweep source and target blocks while keeping compute, batch size, and training iterations fixed. Generation metrics are reported together with transition-level metrics, since a low prediction loss can also indicate that the pair is easy.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Ablation on transition-pair selection.} Placeholder for testing source/target ranges and layer gaps.}
-    \label{tab:appendix_pair_selection}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{lccccc}
-        \toprule
-        Backbone & Source range & Target range & Gap & FID $\downarrow$ & Comp. error $\downarrow$ \\
-        \midrule
-        \textbf{[TBD]} & weak blocks & middle blocks & short & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & weak blocks & middle blocks & medium & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & weak blocks & decoder blocks & long & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \textbf{[TBD]} & random valid pairs & mixed & mixed & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
 
 \section{Optional Inference and Layer-Skip Diagnostics}
 \label{app:optional_inference_diagnostics}
@@ -586,31 +550,6 @@ This ablation tests whether projection heads extract useful recoverable signal o
     \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether projection capacity exposes useful signal across layer gaps.}
     \label{fig:appendix_projection_capacity}
 \end{figure}
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Near vs. far layer alignment.} Placeholder for evaluating whether projection heads and LARA become more important as the layer gap increases.}
-    \label{tab:appendix_near_far_alignment}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccccc}
-        \toprule
-        Method & Layer gap & Projection / transition & FID $\downarrow$ & Alignment loss $\downarrow$ & Consistency error $\downarrow$ \\
-        \midrule
-        Direct alignment & Near & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        Direct alignment & Far & -- & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        Projection-augmented alignment & Near & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        Projection-augmented alignment & Far & Small projector & \textbf{[TBD]} & \textbf{[TBD]} & -- \\
-        Pair-specific projector & Far & Per-pair projector & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA (Ours) & Near & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA (Ours) & Far & Shared transition & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular}}
-\end{table}
-
-\subsection{Transition Generalization}
-\label{app:transition_generalization}
-
-This diagnostic distinguishes a shared transition interface from a collection of pair-specific heads. We train on a subset of layer pairs and evaluate prediction and composition error on held-out pairs at the same denoising timestep. Lower held-out and composition errors indicate that the shared predictor captures reusable cross-depth structure.
 
 \clearpage
 \section{Qualitative Examples}
