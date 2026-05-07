@@ -127,7 +127,7 @@ We additionally profile the internal alignment methods used in our speed analysi
 \subsection{Transition Pair and Predictor Design}
 \label{app:transition_pair_predictor_design}
 
-Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use Depth-Centered Gap Sampling (DCGS): draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Gap-only, depth-center-only, and full-uniform alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
+Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use depth-centered gap sampling: draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Gap-only, depth-center-only, and full-uniform alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
 
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
@@ -143,7 +143,7 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
         \toprule
         Experiment & Pred. & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
         \midrule
-        Main ImageNet & \textbf{[TBD]} & DCGS & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        Main ImageNet & \textbf{[TBD]} & depth-centered gap & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         Component ablation & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
         HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
@@ -218,41 +218,47 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Hyperparameter setup for figures and ablation experiments.}}
+    \caption{\textbf{Hyperparameter setup for figures and SiT-B ablations.} The SiT-B column is the common setup for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
+    \label{tab:appendix_common_ablation_setting}
     \scriptsize
-    \setlength{\tabcolsep}{5pt}
-    \begin{tabular}{lccc}
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.86}
+    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}p{0.24\linewidth}p{0.31\linewidth}p{0.37\linewidth}@{}}
         \toprule
-        & \Cref{fig:training_curve} (SiT-XL) & \Cref{tab:pair_sampling_strategy_fid,tab:realign_ablation} (SiT-B) & \Cref{tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} (SiT-B) \\
+        Setting & \Cref{fig:training_curve} & Common SiT-B ablations \\
         \midrule
-        \multicolumn{4}{l}{\textbf{Architecture}} \\
-        Input dim. & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ \\
-        Num. layers & 28 & 12 & 12 \\
-        Hidden dim. & 1152 & 768 & 768 \\
-        Num. heads & 16 & 12 & 12 \\
+        \multicolumn{3}{@{}l}{\textbf{Architecture}} \\
+        Backbone & \texttt{SiT-XL/2} & \texttt{SiT-B/2} \\
+        Input dim. & $32\times32\times4$ & $32\times32\times4$ \\
+        Blocks / hidden / heads & 28 / 1152 / 16 & 12 / 768 / 12 \\
+        Patch size & 2 & 2 \\
         \midrule
-        \multicolumn{4}{l}{\textbf{LayerSync}} \\
-        $\lambda$ & 0.2 & 0.3 & -- \\
-        Alignment depth & (8,16) & -- & (2,8) \\
-        $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. \\
+        \multicolumn{3}{@{}l}{\textbf{Data and optimization}} \\
+        Data / VAE & ImageNet $256\times256$ latents & ImageNet $256\times256$ latents \\
+        Hardware & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 \\
+        Training budget & checkpoint sweep & $300\mathrm{K}$ iterations \\
+        Batch size & 256 & 128 \\
+        Optimizer / lr & AdamW / $10^{-4}$ & AdamW / $10^{-4}$ \\
+        Metric & FID-50K & FID-10K \\
         \midrule
-        \multicolumn{4}{l}{\textbf{Optimization}} \\
-        Hardware & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 \\
-        Training iteration & 400K & 400K & 400K \\
-        Batch size & 256 & 256 & 256 \\
-        Optimizer & AdamW & AdamW & AdamW \\
-        lr & 0.0001 & 0.0001 & 0.0001 \\
+        \multicolumn{3}{@{}l}{\textbf{Sampling and interpolation}} \\
+        $\alpha_t,\sigma_t$ & $t,1-t$ & $t,1-t$ \\
+        Training objective & v-prediction & v-prediction \\
+        Evaluation sampler & ODE Heun & ODE Heun \\
+        Sampling steps / guidance & 250 / -- & 250 / -- \\
         \midrule
-        \multicolumn{4}{l}{\textbf{Interpolants}} \\
-        $\alpha_t$ & $t$ & $t$ & $t$ \\
-        $\sigma_t$ & $1-t$ & $1-t$ & $1-t$ \\
-        Training objective & v-prediction & v-prediction & v-prediction \\
-        Sampler & ODE Heun & ODE Heun & ODE Heun \\
-        Sampling steps & 250 & 250 & 250 \\
-        Guidance & -- & -- & -- \\
+        \multicolumn{3}{@{}l}{\textbf{LARA recipe for SiT-B ablations}} \\
+        Timestep sampler & -- & logitN$(-0.2,1.0)$ unless varied \\
+        Pair sampling & -- & depth-centered gap: $g\sim\mathcal{TN}(3,2)$; $m\sim\mathcal{N}(L/2,\sigma_m)$ \\
+        Pair-law variants & -- & full uniform, gap-only, depth-centered gap \\
+        Loss weights & -- & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
+        Predictor & -- & Base ConvNet transition predictor with layer and timestep conditioning \\
+        Consistency path & -- & cached online $a\to b$; EMA $b\to c$ target \\
+        Target detach & -- & target $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
+        Output routing & -- & $10\%$ depth-shortcut subset uses the predicted target state \\
         \bottomrule
-    \end{tabular}
+    \end{tabular*}
 \end{table}
 
 \subsection{Extended Related Work and Baseline Descriptions}
@@ -524,38 +530,7 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
 \end{table}
 
 \textbf{Diagnostic readout.}
-\Cref{tab:pair_sampling_ablation} shows that transition difficulty is highly non-uniform under full uniform sampling. Prediction error increases steadily with layer gap, from $0.025$ for the shortest quartile to $0.152$ for the longest quartile, indicating that very distant transitions are much noisier training targets for the auxiliary predictor. The source-layer grouping shows a complementary effect: middle layers are easier to predict from, while the earliest and latest source bins have larger errors. This supports the sampler used in the main experiments. DCGS avoids spending too much probability mass on unstable long-range jumps, while centering the pair midpoint near the model's depth middle keeps supervision away from the most brittle boundary layers. The goal is not to remove hard transitions entirely, but to make the prediction loss informative without letting rare high-error pairs dominate the backbone update.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Common ablation training setting.} Shared setup for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}. Each ablation changes only the factor shown in its own table; all other settings are kept fixed.}
-    \label{tab:appendix_common_ablation_setting}
-    \scriptsize
-    \setlength{\tabcolsep}{4pt}
-    \renewcommand{\arraystretch}{0.86}
-    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}p{0.25\linewidth}p{0.68\linewidth}@{}}
-        \toprule
-        Setting & Value \\
-        \midrule
-        Backbone & \texttt{SiT-B/2} \\
-        Backbone config & 12 blocks, hidden dim. 768, 12 heads, patch size 2 \\
-        Latent input & ImageNet $256\times256$ encoded to $32\times32\times4$ latents with the Stable Diffusion VAE \\
-        Training iterations & $300\mathrm{K}$ \\
-        Batch size & $128$ \\
-        Optimizer & AdamW, learning rate $10^{-4}$ \\
-        Evaluation metric & FID-10K $\downarrow$ \\
-        Timestep sampler & logitN$(-0.2,1.0)$ unless varied in \Cref{tab:main_hyperparameter_tuning} \\
-        Pair sampling & DCGS: gap $g=b-a\sim\mathcal{TN}(3,2)$ and midpoint $m=(a+b)/2\sim\mathcal{N}(L/2,\sigma_m)$, with invalid pairs rejected \\
-        Pair-law variants & Full uniform, gap-only, and DCGS are compared in \Cref{tab:pair_sampling_strategy_fid} \\
-        Loss weights & $\lambda_{\mathrm{pred}}=1.0$, $\lambda_{\mathrm{cons}}=0.25$, $\lambda_{\mathrm{div}}=0.40$ unless varied in \Cref{tab:main_hyperparameter_tuning} \\
-        Predictor & Base ConvNet transition predictor with layer and timestep conditioning unless varied in \Cref{tab:main_predictor_size_ablation} \\
-        Consistency path & Cached online $a\to b$ state, EMA predictor for $b\to c$, and stop-gradient composed target \\
-        Target detach & Target hidden state $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
-        Output routing & $10\%$ depth-shortcut subset routed through $F_{\theta,b:L}(\hat A_{a\to b}^t,t,y)$ inside the flow-matching loss \\
-        Fixed controls & Same data pipeline, VAE, evaluator, reference statistics, and sampler unless varied by the ablation table \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
+\Cref{tab:pair_sampling_ablation} shows that transition difficulty is highly non-uniform under full uniform sampling. Prediction error increases steadily with layer gap, from $0.025$ for the shortest quartile to $0.152$ for the longest quartile, indicating that very distant transitions are much noisier training targets for the auxiliary predictor. The source-layer grouping shows a complementary effect: middle layers are easier to predict from, while the earliest and latest source bins have larger errors. This supports the sampler used in the main experiments. Depth-centered gap sampling avoids spending too much probability mass on unstable long-range jumps, while centering the pair midpoint near the model's depth middle keeps supervision away from the most brittle boundary layers. The goal is not to remove hard transitions entirely, but to make the prediction loss informative without letting rare high-error pairs dominate the backbone update.
 
 \section{Optional Inference and Layer-Skip Diagnostics}
 \label{app:optional_inference_diagnostics}

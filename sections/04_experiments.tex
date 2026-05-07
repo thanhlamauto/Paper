@@ -178,11 +178,9 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \end{figure}
 
 \textbf{Layerwise behavior.}
-Compared with LayerSync, LARA improves the average representation quality despite using roughly half the training iterations, with the exact gains reported after the probe sweep is completed: average linear classification improves by \textbf{[TBD]}, segmentation mIoU by \textbf{[TBD]}, and DINOv2 CKA by \textbf{[TBD]}. More importantly, the layerwise profile is qualitatively different. LayerSync tends to produce a sharper curve, with the strongest gains concentrated near the intermediate layers between its manually aligned source and target blocks. This is consistent with a fixed-pair constraint: it strengthens the selected transition, but the benefit can be localized around the chosen alignment path. LARA instead trains an adaptive transition interface over many source--target pairs. Its gains are therefore distributed more evenly across depth, with fewer abrupt peaks and dips across the hierarchy.
+LARA improves average representation quality over LayerSync while using roughly half the training iterations: linear classification improves by \textbf{[TBD]}, segmentation mIoU by \textbf{[TBD]}, and DINOv2 CKA by \textbf{[TBD]}. The layerwise profile is also smoother. LayerSync tends to peak around the manually aligned source--target pair, while LARA spreads the gain across more depths because it trains over many adaptive source--target pairs.
 
-This pattern suggests that LARA preserves the model's generative dynamics while sharing representational knowledge more broadly across layers. Rather than forcing one weak layer to imitate one reference layer, the predictor learns reusable cross-depth structure and lets each layer retain its own semantic role. The resulting hierarchy is both stronger on average and less dependent on a hand-picked alignment pair, which is the representation behavior expected from layer-aware alignment.
-
-The probes improve in both average and peak quality. Across evaluated layers, linear classification rises by \textbf{[TBD]\%}, segmentation mIoU by \textbf{[TBD]\%}, and DINOv2 CKA by \textbf{[TBD]\%}; the best linear-probe layer also increases by \textbf{[TBD]\%}. This is the internal trace expected from a shared transition objective: useful information spreads through the hierarchy instead of concentrating around one selected pair. The gain is therefore not merely a copy of a strong block into weaker ones, but a cleaner organization of intermediate representations.
+This suggests that LARA shares representational knowledge without forcing one layer to imitate a fixed reference. The predictor learns reusable cross-depth structure while allowing each layer to keep its semantic role, yielding a stronger and more balanced hierarchy.
 
 \FloatBarrier
 
@@ -218,7 +216,7 @@ The probes improve in both average and peak quality. Across evaluated layers, li
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} All rows use the full LARA objective; only the source--target pair law changes. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} For a sampled source--target pair $(a,b)$ with $a<b$, the gap is $g=b-a$ and the midpoint is $m=(a+b)/2$; $L$ denotes the number of transformer blocks. Full uniform samples both quantities uniformly; Gap-only biases only $g$ toward medium gaps; Depth-centered gap sampling biases both $g$ and $m$. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:pair_sampling_strategy_fid}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -230,12 +228,12 @@ The probes improve in both average and peak quality. Across evaluated layers, li
         LayerSync & -- & -- & 43.26 \\
         Full uniform & uniform & uniform & 39.24 \\
         Gap-only & $\mathcal{TN}(3,2)$ & uniform & 37.07 \\
-        DCGS (Ours) & $\mathcal{TN}(3,2)$ & $\mathcal{N}(L/2,\sigma_m)$ & \textbf{35.12} \\
+        Depth-centered gap (Ours) & $\mathcal{TN}(3,2)$ & $\mathcal{N}(L/2,\sigma_m)$ & \textbf{35.12} \\
         \bottomrule
     \end{tabular*}
 \end{table}
 
-\textbf{Layer-pair sampling.} We test whether LARA's gain comes only from a carefully selected pair. Full uniform sampling already improves over LayerSync by training a shared predictor over arbitrary source--target pairs. However, the uniform diagnostic in \Cref{tab:pair_sampling_ablation} shows that long gaps are much harder to predict and can inject noisy auxiliary gradients into both the predictor and the source-side backbone. Gap-only sampling improves FID further by avoiding many unstable long-gap mappings. Our final \emph{Depth-Centered Gap Sampling} (DCGS) additionally samples the pair midpoint from a normal distribution centered at $L/2$, giving $\mathcal{L}_{\mathrm{pred}}$ a cleaner transition target while preserving coverage over many source--target pairs.
+\textbf{Layer-pair sampling.} \Cref{tab:pair_sampling_strategy_fid} separates two choices: how far apart the source and target layers are, and where that pair sits in the network. Full uniform already improves over LayerSync because LARA trains over many pairs rather than one fixed pair. Gap-only improves further by reducing the probability of very long transitions, which are harder to predict according to \Cref{tab:pair_sampling_ablation}. Depth-centered gap sampling performs best by also centering the pair location near the middle of the hierarchy, giving $\mathcal{L}_{\mathrm{pred}}$ cleaner supervision while still covering many source--target pairs.
 
 \begin{table}[!htbp]
     \centering
