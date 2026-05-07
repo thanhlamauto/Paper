@@ -115,8 +115,8 @@
 \begin{figure}[H]
     \centering
     \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \includegraphics[width=\linewidth]{figures/goose_pca_stable_rank.png}
-    \caption{\textbf{Shared spatial structure across depth and time.} Following SRA, we visualize SiT-XL/2 hidden states and find a structured layerwise pattern: different blocks preserve a shared perceptual layout while semantics change with depth and denoising time. Because the activations have low effective rank, the leading PCA components retain meaningful signal rather than only visualization noise. The stable-rank curves show that representation richness changes as the image becomes cleaner, motivating LARA's layer-aware transitions across many source--target pairs. Measurement details are in \Cref{app:metric_definitions}.}
+    \includegraphics[width=\linewidth]{figures/PCA.png}
+    \caption{\textbf{Shared spatial structure across depth and time.} Following PCA-based representation visualizations used in SRA and REPA-style alignment work~\citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence}, we visualize SiT-XL/2 hidden states and find a structured layerwise pattern: different blocks preserve a shared perceptual layout while semantics change with depth and denoising time. The recurring spatial organization motivates LARA's layer-aware transitions across many source--target pairs. Measurement details are in \Cref{app:metric_definitions}.}
     \label{fig:projection_layout_observation}
 \end{figure}
 \vspace{-0.8em}

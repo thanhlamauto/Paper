@@ -127,7 +127,7 @@ We additionally profile the internal alignment methods used in our speed analysi
 \subsection{Transition Pair and Predictor Design}
 \label{app:transition_pair_predictor_design}
 
-Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs sample a mixture of short and medium gaps and keep the target range away from the final reconstruction-heavy blocks. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
+Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use Depth-Centered Gap Sampling (DCGS): draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Gap-only, depth-center-only, and full-uniform alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
 
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
@@ -143,8 +143,8 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
         \toprule
         Experiment & Pred. & Pair sampling & Time cond. & $\lambda_{\mathrm{pred}}$ & $\lambda_{\mathrm{cons}}$ & $\lambda_{\mathrm{div}}$ & Cached $a\to b$ & EMA comp. & Target detach & Extra cost \\
         \midrule
-        Main ImageNet & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
-        Component ablation & \textbf{[TBD]} & \textbf{[TBD]} & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
+        Main ImageNet & \textbf{[TBD]} & DCGS & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
+        Component ablation & \textbf{[TBD]} & varies & varies & \textbf{[TBD]} & varies & varies & varies & varies & \checkmark & \textbf{[TBD]} \\
         HumanML3D & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \checkmark & \checkmark & \checkmark & \textbf{[TBD]} \\
         \bottomrule
     \end{tabular}}
@@ -224,13 +224,13 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
     \setlength{\tabcolsep}{5pt}
     \begin{tabular}{lccc}
         \toprule
-        & \Cref{fig:training_curve} (SiT-XL) & Table 6 (SiT-XL and SiT-B) & Table 7 (SiT-B) \\
+        & \Cref{fig:training_curve} (SiT-XL) & \Cref{tab:pair_sampling_strategy_fid,tab:realign_ablation} (SiT-B) & \Cref{tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} (SiT-B) \\
         \midrule
         \multicolumn{4}{l}{\textbf{Architecture}} \\
         Input dim. & $32\times32\times4$ & $32\times32\times4$ & $32\times32\times4$ \\
-        Num. layers & 28 & 28 / 12 & 12 \\
-        Hidden dim. & 1152 & 1152 / 768 & 768 \\
-        Num. heads & 16 & 16 / 12 & 12 \\
+        Num. layers & 28 & 12 & 12 \\
+        Hidden dim. & 1152 & 768 & 768 \\
+        Num. heads & 16 & 12 & 12 \\
         \midrule
         \multicolumn{4}{l}{\textbf{LayerSync}} \\
         $\lambda$ & 0.2 & 0.3 & -- \\
@@ -350,8 +350,9 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
-        \Cref{fig:projection_layout_observation} & PCA maps, z-score stable rank & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations, and z-score stable rank is computed per layer from the same normalized feature matrix. & \citep{sanyal2020stable,daneshmand2020batchnormrankcollapse,feng2022rankdiminishing} \\
+        \Cref{tab:pair_sampling_strategy_fid,tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only pair law, objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
+        \Cref{tab:external_alignment_compatibility} & FID-10K, probe avg. & Use the same SiT-B/2 control setting; REPA rows follow the REPA teacher and aligned layer, while LARA rows use the same DCGS pair law and loss weights as the internal-only run. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
+        \Cref{fig:projection_layout_observation} & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
@@ -371,12 +372,114 @@ Standard generation metrics follow the cited benchmark protocols. FID compares G
 \end{equation}
 where lower is better. IS is computed using the Inception classifier convention of \citet{salimans2016improved}. Precision and recall follow the improved generative-model support estimate of \citet{kynkaanniemi2019precision}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
 
-For the curves in \Cref{fig:projection_layout_observation}, we use z-score stable rank: image and spatial tokens are flattened into a feature matrix, each channel is z-scored over the flattened token axis, and the resulting matrix $Z$ is summarized by $\|Z\|_F^2 / \|Z\|_2^2$ for each layer and timestep. Stable rank is commonly used as a soft-rank proxy in deep learning and as a diagnostic for representation collapse~\citep{sanyal2020stable,daneshmand2020batchnormrankcollapse,feng2022rankdiminishing}.
+For \Cref{fig:projection_layout_observation}, PCA maps are computed from channel-normalized token activations of frozen SiT-XL/2 hidden states for the same image over representative timesteps. We visualize the leading components as RGB maps to show how spatial structure is preserved while semantic content changes across depth and denoising time.
 
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
 
 The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper.
+
+\subsection{Hyperparameter Tuning}
+\label{app:hyperparameter_tuning}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as \Cref{tab:realign_ablation}. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
+    \label{tab:main_hyperparameter_tuning}
+    \tiny
+    \setlength{\tabcolsep}{1.2pt}
+    \renewcommand{\arraystretch}{0.74}
+    \begin{minipage}[t]{0.235\linewidth}
+        \centering
+        \textbf{Timestep}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Sampler & FID $\downarrow$ \\
+            \midrule
+            \cellcolor{gray!20}uniform & \cellcolor{gray!20}\textbf{[TBD]} \\
+            logitN$(-.2,1.0)$ & \textbf{35.12} \\
+            logitN$(-.2,1.2)$ & \textbf{[TBD]} \\
+            logitN$(-.4,1.0)$ & \textbf{[TBD]} \\
+            logitN$(-.4,1.2)$ & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.235\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID $\downarrow$ \\
+            \midrule
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.235\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID $\downarrow$ \\
+            \midrule
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.235\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID $\downarrow$ \\
+            \midrule
+            0.1 & \textbf{[TBD]} \\
+            0.2 & \textbf{[TBD]} \\
+            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
+            0.7 & \textbf{[TBD]} \\
+            1.0 & \textbf{[TBD]} \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+
+\end{table}
+
+\subsection{Predictor-Size Ablation}
+\label{app:predictor_size_ablation}
+
+The main text focuses on the layer-pair sampling strategy because it determines the final recipe. We keep the predictor-size sweep here to show that the gain does not require an oversized auxiliary branch.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Predictor-size ablation on SiT-B/2.} The SiT-B/2 backbone has 137M parameters; the ConvNet predictor design is discussed in \Cref{app:predictor_architecture_capacity}.}
+    \label{tab:main_predictor_size_ablation}
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+        \toprule
+        Predictor & Params & Share of backbone & FID-10K $\downarrow$ \\
+        \midrule
+        Tiny & 2.7M & 1.9\% & 54.33 \\
+        Small & 5.9M & 4.3\% & \textbf{34.97} \\
+        Base & 18.3M & 13.4\% & 36.45 \\
+        Large & 25.4M & 18.6\% & 47.89 \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
+
+The tiny predictor underfits the transition geometry, while overly large predictors degrade FID, suggesting that excess capacity can absorb target-layer structure instead of regularizing the backbone. The small predictor gives the best FID with only $4.3\%$ additional parameters.
 
 \subsection{Uniform Transition-Prediction Diagnostic}
 \label{app:uniform_transition_diagnostic}
@@ -420,40 +523,6 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
         \end{tabular*}
     \end{minipage}
 \end{table}
-
-\subsection{Compatibility with External Alignment}
-\label{app:external_alignment_compatibility}
-
-LARA is designed as an internal alignment signal, so it is natural to ask whether it can be added on top of an external representation-alignment method such as REPA~\citep{yu2024repa}. The two objectives supervise different relations: REPA anchors selected hidden states to features from an external visual encoder, while LARA learns transitions among the diffusion transformer's own layers. This control therefore tests complementarity rather than replacing one method with the other.
-
-\begin{equation}
-\mathcal{L}_{\mathrm{train}}
-=
-\mathcal{L}_{\mathrm{FM}}
-+\lambda_{\mathrm{REPA}}\mathcal{L}_{\mathrm{REPA}}
-+\lambda_{\mathrm{LARA}}\mathcal{L}_{\mathrm{LARA}}.
-\end{equation}
-All rows use the same backbone, data pipeline, optimizer, training length, and sampler. The REPA teacher and aligned layer follow the REPA protocol; LARA keeps the same predictor, layer-pair sampler, and loss weights as the internal-only run.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Compatibility with external representation alignment.} Appendix control for testing whether LARA can be combined with REPA-style external targets.}
-    \label{tab:appendix_external_alignment_compatibility}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
-        \toprule
-        Variant & External target & LARA & FID $\downarrow$ & Probe avg. $\uparrow$ \\
-        \midrule
-        SiT baseline & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA & DINOv2 & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA (Ours) & -- & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA + LARA (Ours) & DINOv2 & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-        \bottomrule
-    \end{tabular*}
-\end{table}
-
-If the combined row improves over both single-objective rows, the result indicates that external semantic anchoring and internal transition learning provide complementary supervision. If the gain is marginal, LARA should still be interpreted as the self-contained recipe used in the main experiments rather than as a required add-on to external alignment.
 
 \section{Optional Inference and Layer-Skip Diagnostics}
 \label{app:optional_inference_diagnostics}
