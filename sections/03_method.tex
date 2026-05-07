@@ -23,12 +23,14 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 \label{eq:flow_matching_loss}
 \end{equation}
 
-Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
-
 \paragraph{Motivation from shared structure.}
-SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold, while stable-rank curves show that feature diversity changes systematically with layer depth and timestep. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
+SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold across timesteps and block depth. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
 
-\subsection{Layer-Aware Transition Prediction}
+\subsection{Layer Aware Representation Alignment}
+
+\paragraph{Layer-aware transition prediction.}
+
+Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
 
 Given a source layer $a$ and target layer $b$ with $a<b$, LARA predicts the target-layer activation tokens from the source activation:
 \begin{equation}
@@ -56,30 +58,13 @@ d\left(
 \end{equation}
 where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. In implementation, the predictor output is formed before token normalization, as detailed in \Cref{alg:lara_transition_distance}. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
 
-\begin{figure}[!htbp]
-    \centering
-    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \begin{minipage}[t]{0.62\linewidth}
-        \vspace{0pt}
-        \centering
-        \includegraphics[width=\linewidth]{figures/lara_transition_interface.png}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.32\linewidth}
-        \vspace{0.8em}
-        \centering
-        \includegraphics[width=\linewidth]{figures/imagenet256_fid_lara_sit7m_compressed.png}
-    \end{minipage}
-    \caption{\textbf{Shared conditional transition interface.} Left: at each iteration, LARA samples layer pairs and trains a shared predictor with $\mathcal{L}_{\mathrm{pred}}$ (\#1), which passes supervision across depth by predicting a target-layer state that aligns with layer $b$. The consistency loss $\mathcal{L}_{\mathrm{cons}}$ (\#2) ties direct and composed transitions, helping the predictor capture long-gap representations. Right: ImageNet $256\times256$ FID curves show that LARA reduces FID faster than the baseline and LayerSync.}
-    \label{fig:realign_transition_predictor}
-    \label{fig:training_curve}
-\end{figure}
+\textbf{Shared predictor training.}
+At each iteration, LARA samples source--target layer pairs and trains one shared predictor with $\mathcal{L}_{\mathrm{pred}}$. This passes supervision across depth by predicting a target-layer state in layer $b$'s coordinate system, rather than directly matching raw activations from two semantically different depths. The resulting signal improves training dynamics over the baseline and LayerSync, as shown in \Cref{fig:training_curve}.
 
-\FloatBarrier
+\paragraph{Transition consistency.}
 
-\subsection{Transition Consistency}
+A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
 
-A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. For $a<b<c$, we define
 \begin{equation}
 \widehat A_{a\to c}^{\,t}
 =
@@ -93,7 +78,7 @@ e_b,e_c,e_t
 \right),
 \label{eq:direct_transition}
 \end{equation}
-where $\bar\psi$ is updated by moving average and $\widehat A_{a\to b}^{\,t}$ is not recomputed by the EMA predictor. The consistency loss is
+The consistency loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
 =
@@ -106,13 +91,11 @@ d\left(
 \right].
 \label{eq:consistency_loss}
 \end{equation}
-Only the online predictor is updated by this term; the EMA predictor provides a stop-gradient target. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
-
-\subsection{Diversity Regularization}
+Only the online predictor is updated by this term. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
 
 \noindent
-\begin{minipage}[t]{0.60\linewidth}
-LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
+\begin{minipage}[t]{0.57\linewidth}
+\textbf{Diversity regularization.} LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
 =
@@ -125,40 +108,40 @@ LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{ya
 Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.35\linewidth}
+\begin{minipage}[t]{0.37\linewidth}
     \vspace{0pt}
     \centering
     \captionsetup{type=figure,font=small,justification=raggedright,singlelinecheck=false}
-    \begin{tabular}{@{}c@{\hspace{0.25em}}c@{}}
+    \begin{tabular}{@{}c@{\hspace{0.10em}}c@{}}
     \begin{tabular}[t]{@{}c@{}}
     \includegraphics[
-        width=0.74\linewidth,
+        width=0.70\linewidth,
         trim=42 34 88 24,
         clip
     ]{figures/layer_cosine_similarity_before.png}\\[0.30em]
     \includegraphics[
-        width=0.74\linewidth,
+        width=0.70\linewidth,
         trim=28 24 78 20,
         clip
     ]{figures/layer_cosine_similarity_after.png}
     \end{tabular}
     &
     \begin{tabular}[t]{@{}c@{}}
-    \raisebox{-0.73\linewidth}{%
+    \raisebox{-0.68\linewidth}{%
     \includegraphics[
-        height=1.50\linewidth,
+        height=1.42\linewidth,
         trim=411 0 0 0,
         clip
     ]{figures/layer_cosine_similarity_after.png}}
     \end{tabular}
     \end{tabular}
     \vspace{-0.5em}
-    \captionof{figure}{\textbf{Layer diversity.} LARA on SiT-B/2 at $100\mathrm{K}$, before (top) and after (bottom) diversity regularization. Cross-layer correlations are reduced after regularization.}
+    \captionof{figure}{\textbf{Layer diversity.} LARA on SiT-B/2 at $100\mathrm{K}$ before (top) and after (bottom) diversity regularization.}
     \label{fig:cosine_squared_heatmap}
 \end{minipage}
 \vspace{0.5em}
 
-\subsection{Full Objective}
+\paragraph{Full objective.}
 
 The LARA regularizer assigns a separate weight to each component:
 \begin{equation}
