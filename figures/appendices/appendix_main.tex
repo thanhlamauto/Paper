@@ -159,7 +159,7 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 \label{app:image_generation_details}
 
 \paragraph{Compute.}
-We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments are run on TPU v4-16 with batch size 256. Ablation studies are run on a local workstation with two NVIDIA RTX 4090 GPUs. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
 \paragraph{Existing assets.}
 We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
@@ -183,7 +183,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
     \caption{\textbf{Hyperparameter setup for main experiments.}}
     \label{tab:appendix_imagenet_protocol}
     \scriptsize
-    \setlength{\tabcolsep}{5pt}
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{lcccc}
         \toprule
         & Table 1 (SiT-B) & Table 1 (SiT-L) & Table 1 (SiT-XL) & Table 2 \\
@@ -218,45 +218,45 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Hyperparameter setup for figures and SiT-B ablations.} The SiT-B column is the common setup for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}; each ablation changes only the factor shown in its own table.}
+    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
     \label{tab:appendix_common_ablation_setting}
     \scriptsize
-    \setlength{\tabcolsep}{4pt}
+    \setlength{\tabcolsep}{5pt}
     \renewcommand{\arraystretch}{0.86}
-    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}p{0.24\linewidth}p{0.31\linewidth}p{0.37\linewidth}@{}}
+    \begin{tabular*}{0.92\linewidth}{@{\extracolsep{\fill}}p{0.28\linewidth}p{0.58\linewidth}@{}}
         \toprule
-        Setting & \Cref{fig:training_curve} & Common SiT-B ablations \\
+        Setting & Value \\
         \midrule
-        \multicolumn{3}{@{}l}{\textbf{Architecture}} \\
-        Backbone & \texttt{SiT-XL/2} & \texttt{SiT-B/2} \\
-        Input dim. & $32\times32\times4$ & $32\times32\times4$ \\
-        Blocks / hidden / heads & 28 / 1152 / 16 & 12 / 768 / 12 \\
-        Patch size & 2 & 2 \\
+        \multicolumn{2}{@{}l}{\textbf{Architecture}} \\
+        Backbone & \texttt{SiT-B/2} \\
+        Input dim. & $32\times32\times4$ \\
+        Blocks / hidden / heads & 12 / 768 / 12 \\
+        Patch size & 2 \\
         \midrule
-        \multicolumn{3}{@{}l}{\textbf{Data and optimization}} \\
-        Data / VAE & ImageNet $256\times256$ latents & ImageNet $256\times256$ latents \\
-        Hardware & 2$\times$ RTX 4090 & 2$\times$ RTX 4090 \\
-        Training budget & checkpoint sweep & $300\mathrm{K}$ iterations \\
-        Batch size & 256 & 128 \\
-        Optimizer / lr & AdamW / $10^{-4}$ & AdamW / $10^{-4}$ \\
-        Metric & FID-50K & FID-10K \\
+        \multicolumn{2}{@{}l}{\textbf{Data and optimization}} \\
+        Data / VAE & ImageNet $256\times256$ latents \\
+        Hardware & TPU v4-16 \\
+        Training budget & $300\mathrm{K}$ iterations \\
+        Batch size & 128 \\
+        Optimizer / lr & AdamW / $10^{-4}$ \\
+        Metric & FID-10K \\
         \midrule
-        \multicolumn{3}{@{}l}{\textbf{Sampling and interpolation}} \\
-        $\alpha_t,\sigma_t$ & $t,1-t$ & $t,1-t$ \\
-        Training objective & v-prediction & v-prediction \\
-        Evaluation sampler & ODE Heun & ODE Heun \\
-        Sampling steps / guidance & 250 / -- & 250 / -- \\
+        \multicolumn{2}{@{}l}{\textbf{Sampling and interpolation}} \\
+        $\alpha_t,\sigma_t$ & $t,1-t$ \\
+        Training objective & v-prediction \\
+        Evaluation sampler & ODE Heun \\
+        Sampling steps / guidance & 250 / -- \\
         \midrule
-        \multicolumn{3}{@{}l}{\textbf{LARA recipe for SiT-B ablations}} \\
-        Timestep sampler & -- & logitN$(-0.2,1.0)$ unless varied \\
-        Pair sampling & -- & depth-centered gap: $g\sim\mathcal{TN}(3,2)$; $m\sim\mathcal{N}(L/2,\sigma_m)$ \\
-        Pair-law variants & -- & full uniform, gap-only, depth-centered gap \\
-        Loss weights & -- & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
-        Predictor & -- & Base ConvNet transition predictor with layer and timestep conditioning \\
-        Consistency path & -- & cached online $a\to b$; EMA $b\to c$ target \\
-        Target detach & -- & target $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
-        Output routing & -- & $10\%$ depth-shortcut subset uses the predicted target state \\
+        \multicolumn{2}{@{}l}{\textbf{LARA recipe}} \\
+        Timestep sampler & logitN$(-0.2,1.0)$ unless varied \\
+        Pair sampling & depth-centered gap: $g\sim\mathcal{TN}(3,2)$; $m\sim\mathcal{N}(L/2,\sigma_m)$ \\
+        Pair-law variants & full uniform, gap-only, depth-centered gap \\
+        Loss weights & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
+        Predictor & Base ConvNet transition predictor with layer and timestep conditioning \\
+        Consistency path & cached online $a\to b$; EMA $b\to c$ target \\
+        Target detach & target $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
+        Output routing & $10\%$ depth-shortcut subset uses the predicted target state \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -317,21 +317,21 @@ Given a sentence that describes a motion as a sequence of actions, the task is t
 We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
 \paragraph{Implementation details.}
-The motion backbone has eight transformer blocks. MDM and LayerSync are trained for 600K iterations, while LARA is trained for 300K iterations. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone but replaces direct matching with the transition predictor described in \Cref{sec:method}.
+The motion backbone has eight transformer blocks. MDM and LayerSync are trained for 600K iterations, while LARA is evaluated at 300K and 400K training checkpoints. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
 \begin{table}[!htbp]
     \centering
     \caption{\textbf{HumanML3D protocol.} All rows use the same MDM data processing and evaluator; only the internal alignment objective changes.}
     \label{tab:appendix_humanml3d_setup}
     \small
-    \setlength{\tabcolsep}{5pt}
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{lccccc}
         \toprule
         Method & Layers & Iter. & Internal supervision & Evaluator & Metrics \\
         \midrule
         MDM & 8 & 600K & none & Standard MDM & FID, R-Precision \\
         MDM + LayerSync & 8 & 600K & direct pair $(3,6)$ & Standard MDM & FID, R-Precision \\
-        MDM + LARA (Ours) & 8 & 300K & transition predictor & Standard MDM & FID, R-Precision \\
+        MDM + LARA (Ours) & 8 & 300K/400K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
 \end{table}

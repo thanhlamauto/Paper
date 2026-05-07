@@ -153,7 +153,7 @@ ImageNet provides the main testbed because it exposes both optimization quality 
 To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2020action2motion,guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
 \paragraph{Implementation details.}
-We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer backbone for all rows. MDM and LayerSync are trained for $600\mathrm{K}$ iterations, while LARA is trained for $300\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
+We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer backbone for all rows. MDM and LayerSync are trained for $600\mathrm{K}$ iterations, while LARA is evaluated at $300\mathrm{K}$ and $400\mathrm{K}$ checkpoints; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
 
 \paragraph{Evaluation metrics.}
 We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in \Cref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
