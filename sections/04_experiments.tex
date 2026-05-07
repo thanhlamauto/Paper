@@ -14,7 +14,7 @@ Unless otherwise stated, we follow the class-conditional ImageNet training setup
 We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved,szegedy2016rethinking}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. We use the same reference statistics and evaluation implementation for all LARA variants and baselines. Definitions for the diagnostic metrics that are not standard generation benchmarks are provided in \Cref{app:metric_definitions}.
 
 \paragraph{Comparison methods.}
-Our main comparisons are against the base SiT backbone and recent self-contained representation-regularized methods: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For system-level context, we also report representative ImageNet baselines from pixel diffusion~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}, latent diffusion~\citep{rombach2022ldm}, transformer-hybrid diffusion~\citep{bao2023all,hatamizadeh2024diffit,gao2023mdtv2}, and autoregressive or predictive generation~\citep{tian2024visual,chen2024jepa}. Detailed baseline descriptions and the parameter-matching protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
+Our controlled comparisons use the same SiT backbone and training budget as the base model, and compare against the self-contained internal baselines reported in \Cref{tab:imagenet_no_cfg}: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}. For system-level context in \Cref{tab:imagenet_cfg}, we include the reported ImageNet baselines that appear in the table: pixel diffusion methods ADM-U, VDM++, Simple diffusion, and CDM~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}; autoregressive or predictive methods VAR and D-JEPA~\citep{tian2024visual,chen2024jepa}; latent U-Net and transformer-hybrid methods LDM, U-ViT, DiffiT, and MDTv2~\citep{rombach2022ldm,bao2023all,hatamizadeh2024diffit,gao2023mdtv2}; and transformer baselines DiT, SiT, and REPA~\citep{peebles2023scalable,ma2024sit,yu2024repa}. Detailed baseline descriptions and the reporting protocol are deferred to \Cref{app:baseline_descriptions,app:baseline_protocol}.
 
 \paragraph{Results.}
 ImageNet provides the main testbed because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, so changes in FID can be attributed to the auxiliary alignment objective rather than to model size, sampler, or guidance. We then include a CFG-based system comparison to place the final model among standard ImageNet generators, where guidance can change the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}.
@@ -112,7 +112,7 @@ ImageNet provides the main testbed because it exposes both optimization quality 
     \end{minipage}
 \end{table}
 
-The improvement is not confined to one backbone or training length. On \texttt{SiT-B/2}, LARA reduces FID from $35.17$ to $25.01$, a $28.9\%$ gain over the base model and a $12.6\%$ gain over LayerSync. On \texttt{SiT-L/2}, FID improves from $20.55$ to $11.09$. The same pattern remains on \texttt{SiT-XL/2} as training increases: $17.32\!\to\!8.57$ at $400\mathrm{K}$, $12.03\!\to\!6.51$ at $1\mathrm{M}$, and $8.85\!\to\!5.09$ at $2\mathrm{M}$. With CFG, LARA also improves over LayerSync from $1.93$ to $1.88$ while maintaining comparable precision and recall. The consistent gains support the central claim that layer-aware transition supervision scales beyond a single hand-picked alignment pair.
+\textbf{Scaling across backbones.} LARA consistently improves the SiT backbone under matched model size and training budget. On \texttt{SiT-B/2}, FID decreases from $35.17$ to $25.01$, improving over both the vanilla model and the strongest internal baseline. The same trend holds as capacity increases: \texttt{SiT-L/2} improves from $20.55$ to $11.09$, while \texttt{SiT-XL/2} improves from $17.32$ to $8.57$ at $400\mathrm{K}$. The gains remain stable at longer training budgets, reaching $6.51$ at $1\mathrm{M}$ and $5.09$ at $2\mathrm{M}$. With CFG, LARA also improves over LayerSync from $1.93$ to $1.88$ FID while maintaining comparable precision and recall. These results indicate that the learned transition signal scales beyond a single hand-picked alignment pair.
 
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
@@ -120,7 +120,7 @@ The improvement is not confined to one backbone or training length. On \texttt{S
 To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2020action2motion,guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
 \paragraph{Implementation details.}
-We follow the MDM setup~\citep{tevet2022mdm} and use a transformer backbone with the same training budget for the baseline and LARA variant. The main comparison trains MDM with and without LARA for $600\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
+We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer backbone for all rows. MDM and LayerSync are trained for $600\mathrm{K}$ iterations, while LARA is trained for $300\mathrm{K}$ iterations; architecture and loss settings are reported in \Cref{app:realign_hyperparameters}.
 
 \paragraph{Evaluation metrics.}
 We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in \Cref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
@@ -146,16 +146,14 @@ HumanML3D tests whether the same transition signal transfers to a smaller, non-i
     \end{tabular}
 \end{table}
 
-LARA improves both metrics, reducing FID from $0.503$ to $0.4343$ and increasing R-Precision from $0.7202$ to $0.7675$. The gain over LayerSync suggests that the predictor is not specialized to image latents. It can also regularize a motion transformer, where the hidden-state hierarchy is induced by temporal pose dynamics rather than spatial image structure.
+\textbf{Transfer beyond image latents.} LARA improves both HumanML3D metrics despite using only $300\mathrm{K}$ training iterations, while MDM and LayerSync use $600\mathrm{K}$. It reduces FID from $0.503$ to $0.4343$ and increases R-Precision from $0.7202$ to $0.7675$ relative to MDM. It also outperforms LayerSync's $0.4801$ FID and $0.7434$ R-Precision with half the training budget. This suggests that LARA is not specialized to spatial image latents; the same transition objective can regularize a motion transformer whose hierarchy is induced by temporal pose dynamics.
 
 \FloatBarrier
 
 \subsection{Representation Analysis}
 \label{sec:representation_analysis}
 
-Generation metrics only show the final outcome. Since LARA acts inside the depth hierarchy, we also ask whether the learned hidden states become stronger. We use matched-FID checkpoints--an \texttt{SiT-XL/2} trained with LARA for \textbf{[TBD]} iterations and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} iterations--so probe differences reflect representation organization rather than a trivial gap in sample quality.
-
-We probe every backbone block with three layerwise diagnostics: linear classification on Tiny ImageNet~\citep{deng2009imagenet}, linear segmentation on PASCAL VOC~\citep{everingham2010pascal}, and Centered Kernel Alignment (CKA) to DINOv2 features~\citep{kornblith2019similarity,oquab2023dinov2}. The two linear probes measure how much semantic and spatial information is exposed by each layer, while CKA measures whether the hidden states organize visual structure similarly to a strong visual representation. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
+\textbf{Representation quality.} Generation metrics measure the final samples, but LARA acts inside the transformer hierarchy. We therefore evaluate whether the hidden states themselves become more useful under matched-FID checkpoints--an \texttt{SiT-XL/2} trained with LARA for \textbf{[TBD]} iterations and a baseline \texttt{SiT-XL/2} trained for \textbf{[TBD]} iterations. The probes test complementary properties: Tiny ImageNet classification measures semantic exposure, PASCAL VOC segmentation measures spatial localization, and DINOv2 CKA measures alignment with strong visual features. Probe heads, layerwise reporting conventions, and additional diagnostics are reported in \Cref{app:layer_statistics_projection,app:metric_definitions}.
 
 \begin{figure}[!htbp]
     \centering
@@ -164,14 +162,14 @@ We probe every backbone block with three layerwise diagnostics: linear classific
     \label{fig:representation_analysis}
 \end{figure}
 
-The probes improve in both average and peak quality. Across evaluated layers, linear classification rises by \textbf{[TBD]\%}, segmentation mIoU by \textbf{[TBD]\%}, and DINOv2 CKA by \textbf{[TBD]\%}; the best linear-probe layer also increases by \textbf{[TBD]\%}. This is the internal trace expected from LARA. Because transition supervision is reused across many source--target depths, useful features spread through the hierarchy instead of concentrating around one selected pair. The gain is therefore not merely a copy of a strong block into weaker ones, but a cleaner and more coherent organization of intermediate representations.
+The probes improve in both average and peak quality. Across evaluated layers, linear classification rises by \textbf{[TBD]\%}, segmentation mIoU by \textbf{[TBD]\%}, and DINOv2 CKA by \textbf{[TBD]\%}; the best linear-probe layer also increases by \textbf{[TBD]\%}. This is the internal trace expected from a shared transition objective: useful information spreads through the hierarchy instead of concentrating around one selected pair. The gain is therefore not merely a copy of a strong block into weaker ones, but a cleaner organization of intermediate representations.
 
 \FloatBarrier
 
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-The ablations are organized around the possible failure modes of the method. A transition objective could help only because it adds extra regularization, require delicate loss weights, depend on an oversized predictor, or benefit from a fortunate layer-pair sampler. We test these alternatives in sequence, keeping the main recipe fixed unless the corresponding component is under study. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
+\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, require an oversized predictor, or benefit from a fortunate layer-pair sampler. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
 
 \begin{table}[!htbp]
     \centering
@@ -194,7 +192,7 @@ The ablations are organized around the possible failure modes of the method. A t
     \end{tabular*}
 \end{table}
 
-The first control separates transition learning from auxiliary regularization. The diversity-only row improves over the vanilla baseline, but remains close to LayerSync, so reducing redundant directions cannot explain the main gain. The decisive change is the learned transition: even without consistency or the $\cos^2$ term, the layer-conditioned predictor already improves over fixed-pair alignment. Consistency then makes direct and composed paths agree, which stabilizes longer gaps where supervision is noisier. Combining the three terms gives the best FID.
+\textbf{Objective components.} To separate transition learning from auxiliary regularization, \Cref{tab:realign_ablation} ablates each loss term. The diversity-only variant improves over the vanilla baseline but remains close to LayerSync, showing that feature decorrelation alone cannot explain the full gain. Adding the layer-conditioned transition predictor already improves over fixed-pair alignment, and consistency further lowers FID by tying direct and composed transitions. The full objective performs best, indicating that LARA benefits from both reusable transition prediction and cross-depth consistency.
 
 \begin{table}[!htbp]
     \centering
@@ -269,7 +267,7 @@ The first control separates transition learning from auxiliary regularization. T
 
 \end{table}
 
-Once the objective is fixed, the remaining concern is whether it depends on a narrow tuning window. The selected setting uses a uniform timestep sampler and moderate loss weights; logit-normal timestep samplers are included as controls rather than as part of the final recipe. The one-at-a-time sweeps keep the interpretation local to each component and are meant to verify that LARA does not rely on a fragile hyperparameter choice.
+\textbf{Loss weights and timestep sampler.} We next test whether the objective requires a narrow tuning window. The selected setting uses a uniform timestep sampler and moderate loss weights, while logit-normal samplers and one-at-a-time coefficient changes serve as controls. This design keeps the interpretation local to each factor and checks whether LARA's gain depends on a fragile schedule or coefficient choice.
 
 \begin{table}[!htbp]
     \centering
@@ -290,10 +288,10 @@ Once the objective is fixed, the remaining concern is whether it depends on a na
     \end{tabular*}
 \end{table}
 
-The sweep uses a compact ConvNet predictor. This choice follows the same spatial intuition as i-REPA~\citep{singh2025irepa}: SiT latents keep a grid layout, so local convolutional mixing can capture shared perceptual structure between layers while adding few parameters. Capacity then controls a separate trade-off. A very small predictor cannot match the geometry of different target layers and gives weak transition supervision. A very large predictor can instead memorize layer representations, weakening the regularization signal while adding overhead. We therefore use a moderate predictor and treat roughly $5$--$10\%$ of the backbone size as the practical range.
+\textbf{Predictor capacity.} \Cref{tab:main_predictor_size_ablation} tests whether LARA needs a large auxiliary network. The tiny predictor underfits the transition geometry, while overly large predictors degrade FID, suggesting that excess capacity can absorb target-layer structure instead of regularizing the backbone. The small predictor gives the best FID with only $4.3\%$ additional parameters. Thus, LARA benefits from a compact transition module rather than a high-capacity shortcut.
 
-Sampling also affects performance through the layer gap, the source layer, and the timestep schedule. We choose the final sampler from a uniform diagnostic over these axes: it favors informative medium-gap transitions, keeps broad source-depth coverage, and leaves the training timestep sampler uniform. The full diagnostic and schedule are given in \Cref{app:uniform_transition_diagnostic,app:realign_ablation_protocols}.
+\textbf{Layer-pair sampling.} The final sampler is chosen from a uniform diagnostic over layer gap and source depth under uniform timestep sampling. The diagnostic favors informative medium-gap transitions and maintains broad source-layer coverage while keeping the training timestep sampler fixed. This supports the intended use of LARA as a shared transition interface across many layer pairs rather than another manually selected weak--strong alignment.
 
-Together, the ablations indicate that LARA's gains are not a consequence of choosing a better weak--strong pair. LayerSync shows that selected internal alignment can regularize training, but its supervision remains tied to one relation. LARA uses the same hierarchy more broadly: the shared predictor learns from many source--target pairs, while layer conditioning preserves their pair-specific gaps. This replaces a single-reference constraint with a smoother and more coherent alignment signal across depth.
+\textbf{Takeaway.} Together, the ablations rule out the simplest alternatives: the gain is not only diversity regularization, not only a larger auxiliary branch, and not only a better fixed layer pair. LARA improves because the shared predictor learns reusable cross-depth structure while layer conditioning preserves pair-specific semantic gaps.
 
 \FloatBarrier

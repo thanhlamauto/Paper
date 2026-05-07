@@ -117,9 +117,9 @@ We additionally profile the internal alignment methods used in our speed analysi
         \toprule
         Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} & \textbf{40,643} \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} & \textbf{30,305} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} & \textbf{35,342} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} \\
+        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -154,7 +154,6 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
 
 \section{Experimental Protocols}
 \label{app:experimental_details}
-\label{app:baseline_protocol}
 
 \subsection{Image Generation Experimental Details}
 \label{app:image_generation_details}
@@ -164,6 +163,11 @@ We thank the TPU Research Cloud (TRC) program for providing TPU access. Main ima
 
 \paragraph{Existing assets.}
 We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
+
+\subsubsection{Baseline Reporting Protocol}
+\label{app:baseline_protocol}
+
+The ImageNet comparison tables report only methods included in \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. System-level rows use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
 
 \paragraph{Classification.}
 We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
@@ -265,13 +269,14 @@ In what follows, we summarize the main baseline methods used in our evaluation:
     \item \textbf{U-ViT}~\citep{bao2023all} combines ViT-based backbones with U-Net-style skip connections in the latent space, bridging the benefits of transformers and convolutional inductive biases.
     \item \textbf{DiffiT}~\citep{hatamizadeh2024diffit} enhances transformer-based diffusion models using time-aware multi-head self-attention, boosting sample efficiency and reducing training time.
     \item \textbf{MDTv2}~\citep{gao2023mdtv2} employs an asymmetric encoder-decoder transformer architecture with U-Net-inspired shortcuts in the encoder and dense skip connections in the decoder, improving generation quality and coherence.
-    \item \textbf{MaskDiT}~\citep{zheng2023fast} introduces masked modeling into diffusion transformers by training with an auxiliary mask reconstruction objective, leading to better efficiency and generalization.
-    \item \textbf{SD-DiT}~\citep{zhu2024sddit} builds on MaskDiT by incorporating a self-supervised discrimination objective using momentum encoding, enhancing the semantic richness of internal representations.
     \item \textbf{DiT}~\citep{peebles2023scalable} proposes a pure transformer architecture for diffusion, using AdaLN-zero modules to stabilize training and scale to large model sizes efficiently.
     \item \textbf{SiT}~\citep{ma2024sit} investigates the link between training efficiency and flow-based perspectives by transitioning from discrete-time diffusion to continuous flow matching, showing improved sample quality and convergence rates.
+    \item \textbf{REPA}~\citep{yu2024repa} improves DiT/SiT training by aligning hidden states to features from an external visual encoder such as DINOv2.
     \item \textbf{D-JEPA}~\citep{chen2024jepa} integrates Joint-Embedding Predictive Architectures into generative modeling by reframing masked image modeling as a generalized next-token prediction task, using diffusion or flow-matching losses to model per-token probability distributions in a continuous space.
     \item \textbf{VAR}~\citep{tian2024visual} redefines autoregressive image generation as a coarse-to-fine ``next-scale prediction'' process, diverging from standard raster-scan next-token prediction and allowing faster inference and scaling laws similar to large language models.
+    \item \textbf{Dispersive Loss}~\citep{wang2025dispersive} regularizes internal features by encouraging diverse directions across hidden representations without relying on an external teacher.
     \item \textbf{SRA}~\citep{jiang2025sra} is an EMA-based method that enables diffusion transformers to enhance their own representation learning and generation quality by aligning latent outputs from earlier, noisier layers with those from later, cleaner layers, eliminating the need for external guidance models.
+    \item \textbf{LayerSync}~\citep{haghighi2026layersync} directly aligns selected weak and strong internal layers in the diffusion transformer, providing a self-contained depth-alignment baseline.
 \end{itemize}
 
 \subsection{SiT Architecture Details}
