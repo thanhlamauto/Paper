@@ -23,8 +23,8 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 \label{eq:flow_matching_loss}
 \end{equation}
 
-\paragraph{Motivation from shared structure.}
-SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold across timesteps and block depth. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.
+\paragraph{Layer-wise activation analysis.}
+Following PCA-based representation visualizations used in recent alignment work~\citep{jiang2025sra,yu2024repa,singh2025irepa}, we project SiT-XL/2 hidden tokens onto their leading three principal components in \Cref{fig:projection_layout_observation}. The maps show a consistent spatial scaffold across depth and denoising time, while the semantic emphasis changes across blocks. This suggests that layers share reusable structure but are not interchangeable. Direct matching of one hand-picked pair, as in LayerSync~\citep{haghighi2026layersync}, or supervision from a narrow internal EMA teacher, as in SRA~\citep{jiang2025sra}, can exploit part of this structure but ties the signal to a limited alignment relation. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while source, target, and timestep embeddings adapt the mapping to each pair.
 
 \subsection{Layer Aware Representation Alignment}
 
@@ -78,6 +78,7 @@ e_b,e_c,e_t
 \right),
 \label{eq:direct_transition}
 \end{equation}
+Here $\bar\psi$ is updated by moving average, and the cached $\widehat A_{a\to b}^{\,t}$ is not recomputed by the EMA predictor.
 The consistency loss is
 \begin{equation}
 \mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
