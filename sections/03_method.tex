@@ -3,7 +3,7 @@
 
 \subsection{Preliminaries and Internal Activations}
 
-We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
+We build on the stochastic-interpolant formulation for diffusion models~\citep{albergo2025stochastic}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
 \begin{equation}
 x_t=\alpha_t x_0+\sigma_t\epsilon ,
 \label{eq:stochastic_interpolant}
@@ -23,7 +23,7 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 \label{eq:flow_matching_loss}
 \end{equation}
 
-Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
+Let $A_{\theta,\ell}^t \in \mathbb{R}^{N \times C}$ denote the activation at layer $\ell$ of a diffusion transformer (DiT) conditioned on $(x_t, t, c)$, where $N$ denotes the number of latent tokens and $C$ is the token embedding dimension. We further define $F_{\theta,b:L}$ as the upper DiT block spanning layers $b$ through $L$, which maps the depth-$b$ activation to the final velocity prediction. For notion clarity, we omit the explicit dependence on $\theta$ in $A_{\theta,\ell}^t$ whenever the parameterization is clear from context.
 
 \paragraph{Motivation from shared structure.}
 SRA observes that diffusion-transformer representations become more structured across depth and denoising time~\citep{jiang2025sra}. We follow this observation in \Cref{fig:projection_layout_observation}: internal layers differ in semantic level, but often preserve a common spatial scaffold, while stable-rank curves show that feature diversity changes systematically with layer depth and timestep. Directly matching a fixed pair of raw activations ties supervision to one representation gap. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while layer embeddings adapt the mapping to each source--target pair.

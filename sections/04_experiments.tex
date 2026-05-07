@@ -101,12 +101,12 @@ ImageNet provides the main testbed because it exposes both optimization quality 
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
             DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
             SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 675M & 2.00M & 1.80 & 284.0 & 0.81 & 0.61 \\
+            \quad + REPA & 675M & 2.00M & 1.84 & 284.0 & 0.81 & 0.61 \\
             \hdashline
-            \quad + SRA & 675M & 2.00M & 1.93 & 311.4 & 0.80 & 0.63 \\
-            \quad + Dispersive & 675M & 2.00M & 1.97 & -- & -- & -- \\
-            \quad + LayerSync & 675M & 2.00M & 1.89 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.82 & 276.48 & 0.81 & 0.61 \\
+            \quad + SRA & 675M & 2.00M & 2.01 & 311.4 & 0.80 & 0.63 \\
+            \quad + Dispersive & 675M & 2.00M & 2.04 & -- & -- & -- \\
+            \quad + LayerSync & 675M & 2.00M & 1.93 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.88 & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular}}
     \end{minipage}
@@ -141,7 +141,7 @@ HumanML3D tests whether the same transition signal transfers to a smaller, non-i
         \midrule
         MDM & 600K & 0.503 & 0.7202 \\
         + LayerSync & 600K & 0.4801 & 0.7434 \\
-        + LARA (Ours) & 600K & \textbf{0.4565} & \textbf{0.7557} \\
+        + LARA (Ours) & 300K& \textbf{0.4343} & \textbf{0.7675} \\
         \bottomrule
     \end{tabular}
 \end{table}
