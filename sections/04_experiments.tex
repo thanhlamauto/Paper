@@ -128,7 +128,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \paragraph{Results.}
 HumanML3D tests whether the same transition signal transfers to a smaller, non-image transformer without changing the generative task.
 
-\begin{table}[!htbp]
+\begin{table}[float]
     \centering
     \caption{\textbf{Quantitative results for text-conditional human motion generation on HumanML3D.}}
     \label{tab:humanml3d_results}
@@ -186,7 +186,7 @@ The ablations are organized around the possible failure modes of the method. A t
         \midrule
         Vanilla & -- & -- & -- & 49.36 \\
         LayerSync & -- & -- & -- & 43.26 \\
-        Cosine squared only & -- & -- & \checkmark & 44.44 \\
+        Loss div only & -- & -- & \checkmark & 44.44 \\
         LARA pred. (Ours) & \checkmark & -- & -- & 42.73 \\
         LARA pred. + cons. (Ours) & \checkmark & \checkmark & -- & 38.85 \\
         Full LARA (Ours) & \checkmark & \checkmark & \checkmark & \textbf{35.12} \\
