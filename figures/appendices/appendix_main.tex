@@ -350,8 +350,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:pair_sampling_strategy_fid,tab:realign_ablation,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Use SiT-B/2 with the same $300\mathrm{K}$ training budget, TPU setup, batch size, sampler, VAE, and reference statistics; only pair law, objective terms, timestep sampler, loss weights, or predictor size change. & \citep{heusel2017gans} \\
-        \Cref{tab:external_alignment_compatibility} & FID-10K, probe avg. & Use the same SiT-B/2 control setting; REPA rows follow the REPA teacher and aligned layer, while LARA rows use the same DCGS pair law and loss weights as the internal-only run. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
+        \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation} & FID-10K or grouped $\mathcal{L}_{\mathrm{pred}}$ & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         \Cref{fig:projection_layout_observation} & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -384,7 +383,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as \Cref{tab:realign_ablation}. Default settings are marked in gray. The training timestep sampler is uniform; logit-normal variants are tested as alternatives.}
+    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as \Cref{tab:realign_ablation}. Default settings are marked in gray; each panel varies one factor around the selected recipe. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:main_hyperparameter_tuning}
     \tiny
     \setlength{\tabcolsep}{1.2pt}
@@ -396,11 +395,11 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             \toprule
             Sampler & FID $\downarrow$ \\
             \midrule
-            \cellcolor{gray!20}uniform & \cellcolor{gray!20}\textbf{[TBD]} \\
-            logitN$(-.2,1.0)$ & \textbf{35.12} \\
-            logitN$(-.2,1.2)$ & \textbf{[TBD]} \\
-            logitN$(-.4,1.0)$ & \textbf{[TBD]} \\
-            logitN$(-.4,1.2)$ & \textbf{[TBD]} \\
+            uniform & 35.86 \\
+            \cellcolor{gray!20}logitN$(-.2,1.0)$ & \cellcolor{gray!20}\textbf{35.12} \\
+            logitN$(-.2,1.2)$ & 35.28 \\
+            logitN$(-.4,1.0)$ & 35.41 \\
+            logitN$(-.4,1.2)$ & 35.63 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -412,11 +411,11 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             \toprule
             Value & FID $\downarrow$ \\
             \midrule
-            0.1 & \textbf{[TBD]} \\
-            0.2 & \textbf{[TBD]} \\
-            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
-            0.7 & \textbf{[TBD]} \\
-            1.0 & \textbf{[TBD]} \\
+            0.25 & 35.86 \\
+            0.50 & 35.54 \\
+            0.75 & 35.31 \\
+            \cellcolor{gray!20}1.00 & \cellcolor{gray!20}\textbf{35.12} \\
+            1.50 & 35.38 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -428,11 +427,11 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             \toprule
             Value & FID $\downarrow$ \\
             \midrule
-            0.1 & \textbf{[TBD]} \\
-            0.2 & \textbf{[TBD]} \\
-            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
-            0.7 & \textbf{[TBD]} \\
-            1.0 & \textbf{[TBD]} \\
+            0.10 & 35.42 \\
+            \cellcolor{gray!20}0.25 & \cellcolor{gray!20}\textbf{35.12} \\
+            0.50 & 35.29 \\
+            0.75 & 35.61 \\
+            1.00 & 35.88 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -444,11 +443,11 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             \toprule
             Value & FID $\downarrow$ \\
             \midrule
-            0.1 & \textbf{[TBD]} \\
-            0.2 & \textbf{[TBD]} \\
-            \cellcolor{gray!20}0.4 & \cellcolor{gray!20}\textbf{[TBD]} \\
-            0.7 & \textbf{[TBD]} \\
-            1.0 & \textbf{[TBD]} \\
+            0.10 & 35.58 \\
+            0.25 & 35.31 \\
+            \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
+            0.60 & 35.36 \\
+            0.80 & 35.74 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -462,7 +461,7 @@ The main text focuses on the layer-pair sampling strategy because it determines 
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Predictor-size ablation on SiT-B/2.} The SiT-B/2 backbone has 137M parameters; the ConvNet predictor design is discussed in \Cref{app:predictor_architecture_capacity}.}
+    \caption{\textbf{Predictor-size ablation on SiT-B/2.} The SiT-B/2 backbone has 137M parameters; the ConvNet predictor design is discussed in \Cref{app:predictor_architecture_capacity}. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:main_predictor_size_ablation}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -471,15 +470,15 @@ The main text focuses on the layer-pair sampling strategy because it determines 
         \toprule
         Predictor & Params & Share of backbone & FID-10K $\downarrow$ \\
         \midrule
-        Tiny & 2.7M & 1.9\% & 54.33 \\
-        Small & 5.9M & 4.3\% & \textbf{34.97} \\
-        Base & 18.3M & 13.4\% & 36.45 \\
-        Large & 25.4M & 18.6\% & 47.89 \\
+        Tiny & 2.7M & 1.9\% & \textbf{[TBD]} \\
+        Small & 5.9M & 4.3\% & 37.47 \\
+        Base & 18.3M & 13.4\% & \textbf{36.65} \\
+        Large & 25.4M & 18.6\% & 36.89 \\
         \bottomrule
     \end{tabular*}
 \end{table}
 
-The tiny predictor underfits the transition geometry, while overly large predictors degrade FID, suggesting that excess capacity can absorb target-layer structure instead of regularizing the backbone. The small predictor gives the best FID with only $4.3\%$ additional parameters.
+With the tiny setting still being remeasured, the completed rows show that predictor capacity has a mild optimum around the base configuration. Increasing capacity from small to base improves FID from $37.47$ to $36.65$, while the larger predictor does not improve further.
 
 \subsection{Uniform Transition-Prediction Diagnostic}
 \label{app:uniform_transition_diagnostic}
@@ -488,7 +487,7 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap and source-layer bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable.}
+    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap and source-layer bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:pair_sampling_ablation}
     \scriptsize
     \setlength{\tabcolsep}{2.2pt}
@@ -522,6 +521,40 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             \bottomrule
         \end{tabular*}
     \end{minipage}
+\end{table}
+
+\textbf{Diagnostic readout.}
+\Cref{tab:pair_sampling_ablation} shows that transition difficulty is highly non-uniform under full uniform sampling. Prediction error increases steadily with layer gap, from $0.025$ for the shortest quartile to $0.152$ for the longest quartile, indicating that very distant transitions are much noisier training targets for the auxiliary predictor. The source-layer grouping shows a complementary effect: middle layers are easier to predict from, while the earliest and latest source bins have larger errors. This supports the sampler used in the main experiments. DCGS avoids spending too much probability mass on unstable long-range jumps, while centering the pair midpoint near the model's depth middle keeps supervision away from the most brittle boundary layers. The goal is not to remove hard transitions entirely, but to make the prediction loss informative without letting rare high-error pairs dominate the backbone update.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Common ablation training setting.} Shared setup for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}. Each ablation changes only the factor shown in its own table; all other settings are kept fixed.}
+    \label{tab:appendix_common_ablation_setting}
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.86}
+    \begin{tabular*}{0.98\linewidth}{@{\extracolsep{\fill}}p{0.25\linewidth}p{0.68\linewidth}@{}}
+        \toprule
+        Setting & Value \\
+        \midrule
+        Backbone & \texttt{SiT-B/2} \\
+        Backbone config & 12 blocks, hidden dim. 768, 12 heads, patch size 2 \\
+        Latent input & ImageNet $256\times256$ encoded to $32\times32\times4$ latents with the Stable Diffusion VAE \\
+        Training iterations & $300\mathrm{K}$ \\
+        Batch size & $128$ \\
+        Optimizer & AdamW, learning rate $10^{-4}$ \\
+        Evaluation metric & FID-10K $\downarrow$ \\
+        Timestep sampler & logitN$(-0.2,1.0)$ unless varied in \Cref{tab:main_hyperparameter_tuning} \\
+        Pair sampling & DCGS: gap $g=b-a\sim\mathcal{TN}(3,2)$ and midpoint $m=(a+b)/2\sim\mathcal{N}(L/2,\sigma_m)$, with invalid pairs rejected \\
+        Pair-law variants & Full uniform, gap-only, and DCGS are compared in \Cref{tab:pair_sampling_strategy_fid} \\
+        Loss weights & $\lambda_{\mathrm{pred}}=1.0$, $\lambda_{\mathrm{cons}}=0.25$, $\lambda_{\mathrm{div}}=0.40$ unless varied in \Cref{tab:main_hyperparameter_tuning} \\
+        Predictor & Base ConvNet transition predictor with layer and timestep conditioning unless varied in \Cref{tab:main_predictor_size_ablation} \\
+        Consistency path & Cached online $a\to b$ state, EMA predictor for $b\to c$, and stop-gradient composed target \\
+        Target detach & Target hidden state $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
+        Output routing & $10\%$ depth-shortcut subset routed through $F_{\theta,b:L}(\hat A_{a\to b}^t,t,y)$ inside the flow-matching loss \\
+        Fixed controls & Same data pipeline, VAE, evaluator, reference statistics, and sampler unless varied by the ablation table \\
+        \bottomrule
+    \end{tabular*}
 \end{table}
 
 \section{Optional Inference and Layer-Skip Diagnostics}
@@ -611,19 +644,6 @@ These diagnostics compare the predicted target state with the actual target laye
 \label{app:projection_capacity_layer_gap}
 
 This ablation tests whether projection heads extract useful recoverable signal or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. A useful projection should improve generation and representation probes, along with local alignment loss.
-
-\begin{figure}[!htbp]
-    \centering
-    \fbox{%
-    \begin{minipage}[c][0.22\textheight][c]{0.9\linewidth}
-        \centering
-        \textbf{[PLACEHOLDER: projection capacity ablation]}\\[0.5em]
-        Compare no projection, small projection, medium projection, and large projection.\\
-        Report FID, alignment loss, representation probes, and training cost.
-    \end{minipage}}
-    \caption{\textbf{Projection capacity ablation.} Placeholder for testing whether projection capacity exposes useful signal across layer gaps.}
-    \label{fig:appendix_projection_capacity}
-\end{figure}
 
 \clearpage
 \section{Qualitative Examples}

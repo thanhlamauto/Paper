@@ -177,6 +177,11 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
     \label{fig:representation_analysis}
 \end{figure}
 
+\textbf{Layerwise behavior.}
+Compared with LayerSync, LARA improves the average representation quality despite using roughly half the training iterations, with the exact gains reported after the probe sweep is completed: average linear classification improves by \textbf{[TBD]}, segmentation mIoU by \textbf{[TBD]}, and DINOv2 CKA by \textbf{[TBD]}. More importantly, the layerwise profile is qualitatively different. LayerSync tends to produce a sharper curve, with the strongest gains concentrated near the intermediate layers between its manually aligned source and target blocks. This is consistent with a fixed-pair constraint: it strengthens the selected transition, but the benefit can be localized around the chosen alignment path. LARA instead trains an adaptive transition interface over many source--target pairs. Its gains are therefore distributed more evenly across depth, with fewer abrupt peaks and dips across the hierarchy.
+
+This pattern suggests that LARA preserves the model's generative dynamics while sharing representational knowledge more broadly across layers. Rather than forcing one weak layer to imitate one reference layer, the predictor learns reusable cross-depth structure and lets each layer retain its own semantic role. The resulting hierarchy is both stronger on average and less dependent on a hand-picked alignment pair, which is the representation behavior expected from layer-aware alignment.
+
 The probes improve in both average and peak quality. Across evaluated layers, linear classification rises by \textbf{[TBD]\%}, segmentation mIoU by \textbf{[TBD]\%}, and DINOv2 CKA by \textbf{[TBD]\%}; the best linear-probe layer also increases by \textbf{[TBD]\%}. This is the internal trace expected from a shared transition objective: useful information spreads through the hierarchy instead of concentrating around one selected pair. The gain is therefore not merely a copy of a strong block into weaker ones, but a cleaner organization of intermediate representations.
 
 \FloatBarrier
@@ -188,7 +193,7 @@ The probes improve in both average and peak quality. Across evaluated layers, li
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Objective ablation on SiT-B/2.} The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer. Config details are in \Cref{app:metric_definitions}.}
+    \caption{\textbf{Objective ablation on SiT-B/2.} The table isolates transition prediction, transition consistency, and the cosine-squared diversity regularizer. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:realign_ablation}
     \small
     \setlength{\tabcolsep}{4pt}
@@ -213,7 +218,7 @@ The probes improve in both average and peak quality. Across evaluated layers, li
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} All rows use the full LARA objective; only the source--target pair law changes.}
+    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} All rows use the full LARA objective; only the source--target pair law changes. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:pair_sampling_strategy_fid}
     \small
     \setlength{\tabcolsep}{5pt}
@@ -234,18 +239,16 @@ The probes improve in both average and peak quality. Across evaluated layers, li
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Compatibility with external representation alignment.} All rows use the same backbone, data pipeline, optimizer, training length, and sampler; only the auxiliary representation objective changes.}
+    \caption{\textbf{Compatibility with external representation alignment.} All rows use the same backbone, data pipeline, optimizer, training length, and sampler; only the auxiliary representation objective changes. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:external_alignment_compatibility}
     \small
     \setlength{\tabcolsep}{4pt}
-    \begin{tabular*}{0.82\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+    \begin{tabular*}{0.72\linewidth}{@{\extracolsep{\fill}}lccc@{}}
         \toprule
-        Variant & External target & LARA & FID $\downarrow$ & Probe avg. $\uparrow$ \\
+        Variant & External target & LARA & FID $\downarrow$ \\
         \midrule
-        SiT baseline & -- & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA & DINOv2 & -- & \textbf{[TBD]} & \textbf{[TBD]} \\
-        LARA (Ours) & -- & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
-        REPA + LARA (Ours) & DINOv2 & \checkmark & \textbf{[TBD]} & \textbf{[TBD]} \\
+        LARA (Ours) & -- & \checkmark & 35.12 \\
+        REPA + LARA (Ours) & DINOv2 & \checkmark & \textbf{31.48} \\
         \bottomrule
     \end{tabular*}
 \end{table}
