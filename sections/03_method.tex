@@ -66,16 +66,18 @@ At each iteration, LARA samples source--target layer pairs and trains one shared
 A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
 
 \begin{equation}
+\begin{aligned}
 \widehat A_{a\to c}^{\,t}
 =
 G_\psi(\operatorname{sg}(A_a^t),e_a,e_c,e_t),
-\qquad
+\\
 \widetilde A_{a\to b\to c}^{\,t}
 =
 G_{\bar\psi}\!\left(
 \operatorname{sg}(\widehat A_{a\to b}^{\,t}),
 e_b,e_c,e_t
 \right),
+\end{aligned}
 \label{eq:direct_transition}
 \end{equation}
 Here $\bar\psi$ is updated by moving average, and the cached $\widehat A_{a\to b}^{\,t}$ is not recomputed by the EMA predictor.
@@ -94,25 +96,9 @@ d\left(
 \end{equation}
 Only the online predictor is updated by this term. The source activation and composed target are detached, so the constraint regularizes the transition interface rather than forcing the backbone to collapse intermediate layers.
 
-\noindent
-\begin{minipage}[t]{0.57\linewidth}
-\textbf{Diversity regularization.} LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
-\begin{equation}
-\mathcal{L}_{\mathrm{div}}(\theta)
-=
-\mathbb{E}_{i<j,t}
-\left[
-\operatorname{cos}^2(A_i^t,A_j^t)
-\right].
-\label{eq:diversity_loss}
-\end{equation}
-Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.37\linewidth}
-    \vspace{0pt}
+\begin{figure*}[!t]
     \centering
-    \captionsetup{type=figure,font=small,justification=raggedright,singlelinecheck=false}
+    \begin{minipage}{0.45\textwidth}
     \begin{tabular}{@{}c@{\hspace{0.10em}}c@{}}
     \begin{tabular}[t]{@{}c@{}}
     \includegraphics[
@@ -136,23 +122,37 @@ Minimizing this term discourages layer homogenization: different depths can stil
     ]{figures/layer_cosine_similarity_after.png}}
     \end{tabular}
     \end{tabular}
-    \vspace{-0.5em}
-    \captionof{figure}{\textbf{Layer diversity.} LARA on SiT-B/2 at $100\mathrm{K}$ before (top) and after (bottom) diversity regularization.}
+    \end{minipage}
+    \caption{\textbf{Layer diversity.} LARA on SiT-B/2 at $100\mathrm{K}$ before (top) and after (bottom) diversity regularization.}
     \label{fig:cosine_squared_heatmap}
-\end{minipage}
-\vspace{0.5em}
+\end{figure*}
+
+\textbf{Diversity regularization.} LARA also includes a lightweight diversity term inspired by DiverseDiT~\citep{yang2026diversedit}. The transition objective deliberately increases the shared signal between depths: a source layer should contain enough information to predict a later target layer. If this sharing is left unconstrained, however, adjacent hidden states can become overly dependent and carry the same features. We therefore reduce redundant cross-layer dependence by penalizing squared cosine similarity. This is a tractable proxy for lowering excessive mutual information between layer activations, without requiring explicit mutual-information estimation. For randomly sampled layer pairs $(i,j)$, independent of the transition pair used above, we define
+\begin{equation}
+\mathcal{L}_{\mathrm{div}}(\theta)
+=
+\mathbb{E}_{i<j,t}
+\left[
+\operatorname{cos}^2(A_i^t,A_j^t)
+\right].
+\label{eq:diversity_loss}
+\end{equation}
+Minimizing this term discourages layer homogenization: different depths can still share the structure needed for transition prediction, but they are pushed away from encoding identical directions. The heatmap diagnostic in \Cref{fig:cosine_squared_heatmap} visualizes this intended effect as lower pairwise layer similarity after applying the regularizer.
 
 \paragraph{Full objective.}
 
 The LARA regularizer assigns a separate weight to each component:
 \begin{equation}
+\begin{aligned}
 \mathcal{L}_{\mathrm{LARA}}(\theta,\psi)
 =
 \lambda_{\mathrm{pred}}\mathcal{L}_{\mathrm{pred}}(\theta,\psi)
 +
+\\
 \lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
 +
 \lambda_{\mathrm{div}}\mathcal{L}_{\mathrm{div}}(\theta).
+\end{aligned}
 \label{eq:realign_loss}
 \end{equation}
 The final training objective: 
