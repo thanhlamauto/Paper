@@ -13,7 +13,7 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
 \small
 \begin{algorithmic}[1]
 \Require backbone $v_\theta$ with prefix/suffix maps $F_{\theta,1:a},F_{\theta,b:L}$; online predictor $G_\psi$ and EMA predictor $G_{\bar\psi}$.
-\Require timestep law $p_t$; pair law $q(a,b,c)$; depth-shortcut subset $\mathcal{B}_{\mathrm{ds}}$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
+\Require timestep law $p_t$; depth-shortcut subset $\mathcal{B}_{\mathrm{ds}}$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
 \Repeat
     \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim p_t$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
@@ -22,7 +22,7 @@ LARA adds a lightweight training-time branch to the diffusion transformer. The b
     (\hat v,\mathcal{H})\leftarrow v_\theta(x_t,t,y),\qquad
     \mathcal{H}=\{A_\ell^t\}_{\ell=0}^{L}.
     \]
-    \State Sample $(a,b,c)\sim q(a,b,c)$ with $a<b<c$, and compute transitions from cached states:
+    \State Sample a valid triple $(a,b,c)$ with $a<b<c$, and compute transitions from cached states:
     \[
     \begin{aligned}
     \hat A_{a\to b}^t &= G_\psi(A_a^t;e_a,e_b,e_t),\\
@@ -129,15 +129,10 @@ We additionally profile the internal alignment methods used in our speed analysi
     \end{tabular}
 \end{table}
 
-\subsection{Transition Pair and Predictor Design}
-\label{app:transition_pair_predictor_design}
-
-Layer-pair sampling replaces the fixed layer choice used by direct self-alignment. Very short gaps make transition prediction nearly local, while very long gaps can make the target state too distant early in training. Unless otherwise stated, main runs use depth-centered gap sampling: draw the positive gap $g=b-a$ from a truncated normal distribution with $\mu=3$ and $\sigma=2$, draw the midpoint $m=(a+b)/2$ from a normal distribution centered at $L/2$, and reject invalid pairs. Full-uniform and depth-center-only alternatives are compared in \Cref{tab:pair_sampling_strategy_fid}. The predictor is shared across valid pairs through layer and timestep conditioning, so the auxiliary branch learns reusable cross-depth transitions instead of separate pair-specific adapters.
-
 \subsection{LARA Hyperparameters}
 \label{app:realign_hyperparameters}
 
-Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the pair sampler and timestep conditioning are summarized in \Cref{app:transition_pair_predictor_design}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Local filesystem paths, logging flags, and checkpoint directories are omitted because they do not affect the method.
+Each run reports the predictor architecture, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Local filesystem paths, logging flags, and checkpoint directories are omitted because they do not affect the method.
 
 \begin{table*}[!t]
     \centering
@@ -156,9 +151,6 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
         Predictor details & implementation default & depth 11, dilation $1,2,4$ & hidden 480, depth 12, heads 8, dilation $1,2,4$ \\
         Conditioning & timestep + class, additive fusion & timestep + class, additive fusion & timestep + class, additive fusion \\
         Timestep sampler & logit-normal $(0,1)$ & logit-normal $(0,1)$ & logit-normal $(0,1)$ \\
-        Pair sampler & $g\sim\mathcal{TN}(3.0,2.0)$, $\sigma_m=2.0$ & $g\sim\mathcal{TN}(6.0,4.0)$, $\sigma_m=4.0$ & $g\sim\mathcal{TN}(7.0,4.7)$, $\sigma_m=4.7$ \\
-        Max sampled gap & 10 & 14 & 18LARA
-        \\
         Direct pairs & 1 joint pair & 1 joint pair & 1 joint pair \\
         Direction / boot weights & $1.0$ / $0.25$ & $1.0$ / $0.25$ & $1.0$ / $0.25$ \\
         Magnitude weights & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ \\
@@ -237,7 +229,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation}; each ablation changes only the factor shown in its own table.}
+    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for \Cref{tab:realign_ablation,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
     \label{tab:appendix_common_ablation_setting}
     \scriptsize
@@ -269,8 +261,6 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
         \midrule
         \multicolumn{2}{@{}l}{\textbf{LARA recipe}} \\
         Timestep sampler & logitN$(-0.2,1.0)$ unless varied \\
-        Pair sampling & depth-centered gap: $g\sim\mathcal{TN}(3,2)$; $m\sim\mathcal{N}(L/2,\sigma_m)$ \\
-        Pair-law variants & full uniform, depth-center only, depth-centered gap \\
         Loss weights & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
         Predictor & Base ConvNet transition predictor with layer and timestep conditioning \\
         Consistency path & cached online $a\to b$; EMA $b\to c$ target \\
@@ -375,7 +365,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \midrule
         \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
         \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
-        \Cref{tab:realign_ablation,tab:pair_sampling_strategy_fid,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation,tab:pair_sampling_ablation} & FID-10K or grouped $\mathcal{L}_{\mathrm{pred}}$ & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
+        \Cref{tab:realign_ablation,tab:external_alignment_compatibility,tab:main_hyperparameter_tuning,tab:main_predictor_size_ablation} & FID-10K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         \Cref{fig:projection_layout_observation} & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         \Cref{fig:cosine_squared_heatmap} & Layer cosine heatmap & Flatten activations over images and spatial tokens, normalize token features, average cosine similarity over sampled data and timesteps. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
@@ -482,7 +472,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 \subsection{Predictor-Size Ablation}
 \label{app:predictor_size_ablation}
 
-The main text focuses on the layer-pair sampling strategy because it determines the final recipe. We keep the predictor-size sweep here to show that the gain does not require an oversized auxiliary branch.
+We keep the predictor-size sweep here to show that the gain does not require an oversized auxiliary branch.
 
 \begin{table}[!htbp]
     \centering
@@ -504,52 +494,6 @@ The main text focuses on the layer-pair sampling strategy because it determines 
 \end{table}
 
 With the tiny setting still being remeasured, the completed rows show that predictor capacity has a mild optimum around the base configuration. Increasing capacity from small to base improves FID from $37.47$ to $36.65$, while the larger predictor does not improve further.
-
-\subsection{Uniform Transition-Prediction Diagnostic}
-\label{app:uniform_transition_diagnostic}
-
-Before selecting the final layer-pair sampler, we run a diagnostic with uniform sampling over valid source--target pairs and uniform timesteps. We then group the predictor error by normalized layer gap and source-layer position. This diagnostic is used to choose the sampler qualitatively: adjacent layers tend to be easy but uninformative, very distant layers tend to be unstable, and medium gaps provide a stronger training signal.
-
-\begin{table*}[!t]
-    \centering
-    \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap and source-layer bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
-    \label{tab:pair_sampling_ablation}
-    \scriptsize
-    \setlength{\tabcolsep}{2.2pt}
-    \renewcommand{\arraystretch}{0.88}
-    \begin{minipage}[t]{0.46\linewidth}
-        \centering
-        \textbf{Layer gap}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Gap & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & 0.025 \\
-            25--50\% & 0.039 \\
-            50--75\% & 0.057 \\
-            75--100\% & 0.152 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.46\linewidth}
-        \centering
-        \textbf{Source layer}\\[0.25em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Source & $\mathcal{L}_{\mathrm{pred}}\downarrow$ \\
-            \midrule
-            0--25\% & 0.060 \\
-            25--50\% & 0.023 \\
-            50--75\% & 0.027 \\
-            75--100\% & 0.110 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-\end{table*}
-
-\textbf{Diagnostic readout.}
-\Cref{tab:pair_sampling_ablation} shows that transition difficulty is highly non-uniform under full uniform sampling. Prediction error increases steadily with layer gap, from $0.025$ for the shortest quartile to $0.152$ for the longest quartile, indicating that very distant transitions are much noisier training targets for the auxiliary predictor. The source-layer grouping shows a complementary effect: middle layers are easier to predict from, while the earliest and latest source bins have larger errors. This supports the sampler used in the main experiments. Depth-centered gap sampling avoids spending too much probability mass on unstable long-range jumps, while centering the pair midpoint near the model's depth middle keeps supervision away from the most brittle boundary layers. The goal is not to remove hard transitions entirely, but to make the prediction loss informative without letting rare high-error pairs dominate the backbone update.
 
 \section{Optional Inference and Layer-Skip Diagnostics}
 \label{app:optional_inference_diagnostics}

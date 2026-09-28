@@ -8,7 +8,7 @@ We organize the experiments around two comparisons. First, we compare generation
 \label{sec:experimental_setup}
 
 \paragraph{Implementation details.}
-Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. Additional details on architecture, transition-pair sampling, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. We sample source--target layer pairs uniformly from all valid pairs $(a,b)$ with $a<b$. Additional details on architecture, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in \Cref{app:experimental_details}.
 
 \begin{figure}[!t]
     \centering
@@ -199,7 +199,7 @@ The shape of the curves gives a more useful diagnostic than the averages alone. 
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, require an oversized predictor, or benefit from a fortunate layer-pair sampler. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
+\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, or require an oversized predictor. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Extended controls are reported in \Cref{app:realign_ablation_protocols}.
 
 \begin{table*}[!t]
     \centering
@@ -226,26 +226,7 @@ The shape of the curves gives a more useful diagnostic than the averages alone. 
 
 \textbf{Loss weights and timestep sampler.} We keep the main ablation focused on the design choices that determine the final recipe. The full loss-weight and timestep-sampler sweep is reported in \Cref{tab:main_hyperparameter_tuning}.
 
-\begin{table*}[!t]
-    \centering
-    \caption{\textbf{Layer-pair sampling strategies on SiT-B/2.} For a sampled source--target pair $(a,b)$ with $a<b$, the gap is $g=b-a$ and the midpoint is $m=(a+b)/2$; $L$ denotes the number of transformer blocks. Full uniform samples both quantities uniformly; depth-center only keeps $g$ uniform but centers $m$ near $L/2$; depth-centered gap sampling biases both $g$ and $m$. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
-    \label{tab:pair_sampling_strategy_fid}
-    \small
-    \setlength{\tabcolsep}{5pt}
-    \renewcommand{\arraystretch}{0.92}
-    \begin{tabular*}{0.88\textwidth}{@{\extracolsep{\fill}}lccc@{}}
-        \toprule
-        Strategy & Gap $g=b-a$ & Midpoint $m=(a+b)/2$ & FID-10K $\downarrow$ \\
-        \midrule
-        LayerSync & -- & -- & 43.26 \\
-        Full uniform & uniform & uniform & 39.24 \\
-        Depth-center only & uniform & $\mathcal{N}(L/2,\sigma_m)$ & 37.07 \\
-        Depth-centered gap (Ours) & $\mathcal{TN}(3,2)$ & $\mathcal{N}(L/2,\sigma_m)$ & \textbf{35.12} \\
-        \bottomrule
-    \end{tabular*}
-\end{table*}
 
-\textbf{Layer-pair sampling.} \Cref{tab:pair_sampling_strategy_fid} separates two choices: how far apart the source and target layers are, and where that pair sits in the network. Full uniform already improves over LayerSync because LARA trains over many pairs rather than one fixed pair. Depth-center only improves further by placing more pairs around the middle of the hierarchy while still sampling varied gaps. Depth-centered gap sampling performs best by combining this centered pair location with a medium-gap bias, giving $\mathcal{L}_{\mathrm{pred}}$ cleaner supervision while still covering many source--target pairs.
 
 \begin{table*}[!t]
     \centering
