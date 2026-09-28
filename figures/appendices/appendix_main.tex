@@ -108,8 +108,11 @@ We additionally profile the internal alignment methods used in our speed analysi
 
 \begin{table}[H]
     \centering
-    \caption{\textbf{Comparison between SRA, LayerSync, and LARA.} Per-step profiling for self-contained internal alignment methods under the same \texttt{SiT-XL/2} TPU v4-16 setting.}
+    \caption{\textbf{Comparison between SRA, LayerSync, and LARA.}
+    Per-step profiling for self-contained internal alignment methods under the same
+    \texttt{SiT-XL/2} TPU v4-16 setting.}
     \label{tab:appendix_sra_layersync_lara_compute}
+    \vspace{0.25em}
     \scriptsize
     \setlength{\tabcolsep}{6pt}
     \renewcommand{\arraystretch}{0.9}
@@ -117,9 +120,9 @@ We additionally profile the internal alignment methods used in our speed analysi
         \toprule
         Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & \textbf{0.42} \\
+        \texttt{SiT-XL/2}+SRA & 1.93 & 0.42 \\
         \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & \textbf{0.30} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & 0.30 \\
         \bottomrule
     \end{tabular*}
 \end{table}
@@ -153,14 +156,15 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
         Conditioning & timestep + class, additive fusion & timestep + class, additive fusion & timestep + class, additive fusion \\
         Timestep sampler & logit-normal $(0,1)$ & logit-normal $(0,1)$ & logit-normal $(0,1)$ \\
         Pair sampler & $g\sim\mathcal{TN}(3.0,2.0)$, $\sigma_m=2.0$ & $g\sim\mathcal{TN}(6.0,4.0)$, $\sigma_m=4.0$ & $g\sim\mathcal{TN}(7.0,4.7)$, $\sigma_m=4.7$ \\
-        Max sampled gap & 10 & 20 & 23 \\
+        Max sampled gap & 10 & 14 & 18LARA
+        \\
         Direct pairs & 1 joint pair & 1 joint pair & 1 joint pair \\
         Direction / boot weights & $1.0$ / $0.25$ & $1.0$ / $0.25$ & $1.0$ / $0.25$ \\
         Magnitude weights & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ & $0.375$ / $0.1875$ \\
         Magnitude scale / center / abs-scale & $3.0$ / $5.5$ / $1.5$ & $3.3$ / $5.4$ / $1.0$ & $4.9$ / $7.5$ / $1.4$ \\
         Magnitude clip & $[3.0,8.0]$ & $[3.3,7.3]$ & $[4.0,10.0]$ \\
         Output distillation & ratio $0.10$, weight $0.05$ & ratio $0.10$, weight $0.05$ & ratio $0.10$, weight $0.05$ \\
-        Private/diversity loss & weight $1.0$, max 4 pairs & weight $1.0$, max 4 pairs & weight $1.0$, max 4 pairs \\
+        Private/diversity loss & weight $1.0$, max 2 pairs & weight $1.0$, max 2 pairs & weight $1.0$, max 2 pairs \\
         Evaluation checkpoints & 50K, 100K, 200K, 400K & 50K, 400K & 50K, 2M \\
         \bottomrule
     \end{tabular}}
@@ -490,7 +494,7 @@ The main text focuses on the layer-pair sampling strategy because it determines 
         \toprule
         Predictor & Params & Share of backbone & FID-10K $\downarrow$ \\
         \midrule
-        Tiny & 2.7M & 1.9\% & \textbf{[TBD]} \\
+        Tiny & 2.7M & 1.9\% & 38.46 \\
         Small & 5.9M & 4.3\% & 37.47 \\
         Base & 18.3M & 13.4\% & \textbf{36.65} \\
         Large & 25.4M & 18.6\% & 36.89 \\

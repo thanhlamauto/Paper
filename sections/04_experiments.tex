@@ -196,7 +196,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \textbf{Layerwise behavior.}
 \Cref{fig:representation_analysis} shows that LARA strengthens the hidden hierarchy even under a smaller training budget. LARA is evaluated at $500\mathrm{K}$ iterations, whereas LayerSync uses $800\mathrm{K}$ and the SiT baseline uses $2\mathrm{M}$. Averaged over layers, LARA improves over SiT by $54.8\%$ on Tiny ImageNet classification, $113.6\%$ on PASCAL VOC segmentation, and $155.6\%$ on DINOv2-g CKA. It also improves over LayerSync by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The best layer improves as well, reaching $55.71$ classification accuracy, $47.15$ segmentation mIoU, and $0.287$ CKA.
 
-The shape of the curves gives a more useful diagnostic than the averages alone. LayerSync raises representation quality around the region influenced by its selected alignment pair, which produces a relatively sharp layerwise profile. LARA instead spreads the improvement across a wider portion of the network. This is expected from an adaptive transition objective: the predictor is trained on many source--target pairs, so the supervision is not concentrated on one manually chosen path. The resulting representations are stronger, smoother across depth, and less dependent on a single reference layer, suggesting that LARA shares useful structure while preserving the different semantic roles of individual blocks.
+The shape of the curves gives a more useful diagnostic than the averages alone. LayerSync raises representation quality around the region influenced by its selected alignment pair, which produces a relatively sharp layerwise profile. LARA instead spreads the improvement across a wider portion of the network. This is expected from an adaptive transition objective: the predictor is trained on many source--target pairs, so the supervision is not concentrated on one manually chosen path. As a result, the resulting representations are stronger, smoother across depth, and less dependent on a single reference layer, suggesting that LARA shares useful structure while preserving the different semantic roles of individual blocks.
 
 \begin{figure}[!htbp]
     \centering
@@ -278,6 +278,8 @@ The shape of the curves gives a more useful diagnostic than the averages alone. 
 \end{table}
 
 \textbf{Compatibility with external alignment.} LARA remains complementary to REPA~\citep{yu2024repa}: REPA anchors hidden states to DINOv2 features, while LARA aligns transitions inside the diffusion transformer.
+
+We show training overhead between SRA, LayerSync, and LARA inTable~\ref{tab:appendix_sra_layersync_lara_compute}, 
 
 \textbf{Predictor capacity.} \Cref{tab:main_predictor_size_ablation} shows that a compact transition module is sufficient; larger predictors do not explain the gain.
 

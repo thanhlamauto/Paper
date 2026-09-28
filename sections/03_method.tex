@@ -1,7 +1,7 @@
 \section{Methodology}
 \label{sec:method}
 
-\subsection{Preliminaries and Internal Activations}
+\subsection{Preliminary}
 
 We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
 \begin{equation}
@@ -30,7 +30,7 @@ Following PCA-based representation visualizations used in recent alignment work~
 
 \paragraph{Layer-aware transition prediction.}
 
-Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. We write $F_{\theta,b:L}$ for the remaining model suffix that consumes a depth-$b$ activation and produces the final velocity prediction; this is the ordinary transformer suffix after the insertion point, not a separate network. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
+Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
 
 Given a source layer $a$ and target layer $b$ with $a<b$, LARA predicts the target-layer activation tokens from the source activation:
 \begin{equation}
