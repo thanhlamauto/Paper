@@ -90,13 +90,15 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 
 Equivalently, the transition distance used in \Cref{alg:realign_training} is
 \begin{equation}
+\begin{aligned}
 d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
-=
-\frac{1}{N}\sum_{n=1}^{N}
+&=\\
+&\frac{1}{N}\sum_{n=1}^{N}
 \left(
 1-
 \operatorname{cos\_sim}\left(\widehat A_{a\to b,n}^{\,t},\operatorname{sg}(A_{b,n}^{t})\right)
 \right).
+\end{aligned}
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
 The diversity term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
@@ -106,7 +108,7 @@ The diversity term is computed directly from the hidden-state cache $\mathcal{H}
 
 We additionally profile the internal alignment methods used in our speed analysis. The matched compute comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, batch size, and step count. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor.
 
-\begin{table}[H]
+\begin{table}[!t]
     \centering
     \caption{\textbf{Comparison between SRA, LayerSync, and LARA.}
     Per-step profiling for self-contained internal alignment methods under the same
@@ -116,7 +118,7 @@ We additionally profile the internal alignment methods used in our speed analysi
     \scriptsize
     \setlength{\tabcolsep}{6pt}
     \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.66\textwidth}{@{\extracolsep{\fill}}lcc@{}}
+    \begin{tabular}{@{}lcc@{}}
         \toprule
         Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
         \midrule
@@ -124,7 +126,7 @@ We additionally profile the internal alignment methods used in our speed analysi
         \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} \\
         \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & 0.30 \\
         \bottomrule
-    \end{tabular*}
+    \end{tabular}
 \end{table}
 
 \subsection{Transition Pair and Predictor Design}
@@ -137,15 +139,14 @@ Layer-pair sampling replaces the fixed layer choice used by direct self-alignmen
 
 Each run reports the predictor architecture, layer-pair distribution, loss weights, diversity weight, cached-transition composition, EMA target rule, and training cost. The transition predictor and target detach are defined in \Cref{eq:realign_predictor,eq:align_loss}, the pair sampler and timestep conditioning are summarized in \Cref{app:transition_pair_predictor_design}, the EMA composition path is defined in \Cref{eq:consistency_loss}, and predictor capacity is specified in \Cref{app:predictor_architecture_capacity}. Local filesystem paths, logging flags, and checkpoint directories are omitted because they do not affect the method.
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{LARA ImageNet training hyperparameters.} Key settings used for the main \texttt{SiT-B/2}, \texttt{SiT-L/2}, and \texttt{SiT-XL/2} LARA runs. All runs use ImageNet $256\times256$ VAE latents, AdamW with learning rate $10^{-4}$ for both backbone and predictor, weight decay $0.1$, EMA decay $0.9999$, gradient clipping at $1.0$, class-dropout rate $0.1$, 50K-sample FID evaluation, and 250-step ODE sampling with CFG scale $1.0$.}
     \label{tab:appendix_realign_hparams}
-    \scriptsize
+    \footnotesize
     \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{0.86}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{@{}lccc@{}}
+    \renewcommand{\arraystretch}{1.08}
+        \begin{tabularx}{\textwidth}{@{}lXXX@{}}
         \toprule
         Setting & \texttt{SiT-B/2} & \texttt{SiT-L/2} & \texttt{SiT-XL/2} \\
         \midrule
@@ -167,8 +168,8 @@ Each run reports the predictor architecture, layer-pair distribution, loss weigh
         Private/diversity loss & weight $1.0$, max 2 pairs & weight $1.0$, max 2 pairs & weight $1.0$, max 2 pairs \\
         Evaluation checkpoints & 50K, 100K, 200K, 400K & 50K, 400K & 50K, 2M \\
         \bottomrule
-    \end{tabular}}
-\end{table}
+    \end{tabularx}
+\end{table*}
 
 \section{Experimental Protocols}
 \label{app:experimental_details}
@@ -196,7 +197,7 @@ For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and
 \paragraph{CKA.}
 For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from ImageNet $256\times256$.
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{Hyperparameter setup for main experiments.}}
     \label{tab:appendix_imagenet_protocol}
@@ -232,7 +233,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
         Guidance & -- & -- & -- & 1.37 \\
         \bottomrule
     \end{tabular}
-\end{table}
+\end{table*}
 
 \begin{table}[!htbp]
     \centering
@@ -337,7 +338,7 @@ We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion be
 \paragraph{Implementation details.}
 The motion backbone has eight transformer blocks. MDM and LayerSync are trained for 600K iterations, while LARA is evaluated at 300K and 400K training checkpoints. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone but replaces direct matching with the transition predictor described in \Cref{sec:method}.
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{HumanML3D protocol.} All rows use the same MDM data processing and evaluator; only the internal alignment objective changes.}
     \label{tab:appendix_humanml3d_setup}
@@ -352,7 +353,7 @@ The motion backbone has eight transformer blocks. MDM and LayerSync are trained 
         MDM + LARA (Ours) & 8 & 300K/400K & transition predictor & Standard MDM & FID, R-Precision \\
         \bottomrule
     \end{tabular}
-\end{table}
+\end{table*}
 
 \subsection{Metric and Measurement Definitions}
 \label{app:metric_definitions}
@@ -361,7 +362,7 @@ The motion backbone has eight transformer blocks. MDM and LayerSync are trained 
 
 We follow the common appendix convention of recent internal-alignment work: the main paper keeps tables and figures compact, while the appendix states the measurement protocol, sample count, normalization, and citations. \Cref{tab:appendix_main_protocol_map} maps each main result to the corresponding measurement rule.
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{Protocol map for main tables and figures.} Each main artifact reports a compact result; the appendix specifies how it is measured.}
     \label{tab:appendix_main_protocol_map}
@@ -380,7 +381,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
-\end{table}
+\end{table*}
 
 Standard generation metrics follow the cited benchmark protocols. FID compares Gaussian approximations of real and generated Inception features,
 \begin{equation}
@@ -405,14 +406,14 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 \subsection{Hyperparameter Tuning}
 \label{app:hyperparameter_tuning}
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as \Cref{tab:realign_ablation}. Default settings are marked in gray; each panel varies one factor around the selected recipe. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:main_hyperparameter_tuning}
-    \tiny
-    \setlength{\tabcolsep}{1.2pt}
-    \renewcommand{\arraystretch}{0.74}
-    \begin{minipage}[t]{0.235\linewidth}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.0}
+    \begin{minipage}[t]{0.47\linewidth}
         \centering
         \textbf{Timestep}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -428,7 +429,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.235\linewidth}
+    \begin{minipage}[t]{0.47\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -443,8 +444,8 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             \bottomrule
         \end{tabular*}
     \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.235\linewidth}
+    \par\smallskip
+    \begin{minipage}[t]{0.47\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -460,7 +461,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.235\linewidth}
+    \begin{minipage}[t]{0.47\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -476,7 +477,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
         \end{tabular*}
     \end{minipage}
 
-\end{table}
+\end{table*}
 
 \subsection{Predictor-Size Ablation}
 \label{app:predictor_size_ablation}
@@ -488,9 +489,9 @@ The main text focuses on the layer-pair sampling strategy because it determines 
     \caption{\textbf{Predictor-size ablation on SiT-B/2.} The SiT-B/2 backbone has 137M parameters; the ConvNet predictor design is discussed in \Cref{app:predictor_architecture_capacity}. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:main_predictor_size_ablation}
     \small
-    \setlength{\tabcolsep}{5pt}
+    \setlength{\tabcolsep}{3pt}
     \renewcommand{\arraystretch}{0.9}
-    \begin{tabular*}{0.78\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
         \toprule
         Predictor & Params & Share of backbone & FID-10K $\downarrow$ \\
         \midrule
@@ -509,7 +510,7 @@ With the tiny setting still being remeasured, the completed rows show that predi
 
 Before selecting the final layer-pair sampler, we run a diagnostic with uniform sampling over valid source--target pairs and uniform timesteps. We then group the predictor error by normalized layer gap and source-layer position. This diagnostic is used to choose the sampler qualitatively: adjacent layers tend to be easy but uninformative, very distant layers tend to be unstable, and medium gaps provide a stronger training signal.
 
-\begin{table}[!htbp]
+\begin{table*}[!t]
     \centering
     \caption{\textbf{Where uniform transition prediction struggles.} Prediction error is measured under uniform pair sampling and grouped by normalized layer-gap and source-layer bins. Higher error marks transitions that are more difficult; useful bins are informative without being too unstable. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:pair_sampling_ablation}
@@ -545,7 +546,7 @@ Before selecting the final layer-pair sampler, we run a diagnostic with uniform 
             \bottomrule
         \end{tabular*}
     \end{minipage}
-\end{table}
+\end{table*}
 
 \textbf{Diagnostic readout.}
 \Cref{tab:pair_sampling_ablation} shows that transition difficulty is highly non-uniform under full uniform sampling. Prediction error increases steadily with layer gap, from $0.025$ for the shortest quartile to $0.152$ for the longest quartile, indicating that very distant transitions are much noisier training targets for the auxiliary predictor. The source-layer grouping shows a complementary effect: middle layers are easier to predict from, while the earliest and latest source bins have larger errors. This supports the sampler used in the main experiments. Depth-centered gap sampling avoids spending too much probability mass on unstable long-range jumps, while centering the pair midpoint near the model's depth middle keeps supervision away from the most brittle boundary layers. The goal is not to remove hard transitions entirely, but to make the prediction loss informative without letting rare high-error pairs dominate the backbone update.
@@ -588,13 +589,13 @@ Each diagnostic must report the skip rate, chosen layer jumps, and whether the s
 
 This diagnostic tests whether a predicted target-layer state can replace skipped blocks. Because the cosine transition loss mainly controls direction, we attach a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. This route is appendix-only and is not used for the main generation results.
 
-\begin{table}[!htbp]
+\begin{table}[!t]
     \centering
     \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint, ODE sampler, and 250 sampling steps; only the internal route changes. Relative cost counts transformer blocks for a 12-block backbone, so jump $(3,7)$ skips $4/12$ blocks.}
     \label{tab:appendix_magnitude_layer_skip}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular*}{0.94\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+    \footnotesize
+    \setlength{\tabcolsep}{1pt}
+    \begin{tabular}{@{}lcccc@{}}
         \toprule
         Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
         \midrule
@@ -603,7 +604,7 @@ This diagnostic tests whether a predicted target-layer state can replace skipped
         Calibrated skip (250 steps) & $(3,7)$ & on, stop-grad & 54.17 & 0.67$\times$ \\
         Calibrated skip (first 125) & $(3,7)$ & on, stop-grad & 45.84 & 0.83$\times$ \\
         \bottomrule
-    \end{tabular*}
+    \end{tabular}
 \end{table}
 
 \section{Transition Predictor Configuration and Capacity}
@@ -621,28 +622,23 @@ This section collects the additional diagnostics behind \Cref{sec:representation
 
 This ablation tests whether projection heads extract useful recoverable signal or simply absorb the auxiliary loss. The key comparison is direct alignment versus small and large projection heads across near and far layer pairs. A useful projection should improve generation and representation probes, along with local alignment loss.
 
-\clearpage
 \section{Qualitative Examples}
 \label{app:qualitative_examples}
 
 Class-conditional ImageNet samples from \texttt{SiT-XL/2} + LARA trained for $400\mathrm{K}$ iterations, sampled with CFG $=4$.
 
 \newcommand{\laraqualclass}[2]{%
-    \includegraphics[width=\textwidth,height=0.375\textheight,keepaspectratio]{#1}\\[-0.10em]
-    \captionof{figure}{Generated samples from LARA at $400\mathrm{K}$ iterations with CFG $=4$. Class: ``#2''.}
+    \includegraphics[width=\textwidth,height=0.375\textheight,keepaspectratio]{#1}
+    \caption{Generated samples from LARA at $400\mathrm{K}$ iterations with CFG $=4$. Class: ``#2''.}
 }
 
 \newcommand{\laraqualpage}[4]{%
-    \begin{center}
-    \captionsetup{font=small,justification=centering,singlelinecheck=false}
+    \begin{figure*}[p]
+    \centering
     \laraqualclass{#1}{#2}
-    \end{center}
     \vfill
-    \begin{center}
-    \captionsetup{font=small,justification=centering,singlelinecheck=false}
     \laraqualclass{#3}{#4}
-    \end{center}
-    \clearpage
+    \end{figure*}
 }
 
 \laraqualpage{figures/qualitative/lara_400k_cfg4/sample_01.png}{goldfish}{figures/qualitative/lara_400k_cfg4/sample_02.png}{quail}
