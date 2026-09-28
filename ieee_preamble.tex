@@ -1,0 +1,17 @@
+% Shared IEEE Computer Society journal packages and manuscript macros.
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools}
+\usepackage{booktabs,graphicx,multirow,array,tabularx,colortbl}
+\usepackage{nicefrac,microtype,xcolor,url,enumitem}
+\usepackage{algorithm,algpseudocode,placeins}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xr-hyper}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+\makeatletter
+\renewcommand{\theALG@line}{\thealgorithm.\arabic{ALG@line}}
+\providecommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\renewcommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\makeatother
+\setcounter{secnumdepth}{3}
+\input{macros}

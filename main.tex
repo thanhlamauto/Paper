@@ -1,141 +1,46 @@
 % !TEX root = main.tex
-\documentclass{article}
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\input{ieee_preamble}
+\externaldocument[][nocite]{supplementary}
 
-% =========================================================
-% NeurIPS 2026 style
-% =========================================================
-
-\PassOptionsToPackage{numbers,sort&compress}{natbib}
-
-% Submission (anonymous, with line numbers):
-\usepackage{neurips_2026}
-
-% Camera-ready:
-% \usepackage[main, final]{neurips_2026}
-
-% Preprint / arXiv:
-% \usepackage[preprint]{neurips_2026}
-
-% If natbib conflicts:
-% \usepackage[nonatbib]{neurips_2026}
-
-% =========================================================
-% Basic packages from template
-% =========================================================
-\usepackage{iftex}
-\ifPDFTeX
-  \usepackage[utf8]{inputenc}
-\fi
-\usepackage[T1]{fontenc}
-\usepackage{hyperref}
-\usepackage{url}
-\usepackage{booktabs}
-\usepackage{amsfonts}
-\usepackage{nicefrac}
-\usepackage{microtype}
-\usepackage{xcolor}
-% preamble cần có
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage{svg}
-
-% =========================================================
-% Recommended math / figure / table packages
-% =========================================================
-\usepackage{amsmath, amssymb, amsthm, mathtools}
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{multirow}
-\usepackage{array}
-\usepackage{colortbl}
-\usepackage{arydshln}
-\usepackage{siunitx}
-\usepackage{enumitem}
-\usepackage{wrapfig}
-\usepackage{placeins}
-\usepackage{float}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\makeatletter
-\renewcommand{\theALG@line}{\thealgorithm.\arabic{ALG@line}}
-\providecommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
-\renewcommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
-\makeatother
-
-% Avoid vertically stretched pages when forcing a new page after the teaser figure.
-\raggedbottom
-
-% Optional but useful
-\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
-
-% =========================================================
-% Macros
-% =========================================================
-\input{macros}
-
-% =========================================================
-% Metadata
-% =========================================================
 \title{LARA: Layer-Aware Representation Alignment for Diffusion Transformers}
-
-\author{%
-  Anonymous Authors \\
-  Anonymous Institution \\
-  Anonymous Email
-}
+\author{Anonymous Authors}
 
 \begin{document}
-
 \maketitle
-
 \begin{abstract}
 \input{sections/00_abstract}
 \end{abstract}
+\begin{IEEEkeywords}
+Diffusion Transformers, Representation Alignment, Representation Learning, Generative Models
+\end{IEEEkeywords}
 
-\vspace{-0.6em}
-\begin{figure}[H]
+\begin{figure*}[!t]
   \centering
-  \includegraphics[width=\linewidth]{figures/arch.png}
-  \vspace{-0.4em}
+  \includegraphics[width=\textwidth]{figures/arch.png}
   \caption{\textbf{Layer-aware representation alignment.}
   \textbf{(a) SRA} aligns through an EMA/projection branch.
   \textbf{(b) LayerSync} aligns selected internal layer pairs.
   \textbf{(c) Layer-aware transition (LARA)} uses a shared predictor across source--target depths.}
   \label{fig:projection_as_transition}
-\end{figure}
-\vspace{-0.6em}
-
-\clearpage
+\end{figure*}
 
 \input{sections/01_introduction}
 \input{sections/02_related_works}
 
-\FloatBarrier
-\begin{figure}[H]
+\begin{figure*}[!t]
     \centering
-    \captionsetup{font=small,justification=raggedright,singlelinecheck=false}
-    \includegraphics[width=\linewidth]{figures/PCA.png}
+    \includegraphics[width=\textwidth]{figures/PCA.png}
     \caption{\textbf{Shared spatial structure across depth and time.} Following PCA-based representation visualizations used in SRA and REPA-style alignment work~\citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence}, we visualize SiT-XL/2 hidden states and find a structured layerwise pattern: different blocks preserve a shared perceptual layout while semantics change with depth and denoising time. The recurring spatial organization motivates LARA's layer-aware transitions across many source--target pairs. Measurement details are in \Cref{app:metric_definitions}.}
     \label{fig:projection_layout_observation}
-\end{figure}
-\vspace{-0.8em}
+\end{figure*}
 
 \input{sections/03_method}
 \input{sections/04_experiments}
+\FloatBarrier
 \input{sections/05_conclusion}
 
 \clearpage
-\bibliographystyle{unsrtnat}
-\nocite{*}
+\bibliographystyle{IEEEtranN}
 \bibliography{refs}
-
-\newpage
-\input{checklist}
-
-\newpage
-\appendix
-\section*{Appendix}
-\input{figures/appendices/appendix_main}
-
 \end{document}
