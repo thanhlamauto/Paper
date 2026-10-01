@@ -30,8 +30,11 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
 
 \begin{figure*}[!t]
     \centering
+    {\small\sffamily\bfseries (a) PCA across depth and denoising time\par}
     \includegraphics[width=\textwidth]{figures/PCA.png}
-    \caption{\textbf{Shared spatial structure across depth and time.} Following PCA-based representation visualizations used in SRA and REPA-style alignment work~\citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence}, we visualize SiT-XL/2 hidden states and find a structured layerwise pattern: different blocks preserve a shared perceptual layout while semantics change with depth and denoising time. The recurring spatial organization motivates LARA's layer-aware transitions across many source--target pairs. Measurement details are in \Cref{app:metric_definitions}.}
+    \par\smallskip
+    \includegraphics[width=\textwidth]{figures/transition_difficulty.pdf}
+    \caption{\textbf{Shared spatial structure and heterogeneous transition difficulty.} (a) PCA maps of SiT-XL/2 hidden states show recurring spatial structure across depth and denoising time, following prior representation visualizations~\citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence}. Predictor transition error (lower is better) is grouped separately by (b) normalized layer gap and (c) source-layer position. Error increases across gap quartiles and varies non-monotonically with source position. Together, these observations motivate learning shared transitions conditioned on depth. PCA measurement details and tabulated transition errors are in Supplementary Secs.~\ref{app:metric_definitions} and \ref{app:transition_difficulty}, respectively.}
     \label{fig:projection_layout_observation}
 \end{figure*}
 
@@ -40,7 +43,6 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
 \FloatBarrier
 \input{sections/05_conclusion}
 
-\clearpage
 \bibliographystyle{IEEEtranN}
 \bibliography{refs}
 \end{document}
