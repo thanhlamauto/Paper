@@ -358,25 +358,79 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \textbf{Interaction with transition prediction.} The objective decomposition in \Cref{tab:realign_ablation} gives a complementary control: adding diversity regularization to prediction reduces FID-50K from 41.48 to 36.14, while diversity alone reaches 43.02. This supports using the two objectives together in that setting. Prediction encourages target-relevant information to remain recoverable from source-layer states, while the diversity penalty discourages excessive directional similarity across layers. The sweep is consistent with a balance between these objectives: moderate regularization reduces redundancy while retaining useful cross-depth structure, whereas stronger decorrelation need not improve generation. This interpretation does not require statistical independence between layers; nor does the observed correlation alone establish the mechanism behind the FID change.
 
-\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} summarizes the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. Across the tested alternatives, FID remains within 0.76 of the selected setting's 35.12. These local ranges suggest that the recipe does not depend on a sharply tuned loss weight, while the selected combination remains best among the tested values. The individual settings and results are reported in Supplementary \Cref{tab:main_hyperparameter_tuning}.
+\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. Across the tested alternatives, FID remains within 0.76 of the selected setting's 35.12. These local ranges suggest that the recipe does not depend on a sharply tuned loss weight, while the selected combination remains best among the tested values.
 
-\begin{table}[!ht]
+\begin{table*}[!t]
     \centering
-    \caption{\textbf{Hyperparameter sensitivity on SiT-B/2.} The selected recipe gives 35.12 FID-10K. Each row summarizes four alternatives with all other factors fixed; ranges exclude the selected setting. Lower FID is better.}
+    \caption{\textbf{Hyperparameter sensitivity on SiT-B/2.} Each panel varies one factor around the selected recipe under the matched ablation setting. Gray cells mark the selected settings; lower FID-10K is better.}
     \label{tab:main_sensitivity_summary}
     \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{@{}lcc@{}}
-        \toprule
-        Factor & Selected setting & Alternative FID range \\
-        \midrule
-        $\lambda_{\mathrm{pred}}$ & 1.00 & 35.31--35.86 \\
-        $\lambda_{\mathrm{cons}}$ & 0.25 & 35.29--35.88 \\
-        $\lambda_{\mathrm{div}}$ & 0.40 & 35.31--35.74 \\
-        Timestep sampler & logitN$(-0.2,1.0)$ & 35.28--35.86 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.0}
+    \begin{minipage}[t]{0.47\linewidth}
+        \centering
+        \textbf{Timestep sampler}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Sampler & FID-10K $\downarrow$ \\
+            \midrule
+            uniform & 35.86 \\
+            \cellcolor{gray!20}logitN$(-.2,1.0)$ & \cellcolor{gray!20}\textbf{35.12} \\
+            logitN$(-.2,1.2)$ & 35.28 \\
+            logitN$(-.4,1.0)$ & 35.41 \\
+            logitN$(-.4,1.2)$ & 35.63 \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.47\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID-10K $\downarrow$ \\
+            \midrule
+            0.25 & 35.86 \\
+            0.50 & 35.54 \\
+            0.75 & 35.31 \\
+            \cellcolor{gray!20}1.00 & \cellcolor{gray!20}\textbf{35.12} \\
+            1.50 & 35.38 \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \par\smallskip
+    \begin{minipage}[t]{0.47\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID-10K $\downarrow$ \\
+            \midrule
+            0.10 & 35.42 \\
+            \cellcolor{gray!20}0.25 & \cellcolor{gray!20}\textbf{35.12} \\
+            0.50 & 35.29 \\
+            0.75 & 35.61 \\
+            1.00 & 35.88 \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.47\linewidth}
+        \centering
+        \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
+        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+            \toprule
+            Value & FID-10K $\downarrow$ \\
+            \midrule
+            0.10 & 35.58 \\
+            0.25 & 35.31 \\
+            \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
+            0.60 & 35.36 \\
+            0.80 & 35.74 \\
+            \bottomrule
+        \end{tabular*}
+    \end{minipage}
+\end{table*}
 
 \subsection{Predictor Design and Capacity}
 \label{sec:predictor_ablation}
