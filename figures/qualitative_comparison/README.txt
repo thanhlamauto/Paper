@@ -7,8 +7,8 @@ the original paths are retained in selected_images.csv.
 
 Protocol B: SiT-XL/2, ImageNet 256x256, deterministic Euler ODE, 250 steps,
 CFG 1.8, full-interval guidance over all four latent channels, common VAE.
-Each quartet shares the same initial latent. Checkpoints have different
-training budgets, as stated in the figure caption. These are curated examples.
+Each quartet shares the same initial latent. All four checkpoints are at
+2M training iterations, as stated in the figure caption. These are curated examples.
 
 Rebuild from the repository root:
   uv run --with matplotlib python scripts/build_qualitative_comparison.py

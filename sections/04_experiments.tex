@@ -174,7 +174,7 @@ LARA (Ours) & \textbf{1.82} & 0.30~s \\
 \end{figure*}
 
 \paragraph{Qualitative comparison.}
-\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups under a common sampling configuration. The examples highlight LARA's visible subject details, such as the Labrador's eye and muzzle, and coherent structures such as the can opener's cutting wheel and the window shade's vertical slats. All four methods receive the same initial noise latent within each column. These curated examples illustrate visual differences between the released checkpoints; their different training budgets mean they complement the quantitative results rather than isolate a training-time effect.
+\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details, such as the Labrador's eye and muzzle, and coherent structures such as the can opener's cutting wheel and the window shade's vertical slats. All four methods receive the same initial noise latent within each column. These curated examples complement the quantitative results.
 
 \input{figures/qualitative_comparison/figure}
 
@@ -288,7 +288,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \begin{table}[!h]
     \centering
-    \caption{\textbf{FID-50K objective ablation on SiT-B/2.} Common training settings are in Supplementary \Cref{tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{FID-50K objective decomposition and depth-conditioning control on SiT-B/2.} Common training settings are in Supplementary \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:realign_ablation}
     \footnotesize
     \setlength{\tabcolsep}{2pt}
@@ -300,6 +300,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
         Vanilla & -- & -- & -- & 47.51 \\
         LayerSync & -- & -- & -- & 41.89 \\
         Diversity only & -- & -- & \checkmark & 43.02 \\
+        Pred. only, w/o depth cond. & \checkmark & -- & -- & 43.40 \\
         Prediction only & \checkmark & -- & -- & 41.48 \\
         Pred. + consistency & \checkmark & \checkmark & -- & 38.07 \\
         Pred. + diversity & \checkmark & -- & \checkmark & 36.14 \\
@@ -308,7 +309,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
     \end{tabular}
 \end{table}
 
-\textbf{Objective decomposition.} \Cref{tab:realign_ablation} uses FID-50K to separate transition prediction from its auxiliary regularizers. Prediction alone improves FID from 47.51 for the vanilla model to 41.48, slightly surpassing LayerSync at 41.89. The cross-layer redundancy term alone reaches 43.02, so decorrelation by itself does not account for the full gain. When added to prediction, this term gives the larger isolated improvement in this setting, reducing FID from 41.48 to 36.14, whereas prediction with consistency reaches 38.07. The regularizers are nevertheless complementary: adding consistency to prediction plus the redundancy term further reduces FID to 34.43. These results support a decomposition in which prediction supplies cross-depth supervision, $\mathcal{L}_{\mathrm{div}}$ discourages excessive directional similarity between layers, and consistency constrains composed transitions. Consistency alone is omitted because its transition paths require prediction to anchor them to target-layer representations.
+\textbf{Objective decomposition.} \Cref{tab:realign_ablation} uses FID-50K to examine transition prediction, its auxiliary regularizers, and explicit depth conditioning. Prediction alone improves FID from 47.51 for the vanilla model to 41.48, slightly surpassing LayerSync at 41.89. To isolate the role of explicit depth conditioning, we additionally remove the source-layer, target-layer, and relative-gap conditioning signals while retaining the same prediction-only objective, multi-pair training, and remaining conditioning inputs. FID-50K increases from 41.48 to 43.40. This matched SiT-B/2 control indicates that explicit depth conditioning improves generation quality beyond the information available to the shared predictor from the source activation and remaining conditioning inputs alone. The cross-layer redundancy term alone reaches 43.02, so decorrelation by itself does not account for the full gain. When added to prediction, this term gives the larger isolated improvement in this setting, reducing FID from 41.48 to 36.14, whereas prediction with consistency reaches 38.07. The regularizers are nevertheless complementary: adding consistency to prediction plus the redundancy term further reduces FID to 34.43. These results support a decomposition in which prediction supplies cross-depth supervision, $\mathcal{L}_{\mathrm{div}}$ discourages excessive directional similarity between layers, and consistency constrains composed transitions. Consistency alone is omitted because its transition paths require prediction to anchor them to target-layer representations.
 
 \textbf{Consistency target.} To isolate the role of the composed target, \Cref{tab:ema_consistency_target} compares no transition consistency, a stop-gradient online target, and the EMA target used by LARA under the same FID-10K ablation protocol. The online target slightly worsens FID relative to omitting consistency (37.20 versus 36.91), whereas the slowly updated EMA target improves it to 35.12. EMA is therefore a practical stabilization mechanism in this setting: the compositional constraint helps when its target evolves more slowly than the online predictor.
 

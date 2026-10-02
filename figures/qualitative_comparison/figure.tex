@@ -2,6 +2,6 @@
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth,trim=0bp 32bp 0bp 17bp,clip]{figures/qualitative_comparison/selected_comparison.pdf}
-    \caption{\textbf{Selected qualitative comparisons on ImageNet $256\times256$.} Each column uses the same class and initial noise latent across methods. All samples use SiT-XL/2, the same VAE, 250-step Euler ODE, CFG 1.8, and full-interval guidance on all four latent channels. Examples are selected to illustrate subject detail, object structure, and texture. Released checkpoints differ in training budget: SiT uses 7M iterations, LARA 4M iterations, and SRA and LayerSync are documented as 800 epochs.}
+    \caption{\textbf{Selected qualitative comparisons on ImageNet $256\times256$.} All four SiT-XL/2 checkpoints are trained for $2\mathrm{M}$ iterations. Each column uses the same class and initial noise latent across methods. All samples use the same VAE, 250-step Euler ODE, CFG 1.8, and full-interval guidance on all four latent channels. Examples are selected to illustrate subject detail, object structure, and texture.}
     \label{fig:qualitative_method_comparison}
 \end{figure*}

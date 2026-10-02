@@ -88,7 +88,7 @@ fig.text(left, 0.982, "Selected ImageNet comparisons", fontsize=10,
          fontweight="bold", va="top", color="#25313C")
 fig.text(left, 0.026,
          "SiT-XL/2 · 256×256 · Euler ODE, 250 steps · CFG 1.8 · same class and initial latent per column\n"
-         "Curated examples from protocol B; released checkpoints have different training budgets.",
+         "Curated examples from protocol B; all four checkpoints are at 2M training iterations.",
          fontsize=6.5, color="#45515B", va="bottom", linespacing=1.5)
 fig.savefig(OUT / "selected_comparison.pdf")
 fig.savefig(OUT / "selected_comparison.png", dpi=240)
