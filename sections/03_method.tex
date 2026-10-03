@@ -85,7 +85,7 @@ At each iteration, LARA samples source--target layer pairs and trains one shared
 
 \subsection{Transition Consistency}
 
-A single long transition can be difficult to learn directly. To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
+Multi-pair prediction supervises relations with different levels of difficulty: \Cref{fig:projection_layout_observation}(b,c) shows larger errors for longer transitions and variation with source depth. Pairwise prediction alone does not explicitly require different routes between the same endpoints to agree. LARA therefore introduces compositional consistency to coordinate the shared transition family across transition lengths, encouraging direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
 
 \begin{equation}
 \begin{aligned}
@@ -121,7 +121,7 @@ Only the online predictor is updated by this term. The source activation and com
 
 
 \subsection{Cross-Layer Redundancy Regularization}
-LARA further introduces a cross-layer redundancy regularizer, motivated by feature decorrelation and redundancy-reduction objectives in representation learning~\citep{cogswell2016decov,huang2018decorrelated,huang2019iterative,zbontar2021barlow,bardes2022vicreg}. Because transition prediction encourages information sharing across depth, unconstrained optimization may make representations at different layers overly similar. We therefore penalize squared cosine similarity between randomly sampled layer pairs to encourage layer-specific directions while retaining the shared structure required for cross-layer prediction. For layer pairs $(i,j)$ sampled independently of the transition pair above, we define
+LARA further introduces a cross-layer redundancy regularizer, motivated by feature decorrelation and redundancy-reduction objectives in representation learning~\citep{cogswell2016decov,huang2018decorrelated,huang2019iterative,zbontar2021barlow,bardes2022vicreg}. While compositional consistency coordinates transition mappings, multi-pair prediction also encourages information to remain recoverable across many layer pairs. This broad predictability may favor overly similar hidden states, motivating a separate constraint on representation redundancy. We therefore penalize squared cosine similarity between randomly sampled layer pairs to encourage layer-specific directions while retaining the shared structure required for cross-layer prediction. For layer pairs $(i,j)$ sampled independently of the transition pair above, we define
 \begin{equation}
 \mathcal{L}_{\mathrm{div}}(\theta)
 =

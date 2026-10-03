@@ -122,7 +122,7 @@ ImageNet provides the main testbed because it exposes both optimization quality 
 \paragraph{Quality--Efficiency Trade-off with External Alignment.}
 \Cref{tab:repa_profile} exposes a different trade-off from the generation-quality comparison in \Cref{tab:imagenet_cfg}. Under the matched SiT-XL/2 profiling setup, LARA reduces per-step training time from 0.467~s to 0.300~s (35.8\%) and peak training-memory overhead from 21.97~GiB to 16.68~GiB (24.1\%) relative to REPA. It also removes the 86.1M frozen parameters of the external representation encoder. These savings come with a larger trainable auxiliary module: 31.43M parameters for LARA versus 8.1M for REPA. Thus, LARA does not uniformly reduce model complexity; it shifts training cost from an external encoder to an internal trainable transition module, yielding lower measured runtime and memory in this setup. The system-level FID values in \Cref{tab:imagenet_cfg} are not obtained from these profiling runs.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
 \centering
 \caption{\textbf{Matched REPA--LARA training profile on SiT-XL/2.} The same hardware, batch size, precision, data pipeline, and training budget are used.}
 \label{tab:repa_profile}
@@ -143,7 +143,7 @@ Trainable auxiliary parameters & 8.1M & 31.43M \\
 \paragraph{Internal-alignment training cost}
 \Cref{tab:internal_alignment_profile} compares LARA with self-contained internal-alignment baselines under a separate matched SiT-XL/2 profiling setting. LARA takes 0.30~s per step, faster than SRA's 0.42~s but slower than LayerSync's 0.25~s. The shared transition predictor therefore has a measurable cost relative to direct pair alignment, while remaining less expensive per step than the EMA-based SRA setup. The FID values belong to this profiling comparison and should not be read as the system-level results in \Cref{tab:imagenet_cfg}.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
 \centering
 \caption{\textbf{Matched internal-alignment profile on SiT-XL/2.} Same TPU v4-16 setting, input resolution, precision, batch size, and step count. FID values are specific to this profiling comparison.}
 \label{tab:internal_alignment_profile}
@@ -183,7 +183,7 @@ LARA (Ours) & \textbf{1.82} & 0.30~s \\
 
 We test LARA on DiT-B and JiT-B using ImageNet $256\times256$, batch size 128, 300K training iterations, AdamW at learning rate $10^{-4}$, and FID-10K. As \Cref{tab:cross_architecture} shows, adding LARA reduces DiT-B FID-10K from 62.55 to 45.87, an improvement of 16.68 points (26.7\%), and JiT-B FID-10K from 48.39 to 33.71, an improvement of 14.68 points (30.3\%). The consistent direction across these two additional backbone families supports transfer of the layer-aware transition objective beyond SiT; the SiT-B/L/XL results instead test scaling within one family. These are controlled cross-architecture tests, each with one training seed and one sampling seed, rather than system-level comparisons.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
 \centering
 \caption{\textbf{Cross-architecture ImageNet results.} Matched with/without-LARA comparisons at 300K iterations; one training and one sampling seed per setting.}
 \label{tab:cross_architecture}
@@ -211,7 +211,7 @@ We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer
 \paragraph{Evaluation metrics.}
 We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in Supplementary Sec.~\ref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Quantitative results for text-conditional human motion generation on HumanML3D.}}
     \label{tab:humanml3d_results}
@@ -266,7 +266,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \textbf{Layerwise behavior.}
 \Cref{fig:representation_analysis} shows higher probe scores for LARA across the hidden hierarchy in the checkpoints examined. LARA is evaluated at $500\mathrm{K}$ iterations, whereas LayerSync uses $800\mathrm{K}$ and the SiT baseline uses $2\mathrm{M}$. Averaged over layers, LARA exceeds SiT by $54.8\%$ on Tiny ImageNet classification, $113.6\%$ on PASCAL VOC segmentation, and $155.6\%$ on DINOv2-g CKA. It also exceeds LayerSync by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The best layer reaches $55.71$ classification accuracy, $47.15$ segmentation mIoU, and $0.287$ CKA. Because these checkpoints have different training budgets, the probe comparison describes their representation profiles rather than isolating the effect of LARA at a matched iteration.
 
-The shape of the curves adds information beyond the averages. LayerSync has a relatively sharp layerwise profile near its selected alignment region, whereas LARA's higher probe scores extend across a wider portion of the network. This pattern is consistent with LARA's multi-pair transition objective, whose supervision is distributed across source--target relations rather than concentrated on one selected pair. The broader layerwise gains support the hypothesis that transition learning distributes useful supervision across depth; isolating the contribution of multi-pair training would require a matched single-pair predictor control.
+The shape of the curves adds information beyond the averages. LayerSync has a relatively sharp layerwise profile near its selected alignment region, whereas LARA's higher probe scores extend across a wider portion of the network. This pattern is consistent with LARA's multi-pair transition objective, whose supervision is distributed across source--target relations rather than concentrated on one selected pair. The broader layerwise gains support the hypothesis that transition learning distributes useful supervision across depth. The matched prediction-only control in \Cref{tab:realign_ablation} separately evaluates generation quality under multi-pair training and the fixed pair $(4,7)$; it does not establish the cause of the observed probe profiles.
 
 \begin{figure*}[!t]
     \centering
@@ -286,9 +286,9 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 \subsection{Objective Decomposition}
 \label{sec:objective_decomposition}
 
-\begin{table}[!h]
+\begin{table}[!htbp]
     \centering
-    \caption{\textbf{FID-50K objective decomposition and depth-conditioning control on SiT-B/2.} Common training settings are in Supplementary \Cref{tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{FID-50K objective decomposition and mechanism controls on SiT-B/2.} Common training settings are in Supplementary \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:realign_ablation}
     \footnotesize
     \setlength{\tabcolsep}{2pt}
@@ -300,8 +300,9 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
         Vanilla & -- & -- & -- & 47.51 \\
         LayerSync & -- & -- & -- & 41.89 \\
         Diversity only & -- & -- & \checkmark & 43.02 \\
-        Pred. only, w/o depth cond. & \checkmark & -- & -- & 43.40 \\
-        Prediction only & \checkmark & -- & -- & 41.48 \\
+        Pred. only, w/o depth cond. & \checkmark & -- & -- & 42.40 \\
+        Pred. only, fixed (4,7) & \checkmark & -- & -- & 41.13 \\
+        Prediction only & \checkmark & -- & -- & \textbf{40.48} \\
         Pred. + consistency & \checkmark & \checkmark & -- & 38.07 \\
         Pred. + diversity & \checkmark & -- & \checkmark & 36.14 \\
         Full LARA & \checkmark & \checkmark & \checkmark & \textbf{34.43} \\
@@ -309,11 +310,17 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
     \end{tabular}
 \end{table}
 
-\textbf{Objective decomposition.} \Cref{tab:realign_ablation} uses FID-50K to examine transition prediction, its auxiliary regularizers, and explicit depth conditioning. Prediction alone improves FID from 47.51 for the vanilla model to 41.48, slightly surpassing LayerSync at 41.89. To isolate the role of explicit depth conditioning, we additionally remove the source-layer, target-layer, and relative-gap conditioning signals while retaining the same prediction-only objective, multi-pair training, and remaining conditioning inputs. FID-50K increases from 41.48 to 43.40. This matched SiT-B/2 control indicates that explicit depth conditioning improves generation quality beyond the information available to the shared predictor from the source activation and remaining conditioning inputs alone. The cross-layer redundancy term alone reaches 43.02, so decorrelation by itself does not account for the full gain. When added to prediction, this term gives the larger isolated improvement in this setting, reducing FID from 41.48 to 36.14, whereas prediction with consistency reaches 38.07. The regularizers are nevertheless complementary: adding consistency to prediction plus the redundancy term further reduces FID to 34.43. These results support a decomposition in which prediction supplies cross-depth supervision, $\mathcal{L}_{\mathrm{div}}$ discourages excessive directional similarity between layers, and consistency constrains composed transitions. Consistency alone is omitted because its transition paths require prediction to anchor them to target-layer representations.
+\textbf{Objective decomposition.} \Cref{tab:realign_ablation} uses FID-50K to examine transition prediction, its auxiliary regularizers, and two predictor design choices. Prediction only uses multi-pair training with full explicit depth conditioning and improves FID from 47.51 for the vanilla model to 40.48, surpassing LayerSync at 41.89.
+
+\textbf{Mechanism controls.} Removing explicit source-layer, target-layer, and relative-gap conditioning while retaining multi-pair prediction and the remaining conditioning inputs increases FID-50K from 40.48 to 42.40. This matched SiT-B/2 control supports the value of explicit depth conditioning beyond the information already available from the source activation and remaining inputs. Restricting the same prediction-only objective to the fixed pair $(4,7)$, with full depth conditioning retained, gives 41.13 FID-50K, compared with 40.48 for multi-pair training. Thus, explicit depth conditioning improves FID by 1.92, while multi-pair training improves over the tested fixed-pair control by 0.65. These controls support both design choices in the tested prediction-only setting; the fixed-pair comparison does not establish an advantage over every possible pair.
+
+\textbf{Complementary regularizers.} Broader pair coverage yields a modest gain over the tested fixed pair, while the auxiliary objectives provide further improvements. Starting from the depth-conditioned multi-pair prediction baseline at 40.48 FID, adding compositional consistency alone reduces FID to 38.07, adding the redundancy regularizer alone reduces it to 36.14, and combining both reaches 34.43. Diversity alone reaches 43.02. These measurements establish complementary benefits in this setting; they do not identify the cause of the modest multi-pair gain.
+
+The diagnostics motivate an interpretation of these benefits. Transition error rises from 0.025 to 0.152 across layer-gap quartiles and also varies with source depth (\Cref{fig:projection_layout_observation}(b,c)), suggesting a role for consistency in coordinating relations of heterogeneous difficulty. Separately, the redundancy-strength sweep (\Cref{fig:cosine_squared_heatmap}) favors moderate decorrelation over both no regularization and stronger penalties, consistent with balancing cross-depth predictability and layer-specific structure. Together, these findings motivate depth conditioning to specialize the shared mapping, multi-pair prediction to broaden supervision, consistency to coordinate transition routes, and redundancy reduction to discourage representation homogenization. They do not directly establish that multi-pair training causes homogenization or that consistency specifically resolves long-gap prediction errors. Consistency alone is omitted because its transition paths require prediction to anchor them to target-layer representations.
 
 \textbf{Consistency target.} To isolate the role of the composed target, \Cref{tab:ema_consistency_target} compares no transition consistency, a stop-gradient online target, and the EMA target used by LARA under the same FID-10K ablation protocol. The online target slightly worsens FID relative to omitting consistency (37.20 versus 36.91), whereas the slowly updated EMA target improves it to 35.12. EMA is therefore a practical stabilization mechanism in this setting: the compositional constraint helps when its target evolves more slowly than the online predictor.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Transition-consistency target ablation.} Matched FID-10K setting; lower is better.}
     \label{tab:ema_consistency_target}
@@ -357,7 +364,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} examines the effect of the diversity weight in a separate 100K-step SiT-B diagnostic. Without the penalty, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. At $2\times$, correlation falls to 0.66316, FID improves to 66.68, and sFID improves from 137.21 to 124.66. Increasing the weight to $4\times$ lowers correlation further to 0.62781, but FID worsens to 76.76 and sFID to 144.38. At $8\times$, correlation rebounds to 0.76206 without a quality gain. Thus, the lowest correlation and the best generation quality occur at different tested weights.
 
-\textbf{Interaction with transition prediction.} The objective decomposition in \Cref{tab:realign_ablation} gives a complementary control: adding diversity regularization to prediction reduces FID-50K from 41.48 to 36.14, while diversity alone reaches 43.02. This supports using the two objectives together in that setting. Prediction encourages target-relevant information to remain recoverable from source-layer states, while the diversity penalty discourages excessive directional similarity across layers. The sweep is consistent with a balance between these objectives: moderate regularization reduces redundancy while retaining useful cross-depth structure, whereas stronger decorrelation need not improve generation. This interpretation does not require statistical independence between layers; nor does the observed correlation alone establish the mechanism behind the FID change.
+\textbf{Interaction with transition prediction.} The objective decomposition in \Cref{tab:realign_ablation} gives a complementary control: adding diversity regularization to prediction reduces FID-50K from 40.48 to 36.14, while diversity alone reaches 43.02. This supports using the two objectives together in that setting. Prediction encourages target-relevant information to remain recoverable from source-layer states, while the diversity penalty discourages excessive directional similarity across layers. The sweep is consistent with a balance between these objectives: moderate regularization reduces redundancy while retaining useful cross-depth structure, whereas stronger decorrelation need not improve generation. This interpretation does not require statistical independence between layers; nor does the observed correlation alone establish the mechanism behind the FID change.
 
 \textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. Across the tested alternatives, FID remains within 0.76 of the selected setting's 35.12. These local ranges suggest that the recipe does not depend on a sharply tuned loss weight, while the selected combination remains best among the tested values.
 
@@ -368,7 +375,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
     \footnotesize
     \setlength{\tabcolsep}{3pt}
     \renewcommand{\arraystretch}{1.0}
-    \begin{minipage}[t]{0.47\linewidth}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
         \textbf{Timestep sampler}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -384,7 +391,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.47\linewidth}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -399,8 +406,8 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
             \bottomrule
         \end{tabular*}
     \end{minipage}
-    \par\smallskip
-    \begin{minipage}[t]{0.47\linewidth}
+    \hfill
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -416,7 +423,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.47\linewidth}
+    \begin{minipage}[t]{0.235\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -438,7 +445,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \Cref{tab:predictor_architecture_ablation,tab:main_predictor_size_ablation} test whether LARA's gains depend on a particular predictor design or simply on added auxiliary capacity. In the architecture comparison, parameter counts are tightly controlled around 13M, and all variants use the same timestep, class, source-layer, target-layer, and gap conditioning with FiLM/AdaLN-style scale and shift. CNN, MLP, ConvNeXt + Attention, and ViT predictors yield FID-10K between 35.12 and 36.65. ConvNeXt + Attention performs best, but the 1.53-FID spread across different designs indicates that the transition objective is not tied to one predictor family; in particular, the MLP remains effective without the default spatial ConvNeXt design.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
 \centering
 \caption{\textbf{Predictor architecture on SiT-B/2.} Only the predictor backbone changes; conditioning and the FID-10K ablation protocol are identical.}
 \label{tab:predictor_architecture_ablation}
@@ -456,7 +463,7 @@ ViT & 13.1M & 36.34 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[!h]
+\begin{table}[!htbp]
 \centering
 \caption{\textbf{Predictor capacity on SiT-B/2.} Parameter counts refer to the auxiliary predictor. Lower FID-10K is better.}
 \label{tab:main_predictor_size_ablation}
@@ -479,7 +486,7 @@ Large & 25.4M & 35.35 \\
 \subsection{Compatibility with External Alignment}
 
 
-\begin{table}[!h]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Compatibility with external representation alignment.} All rows use the same backbone, data pipeline, optimizer, training length, and sampler; only the auxiliary representation objective changes. Common ablation settings are in Supplementary \Cref{tab:appendix_common_ablation_setting}.}
     \label{tab:external_alignment_compatibility}
@@ -504,7 +511,7 @@ The matched training-cost comparison with SRA and LayerSync appears in \Cref{tab
 
 The predictor is trained to align intermediate states, so we also test whether its output can replace four of twelve backbone blocks at inference. \Cref{tab:main_layer_skip_diagnostic} reports the controlled diagnostic from Supplementary Sec.~\ref{app:magnitude_layer_skip}. The direction-only route substantially worsens FID. A detached magnitude head recovers part of the loss, especially when skipping is limited to the first 125 of 250 Euler steps, but it remains worse than the full backbone. Thus, the primary generation results use the full sampler; learning a useful alignment target does not by itself make the predictor an accurate block substitute.
 
-\begin{table}[!h]
+\begin{table}[!htbp]
     \centering
     \caption{\textbf{Optional layer-skip diagnostic.} All routes use the same checkpoint and 250-step sampler. Relative cost counts executed transformer blocks, not measured inference time; further details are in Supplementary \Cref{tab:appendix_magnitude_layer_skip}.}
     \label{tab:main_layer_skip_diagnostic}
