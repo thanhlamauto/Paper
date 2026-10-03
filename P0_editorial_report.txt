@@ -1,0 +1,122 @@
+LARA P0 editorial/scientific positioning report — 2026-10-03
+
+
+1. Files changed
+sections/00_abstract.tex
+sections/01_introduction.tex
+sections/02_related_works.tex
+sections/04_experiments.tex
+sections/05_conclusion.tex
+refs.bib
+
+
+2. Abstract — before
+Representation alignment (RA) has recently emerged as an effective strategy for improving the generative capability of Diffusion Transformers (DiTs). However, existing methods typically rely on external pretrained representation models or require labor-intensive manual selection of layer pairs for alignment. In this work, we introduce \emph{LARA}, a novel RA framework that enables flexible alignment across arbitrary layer pairs within a DiT. Our approach is motivated by the observation that intermediate DiT activations exhibit both layer-specific semantic variations and shared structural regularities. Building on this insight, LARA learns a lightweight layer-aware transition predictor that captures common structural information in its shared parameters while adapting to varying semantic gaps of different layer pairs through conditional layer embeddings. This design enables scalable and unified representation alignment throughout the network without external supervision or handcrafted layer selection. Extensive experiments and ablation studies demonstrate that LARA consistently improves generative quality and yields stronger representations for downstream tasks.
+
+
+Abstract — after (186 whitespace-delimited words; one paragraph)
+Internal representation alignment can improve diffusion-transformer training without requiring an external representation teacher. Existing internal methods typically supervise selected cross-layer relations, although hidden-state transformations vary throughout depth. We observe that transition prediction difficulty varies substantially with both layer separation and source position. This motivates formulating internal alignment as learning a family of depth-conditioned cross-layer transitions. LARA uses a shared transition predictor conditioned on source depth, target depth, relative gap, timestep, and class. Compositional consistency encourages agreement between direct and composed transitions, while cross-layer redundancy control discourages excessive similarity between hidden states. Matched SiT-B/2 prediction-only controls support two design choices: removing explicit depth conditioning worsens FID-50K from 40.48 to 42.40, and restricting prediction to the fixed pair $(4,7)$ gives 41.13, compared with 40.48 for multi-pair prediction. Adding consistency and redundancy regularization further reduces FID-50K to 34.43. These controls establish empirical benefits in the tested setting, without implying superiority over every fixed pair. LARA improves controlled SiT results across the tested model scales and is additionally evaluated on DiT, JiT, and HumanML3D motion generation. These results support learning structured cross-depth transitions as an alternative to fixed-state internal matching.
+
+
+
+3. Verified new citations
+All five records verified against arXiv abstract pages. Year: 2026. Status recorded: arXiv preprint; no conference/journal venue is listed on the inspected records. No acceptance status is inferred.
+@article{xu2026srepa,
+  title={Beyond Point-Wise Matching: Structural Representation Alignment for Accelerating Diffusion Transformers},
+  author={Xu, Shaodong and Wang, Zhendong and Gong, Litong and Li, Zexian and Zhou, Wengang and Ge, Tiezheng and Li, Houqiang},
+  journal={arXiv preprint arXiv:2605.16949},
+  year={2026},
+  eprint={2605.16949},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2605.16949}
+}
+
+@article{pang2026maskalign,
+  title={{MaskAlign}: Token-Subset Representation Alignment for Efficient Diffusion Training},
+  author={Pang, Lianyu and Pan, Tianlin and Da, Cheng and Yu, Changqian and Yang, Huan and Gai, Kun and Guo, Song and Luo, Wenhan},
+  journal={arXiv preprint arXiv:2606.08788},
+  year={2026},
+  eprint={2606.08788},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2606.08788}
+}
+
+@article{shin2026pixelrepa,
+  title={Representation Alignment for Just Image Transformers is not Easier than You Think},
+  author={Shin, Jaeyo and Kim, Jiwook and Shim, Hyunjung},
+  journal={arXiv preprint arXiv:2603.14366},
+  year={2026},
+  eprint={2603.14366},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2603.14366}
+}
+
+@article{zu2026representationguidance,
+  title={Training-Free Representation Guidance for Diffusion Models with a Representation Alignment Projector},
+  author={Zu, Wenqiang and Xie, Shenghao and Lei, Bo and Ma, Lei},
+  journal={arXiv preprint arXiv:2601.22468},
+  year={2026},
+  eprint={2601.22468},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2601.22468}
+}
+
+@article{li2026diverseditpp,
+  title={{DiverseDiT++}: Quantifying, Analyzing, and Promoting Representation Diversity in Diffusion Transformers},
+  author={Li, Binglei and Yang, Mengping and Tan, Zhiyu and Yang, Xiaomeng and Huang, Zhizhong and Zhang, Junping and Li, Hao},
+  journal={arXiv preprint arXiv:2608.03082},
+  year={2026},
+  eprint={2608.03082},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2608.03082}
+}
+
+
+
+4. Exact modified/new Related Work paragraphs (LaTeX citation keys retained)
+
+\paragraph{Representation alignment for diffusion models.}
+REPA improves DiT and SiT training by aligning hidden states to external visual features~\citep{yu2024repa}. Follow-up methods extend this recipe through flexible guidance, end-to-end variants, structural or adversarial alignment, different teachers, or spatially faithful targets~\citep{wang2025flexible,wang2025haste,chen2025sara,leng2025repae,wang2026vaerepa,sun2026selftranscendence,singh2025irepa}. These approaches use external encoders such as DINOv2~\citep{oquab2023dinov2} and connect to predictive and denoising representation learning~\citep{vincent2008extracting,oord2018cpc}.
+
+Recent work also examines how alignment is imposed. sREPA models spatial relational geometry beyond pointwise feature matching~\citep{xu2026srepa}, while MaskAlign applies alignment to sampled token subsets~\citep{pang2026maskalign}. These methods change the structure or token support of external alignment; LARA models transformations between internal representation spaces across depth. PixelREPA shows that direct external-feature regression can degrade pixel-space JiT training, motivating care when transferring alignment across representation spaces~\citep{shin2026pixelrepa}. A neighboring inference-time direction uses a representation alignment projector for training-free guidance during sampling~\citep{zu2026representationguidance}, whereas LARA supplies training-time supervision.
+
+\paragraph{Internal layer alignment and self-alignment.}
+Self-contained methods derive guidance from the diffusion model itself. SRA uses an internal EMA teacher~\citep{jiang2025sra,tarvainen2017meanteacher}; Dispersive Loss and DiverseDiT regularize internal representation spread~\citep{wang2025dispersive,yang2026diversedit}; LayerSync aligns selected weaker layers with stronger internal layers~\citep{haghighi2026layersync}. More broadly, redundancy reduction has been studied through activation decorrelation, whitening, and covariance-based regularization~\citep{cogswell2016decov,huang2018decorrelated,huang2019iterative,zbontar2021barlow,bardes2022vicreg}. DiverseDiT++ further analyzes and promotes diversity across diffusion-transformer blocks~\citep{li2026diverseditpp}. In LARA, redundancy control supports transition prediction by addressing the potential tension between broad cross-depth predictability and layer-specific structure. It does not seek maximal separation: in \Cref{fig:cosine_squared_heatmap}, the lowest measured cross-layer correlation does not coincide with the best generation quality. This setting is also related to intermediate supervision and distillation, where hints, auxiliary heads, attention transfer, relational constraints, or self-distillation transfer information across representations~\citep{romero2015fitnets,lee2015deeply,zagoruyko2017attention,sun2019patient,park2019relational,furlanello2018born}. The relevant distinctions are target source (external teacher or internal states), relation (direct or structural matching or a learned transition), and supervision support (selected relations or multiple depths). LARA uses internal targets, learns an explicit mapping between representation spaces, and shares that mapping across multiple source--target depths.
+
+
+
+5. Local Introduction edits
+Only the opening paragraph was edited. The existing fixed-pair -> transition-difficulty -> shared depth-conditioned family -> multi-pair -> complementary regularizers progression was retained.
+Diffusion and flow models are widely used for high-fidelity image generation~\citep{ho2020ddpm,song2021sde,dhariwal2021diffusion,lipman2022flow}. Recent Diffusion Transformer (DiT) architectures combine diffusion modeling with transformer backbones and show gains as model size increases~\citep{peebles2023scalable,ma2024sit}. Despite these advances, training diffusion transformers remains computationally intensive, motivating growing interest in methods that improve representation learning to accelerate optimization and enhance generative performance~\citep{yu2024repa,jiang2025sra,haghighi2026layersync,wang2025dispersive}.
+
+
+6. Claim audit
+Searched manuscript sections for all requested terms. In the four requested sections:
+- Removed novel, arbitrary layer pairs, lightweight, scalable and unified, without external supervision, and generic Extensive experiments demonstrate framing from Abstract.
+- Removed effective paradigm and narrowed the opening Introduction scalability wording to gains as model size increases.
+- Changed Related Work strengthen this recipe to extend this recipe.
+- Retained scalable transformers in Related Work: it describes cited DiT/SiT background, not universal LARA efficiency.
+- Retained the Abstract exclusion of superiority over every fixed pair: it narrows scope.
+- Retained improves/improvements tied to reported FID values and tested settings.
+- Retained general in the Conclusion denial of a general EMA convergence/stability guarantee.
+- Citation-key matches (e.g., peebles2023scalable) are bibliographic identifiers, not claims.
+- No other requested terms occur as unsupported claims in Abstract, Introduction, Related Work, or Conclusion.
+- Outside those four sections, the Method still contains lightweight for the predictor implementation; it was deliberately not edited in this P0 task, which freezes the method and Eq. (8).
+
+
+7. Conclusion changes
+Named the tested fixed pair (4,7) explicitly; replaced a repeated These results opening with Together, these findings. All four intrinsic limitations preserved verbatim.
+Under matched SiT training budgets, LARA improves ImageNet generation FID over the internal-alignment baselines across the tested model sizes. The gains extend to the tested DiT and JiT backbones, and the motion experiment reports improved HumanML3D metrics at a shorter training budget. Layerwise probes show higher scores across more of the hierarchy for the evaluated LARA checkpoint, although those checkpoints were trained for different numbers of iterations. Component ablations identify transition prediction as a useful source of cross-depth supervision and show complementary effects from the consistency and redundancy terms. Matched SiT-B/2 prediction-only controls further show that explicit depth conditioning improves FID-50K from 42.40 to 40.48, while multi-pair training improves over the tested fixed-pair $(4,7)$ predictor from 41.13 to 40.48. These results separate the benefits of layer-aware conditioning and broader cross-depth supervision from the effect of introducing a learned predictor itself in the tested setting. Together, these findings support learning cross-depth transitions as a way to use internal states for diffusion-transformer training.
+
+
+8. Compile and checks
+main.pdf: 15 pages (previously 14); supplementary.pdf: 17 pages. The extra page is bibliography material after expanded text and five references. No specified hard page limit was supplied. No undefined citations/references or duplicate BibTeX keys. Existing small bibliography overfull-box warning remains. Abstract and Related Work pages visually inspected.
+All Method source is byte-for-byte identical to HEAD, including Eq. (8). All table and figure environments in Experiments are byte-for-byte identical to HEAD. The sole Experiments edit appends PixelREPA context to the cross-architecture paragraph. No experimental numbers changed.
+
+
+9. Unresolved metadata
+None for titles, authors, years, and arXiv IDs. Conference/journal publication status is not established by the inspected arXiv records, so all five are cited as preprints.
+
+
+10. Equation (8)
+UNCHANGED. No implementation or diversity-loss definition edits.
