@@ -1,3 +1,5 @@
+Historical report: the manuscript excerpts below record the P0 edit at commit 6808ed5. Subsequent user-reported remeasurement updates Table 7 fixed (4,7) to 41.55 and multi-pair prediction only to 39.48; the current manuscript reflects these values, with depth-conditioning and multi-pair improvements of 2.92 and 2.07 FID, respectively.
+
 LARA P0 editorial/scientific positioning report — 2026-10-03
 
 
