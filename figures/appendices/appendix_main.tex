@@ -385,7 +385,7 @@ For Main \Cref{fig:projection_layout_observation}(a), PCA maps are computed from
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
 
-The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes explicit depth conditioning. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to the source--target pair $(4,7)$.
+The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes explicit depth conditioning. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to $(4,7)$, the pair used for LayerSync's main SiT-B/2 setting~\citep{haghighi2026layersync}.
 
 \subsection{Hyperparameter Tuning}
 \label{app:hyperparameter_tuning}
