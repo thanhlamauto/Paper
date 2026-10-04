@@ -313,7 +313,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \textbf{Prediction as the core signal.} \Cref{tab:realign_ablation} first isolates transition prediction from the two auxiliary regularizers. With explicit depth conditioning and multi-pair training, prediction alone reduces FID-50K from 47.51 for the vanilla model to 39.48, also improving over LayerSync at 41.89. Learning cross-depth transitions thus provides a strong training signal before adding consistency or redundancy regularization.
 
-\textbf{Depth conditioning and multi-pair supervision.} We next isolate the two design choices behind the shared transition predictor. Removing explicit depth conditioning while retaining multi-pair prediction increases FID-50K from 39.48 to 42.40, showing that source and target layer identities provide useful information beyond the source activation and timestep. Conversely, retaining depth conditioning but restricting prediction to the fixed pair $(4,7)$ gives 41.55 FID-50K, compared with 39.48 when the same predictor is trained across multiple layer pairs. These matched controls show that introducing an auxiliary predictor alone does not explain the full gain: relation-specific conditioning and broader cross-depth supervision each contribute in the tested setting.
+\textbf{Depth conditioning and multi-pair supervision.} We next isolate the two design choices behind the shared transition predictor. Removing explicit depth conditioning while retaining multi-pair prediction increases FID-50K from 39.48 to 42.40, showing that source and target layer identities provide useful information beyond the source activation and timestep. Conversely, retaining depth conditioning but restricting prediction to the fixed pair gives 41.55 FID-50K, compared with 39.48 when the same predictor is trained across multiple layer pairs. These matched controls show that introducing an auxiliary predictor alone does not explain the full gain: relation-specific conditioning and broader cross-depth supervision each contribute in the tested setting.
 
 \textbf{Complementary regularization of the transition family.} Multi-pair prediction improves over the tested fixed relation, but it also exposes the shared predictor to transitions of different difficulty and encourages information to remain recoverable across a broader portion of the hierarchy. Starting from 39.48 FID-50K, compositional consistency reduces FID to 38.07, while redundancy regularization yields a larger isolated reduction to 36.14. Combining both objectives further improves FID to 34.43. By comparison, redundancy regularization alone reaches 43.02. These results support transition prediction as the primary cross-depth supervision, with consistency and redundancy regularization strengthening the resulting multi-pair transition family.
 
@@ -341,28 +341,19 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth]{figures/diversity_ablation.pdf}
-    \par\smallskip
-    {\small\sffamily\bfseries (d) Generation metrics and cross-layer correlation\par}
-    \smallskip
-    {\small
-    \setlength{\tabcolsep}{12pt}
-    \renewcommand{\arraystretch}{1.08}
-    \begin{tabular}{@{}cccc@{}}
-        \toprule
-        $\lambda_{\mathrm{div}}$ & FID-10K $\downarrow$ & sFID $\downarrow$ & Off-diagonal correlation \\
-        \midrule
-        $0$ & 78.6308 & 137.2109 & 0.82353 \\
-        \rowcolor{gray!10}
-        $0.4$ & \textbf{66.6759} & \textbf{124.6616} & 0.66316 \\
-        $0.8$ & 76.7636 & 144.3796 & \textbf{0.62781} \\
-        \bottomrule
-    \end{tabular}\par}
 
-    \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.} SiT-B at 100K iterations, batch size 128. (a--c) Layerwise heatmaps at $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$. (d) A compact table reports FID-10K, sFID, and mean off-diagonal correlation for these three weights; the shaded row marks $0.4$. The $0.4$ setting gives the best FID and sFID, while $0.8$ gives the lowest correlation. This diagnostic sweep has a different training budget from the objective decomposition in \Cref{tab:realign_ablation}. The full sweep is in Supplementary \Cref{tab:appendix_redundancy_strength}.}
+    \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.}
+    SiT-B at 100K iterations, batch size 128. Layerwise correlation heatmaps are shown for
+    $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$.
+    The $\lambda_{\mathrm{div}}=0.4$ setting gives the best FID and sFID, whereas
+    $\lambda_{\mathrm{div}}=0.8$ gives the lowest cross-layer correlation, showing that stronger
+    decorrelation is not always beneficial for generation quality.
+    The full sweep is reported in Supplementary
+    \Cref{tab:appendix_redundancy_strength}.}
     \label{fig:cosine_squared_heatmap}
 \end{figure*}
 
-\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy substantially outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation. The full sweep appears in Supplementary \Cref{tab:appendix_redundancy_strength}.
+\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation. The full sweep appears in Supplementary \Cref{tab:appendix_redundancy_strength}.
 
 \textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most alternatives stay close to its 35.12 FID, but larger diversity weights worsen quality: FID rises to 36.36 at $\lambda_{\mathrm{div}}=0.60$ and 37.74 at $0.80$.
 
@@ -428,8 +419,8 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
             \toprule
             Value & FID-10K $\downarrow$ \\
             \midrule
-            0.10 & 35.58 \\
-            0.25 & 35.31 \\
+            0 & 38.07 \\
+            0.20 & 35.31 \\
             \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
             0.60 & 36.36 \\
             0.80 & 37.74 \\
@@ -441,7 +432,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 \subsection{Predictor Design and Capacity}
 \label{sec:predictor_ablation}
 
-\textbf{Predictor architecture.} \Cref{tab:predictor_architecture_ablation} examines whether the transition formulation remains effective under substantially different predictor backbones. With parameter counts controlled near 13M and identical conditioning, CNN, MLP, ConvNeXt + Attention, and ViT predictors achieve FID-10K between 35.12 and 36.65. ConvNeXt + Attention performs best at 35.12, while even the MLP predictor reaches 36.65 without the spatial inductive biases of convolution or attention. The relatively narrow 1.53-FID range across these distinct architectures shows that the benefit of transition learning is preserved across predictor designs, while the ConvNeXt + Attention backbone provides the strongest quality among the tested variants.
+\textbf{Predictor architecture.} \Cref{tab:predictor_architecture_ablation} examines whether the transition formulation remains effective under different predictor backbones. With parameter counts controlled near 13M and identical conditioning, CNN, MLP, ConvNeXt + Attention, and ViT predictors achieve FID-10K between 35.12 and 36.65. ConvNeXt + Attention performs best at 35.12, while even the MLP predictor reaches 36.65 without the spatial inductive biases of convolution or attention. The relatively narrow 1.53-FID range across these distinct architectures shows that the benefit of transition learning is preserved across predictor designs, while the ConvNeXt + Attention backbone provides the strongest quality among the tested variants.
 
 \begin{table}[!htbp]
 \centering
@@ -515,7 +506,7 @@ The key comparison is therefore between bypassing the same depth interval with a
 
 \begin{table}[t]
     \centering
-    \caption{\textbf{Functional transition diagnostic.} We bypass the block-3-to-block-7 interval and resume the downstream backbone either from the unchanged source state or from the predictor-generated target-depth state. ``Predictor transition'' uses the calibrated predicted activation described in Supplementary Sec.~\ref{app:magnitude_layer_skip}. All routes use the same checkpoint and 250-step sampler. Relative cost counts executed transformer blocks and is shown only for reference.}
+    \caption{\textbf{Functional transition diagnostic.} Bypassing blocks 3–7 with and without the learned transition. All routes use the same checkpoint and 250-step sampler; relative cost counts executed transformer blocks.}
     \label{tab:transition_diagnostic}
     \footnotesize
     \setlength{\tabcolsep}{2pt}
