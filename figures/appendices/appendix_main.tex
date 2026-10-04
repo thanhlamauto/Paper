@@ -25,10 +25,10 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
     \State Sample a valid triple $(a,b,c)$ with $a<b<c$, and compute transitions from cached states:
     \[
     \begin{aligned}
-    \hat A_{a\to b}^t &= G_\psi(A_a^t;q_{a,b,t,y}),\\
-    \hat A_{a\to c}^t &= G_\psi(\mathrm{sg}(A_a^t);q_{a,c,t,y}),\\
+    \hat A_{a\to b}^t &= G_\psi(A_a^t,e_a,e_b,e_t),\\
+    \hat A_{a\to c}^t &= G_\psi(\mathrm{sg}(A_a^t),e_a,e_c,e_t),\\
     \tilde A_{a\to b\to c}^t
-    &= G_{\bar\psi}\!\left(\mathrm{sg}(\hat A_{a\to b}^t);q_{b,c,t,y}\right).
+    &= G_{\bar\psi}\!\left(\mathrm{sg}(\hat A_{a\to b}^t),e_b,e_c,e_t\right).
     \end{aligned}
     \]
     \Statex \hspace{\algorithmicindent}\textit{This uses two online predictor forwards and one EMA predictor forward; the inner $a\to b$ state is cached, not recomputed.}
@@ -66,8 +66,8 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 \label{alg:lara_transition_distance}
 \small
 \begin{algorithmic}[1]
-\Require source state $A_a^t$; target state $A_b^t$; transition predictor $G_\psi$; conditioning vector $q_{a,b,t,y}$.
-\State $\widehat A_{a\to b}^{\,t}\gets G_\psi(A_a^t;q_{a,b,t,y})$
+\Require source state $A_a^t$; target state $A_b^t$; transition predictor $G_\psi$; embeddings $e_a,e_b,e_t$.
+\State $\widehat A_{a\to b}^{\,t}\gets G_\psi(A_a^t,e_a,e_b,e_t)$
 \State $R_b^t\gets \operatorname{sg}(A_b^t)$
 \For{$n=1,\ldots,N$}
     \State $s_n\gets \operatorname{cos\_sim}(\widehat A_{a\to b,n}^{\,t},R_{b,n}^{t})$
@@ -96,25 +96,26 @@ The cross-layer redundancy term is computed directly from the hidden-state cache
 \subsection{Compute Comparison with SRA and LayerSync}
 \label{app:sra_layersync_lara_compute}
 
-We additionally profile the internal alignment methods used in our speed analysis. The matched compute comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, batch size, and step count. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor.
+We additionally profile the internal alignment methods used in our speed analysis. The matched per-step comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, and batch size. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor. The FID values below are no-CFG checkpoint evaluations at the stated training iterations, separate from the timing profile.
 
 \begin{table}[!t]
     \centering
     \caption{\textbf{Comparison between SRA, LayerSync, and LARA.}
-    Per-step profiling for self-contained internal alignment methods under the same
-    \texttt{SiT-XL/2} TPU v4-16 setting.}
+    No-CFG FID at the stated training iterations and per-step profiling under the same
+    \texttt{SiT-XL/2} TPU v4-16 setting. The same LayerSync time per step applies to both checkpoint rows.}
     \label{tab:appendix_sra_layersync_lara_compute}
     \vspace{0.25em}
     \scriptsize
-    \setlength{\tabcolsep}{6pt}
+    \setlength{\tabcolsep}{4pt}
     \renewcommand{\arraystretch}{0.9}
-    \begin{tabular}{@{}lcc@{}}
+    \begin{tabular}{@{}lccc@{}}
         \toprule
-        Method & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
+        Method & Iter. & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
         \midrule
-        \texttt{SiT-XL/2}+SRA & 1.93 & 0.42 \\
-        \texttt{SiT-XL/2}+LayerSync & 1.89 & \textbf{0.25} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & \textbf{1.82} & 0.30 \\
+        \texttt{SiT-XL/2}+SRA & 2M & 7.97 & 0.42 \\
+        \texttt{SiT-XL/2}+LayerSync & 2M & 6.81 & \textbf{0.25} \\
+        \texttt{SiT-XL/2}+LayerSync & 4M & 6.37 & \textbf{0.25} \\
+        \texttt{SiT-XL/2}+LARA (Ours) & 2M & \textbf{5.08} & 0.30 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -122,11 +123,11 @@ We additionally profile the internal alignment methods used in our speed analysi
 \subsection{LARA ImageNet Configuration}
 \label{app:realign_hyperparameters}
 
-\Cref{tab:appendix_realign_hparams} summarizes the main-run training budgets and the predictor interface specified in Main \Cref{sec:predictor}. The SiT-B/2 block-level dimensions are shown in \Cref{fig:appendix_predictor_architecture}; the matched SiT-B/2 ablation weights and timestep sampler are reported separately in \Cref{tab:appendix_common_ablation_setting}. The transition target and EMA composition path are defined in Main \Cref{eq:align_loss,eq:consistency_loss}.
+\Cref{tab:appendix_realign_hparams} summarizes the main-run training budgets and the predictor interface specified in Main \Cref{sec:predictor}. The SiT-B/2 predictor geometry is described below, and the matched ablation settings are reported in \Cref{tab:appendix_common_ablation_setting}. The transition target and EMA composition path are defined in Main \Cref{eq:align_loss,eq:consistency_loss}.
 
 \begin{table*}[!t]
     \centering
-    \caption{\textbf{LARA ImageNet configuration summary.} Main-run budgets and the shared predictor interface on SiT-B/2, SiT-L/2, and SiT-XL/2. SiT-B/2's $768\to384\to768$ channel path and ten conditioned blocks are detailed in \Cref{fig:appendix_predictor_architecture}. ImageNet training and evaluation protocols are in \Cref{tab:appendix_imagenet_protocol}.}
+    \caption{\textbf{LARA ImageNet configuration summary.} Main-run budgets and the shared predictor interface on SiT-B/2, SiT-L/2, and SiT-XL/2. The SiT-B/2 predictor uses a $768\to384\to768$ channel path and ten conditioned blocks. ImageNet training and evaluation protocols are in \Cref{tab:appendix_imagenet_protocol}.}
     \label{tab:appendix_realign_hparams}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -140,7 +141,7 @@ We additionally profile the internal alignment methods used in our speed analysi
         Predictor input/output width & 768 & 1024 & 1152 \\
         Spatial token grid & $16\times16$ & $16\times16$ & $16\times16$ \\
         Predictor family & \multicolumn{3}{c@{}}{Conditioned ConvNeXt-style spatial blocks with periodic attention} \\
-        Conditioning inputs & \multicolumn{3}{c@{}}{Timestep, class, source depth, target depth, relative layer gap} \\
+        Conditioning inputs & \multicolumn{3}{c@{}}{Timestep, source depth, target depth} \\
         Conditioning injection & \multicolumn{3}{c@{}}{FiLM/AdaLN-style channel-wise scale and shift} \\
         Transition target & \multicolumn{3}{c@{}}{Stopped-gradient target-layer activation} \\
         Checkpoints in Main Table~\ref{tab:imagenet_no_cfg} & 400K & 400K & 400K, 1M, 2M \\
@@ -151,14 +152,7 @@ We additionally profile the internal alignment methods used in our speed analysi
 \section{Transition Predictor Configuration and Capacity}
 \label{app:predictor_architecture_capacity}
 
-We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNet-style spatial predictor, implemented with ConvNeXt-style residual blocks~\citep{liu2022convnext}, on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects timestep, class, source-layer, target-layer, and relative-gap conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}. \Cref{fig:appendix_predictor_architecture} illustrates the SiT-B/2 configuration, including its $768\to384\to768$ channel projections, ten conditioned spatial blocks, and attention after every fourth block.
-
-\begin{figure*}[!t]
-    \centering
-    \includegraphics[width=0.98\textwidth]{Predictor_Arch.pdf}
-    \caption{\textbf{Transition predictor architecture for SiT-B/2.} Source tokens are projected to 384 channels and a $16{\times}16$ spatial grid, processed by ten conditioned ConvNeXt-style blocks with multi-head self-attention after every fourth block, and projected back to 768-channel target-layer tokens. Timestep, class, source depth, target depth, and layer gap form the conditioning signal.}
-    \label{fig:appendix_predictor_architecture}
-\end{figure*}
+We first specify how the transition predictor is attached to the SiT backbones, since the capacity sweep is only meaningful once the state geometry is fixed. LARA uses a compact ConvNet-style spatial predictor, implemented with ConvNeXt-style residual blocks~\citep{liu2022convnext}, on top of SiT hidden states. The latent tokens form a $16{\times}16$ grid at ImageNet $256{\times}256$, so lightweight local mixing can preserve the perceptual layout that matters for representation alignment, in the spirit of i-REPA~\citep{singh2025irepa}. The predictor takes a source-layer activation, injects timestep, source-layer, and target-layer conditioning, and returns an activation in the target-layer coordinate system. The target branch is not processed by the predictor; it is used as a stopped-gradient reference for the distance in \Cref{alg:lara_transition_distance}. In the SiT-B/2 configuration, source tokens are projected from 768 to 384 channels, processed by ten conditioned spatial blocks with attention after every fourth block, and projected back to 768-channel target-layer tokens.
 
 \FloatBarrier
 
@@ -362,12 +356,12 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main artifact & Quantity & Protocol & Citation \\
         \midrule
         Main \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
-        Main \Cref{tab:internal_alignment_profile} & FID, time/step & Match SiT-XL/2 input resolution, precision, batch size, step count, and TPU v4-16 hardware; keep this profiling comparison separate from the system-level FID table. & \citep{jiang2025sra,haghighi2026layersync} \\
+        Main \Cref{tab:internal_alignment_profile} & FID, time/step & Report no-CFG FID at the stated checkpoint iteration; profile time per step separately with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware. & \citep{jiang2025sra,haghighi2026layersync} \\
         Main \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         Main \Cref{tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         Main \Cref{tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
-        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K, sFID & SiT-B, 100K iterations, batch size 128; vary the diversity weight over the four reported multipliers and compare layerwise heatmaps, off-diagonal correlation, and generation metrics. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
+        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K, sFID & SiT-B, 100K iterations, batch size 128; vary the diversity weight over four multipliers, with three shown in the main figure and all four tabulated in Supplementary \Cref{tab:appendix_redundancy_strength}. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         Main \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
@@ -391,7 +385,7 @@ For Main \Cref{fig:projection_layout_observation}(a), PCA maps are computed from
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
 
-The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes only the explicit source-layer, target-layer, and relative-gap conditioning signals. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to the source--target pair $(4,7)$.
+The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes explicit depth conditioning. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to the source--target pair $(4,7)$.
 
 \subsection{Hyperparameter Tuning}
 \label{app:hyperparameter_tuning}
@@ -472,7 +466,7 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 \subsection{Redundancy-Strength Sweep}
 \label{app:redundancy_strength}
 
-\Cref{tab:appendix_redundancy_strength} gives the four-setting sweep visualized in Main \Cref{fig:cosine_squared_heatmap} and discussed in Main \Cref{sec:objective_decomposition}. This diagnostic uses SiT-B on ImageNet $256\times256$ for 100K iterations with batch size 128. The $2\times$ setting gives the lowest FID-10K and sFID among the tested weights. Mean off-diagonal correlation reaches its minimum of 0.62781 at $4\times$, then rises to 0.76206 at $8\times$. Thus, stronger diversity regularization does not monotonically improve either correlation or generation quality.
+\Cref{tab:appendix_redundancy_strength} reports all four tested weights; the first three appear in Main \Cref{fig:cosine_squared_heatmap}. This diagnostic uses SiT-B on ImageNet $256\times256$ for 100K iterations with batch size 128. The $2\times$ setting gives the lowest FID-10K and sFID among the tested weights. Mean off-diagonal correlation reaches its minimum of 0.62781 at $4\times$, then rises to 0.76206 at $8\times$. Thus, stronger diversity regularization does not monotonically improve either correlation or generation quality.
 
 \begin{table}[!htbp]
     \centering
@@ -519,7 +513,7 @@ The main paper uses the standard full-backbone sampler. The transition interface
     \Else
         \State $(a,b)\gets r_k$.
         \State $A_a^{t_k}\gets F_{\theta,1:a}(z_k,t_k,y)$.
-        \State $\widehat A_b^{t_k}\gets G_\psi(A_a^{t_k};q_{a,b,t_k,y})$.
+        \State $\widehat A_b^{t_k}\gets G_\psi(A_a^{t_k},e_a,e_b,e_{t_k})$.
         \State $\hat v_k\gets F_{\theta,b:L}(\widehat A_b^{t_k},t_k,y)$.
     \EndIf
     \State $z_{k-1}\gets z_k+(t_{k-1}-t_k)\hat v_k$.
@@ -530,25 +524,25 @@ The main paper uses the standard full-backbone sampler. The transition interface
 
 Each diagnostic must report the skip rate, chosen layer jumps, and whether the same route is used at all timesteps or only at selected Euler steps. The comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
 
-\subsection{Magnitude-Calibrated Layer-Skip Diagnostic}
+\subsection{Magnitude-Calibrated Transition Diagnostic}
 \label{app:magnitude_layer_skip}
 
-This diagnostic tests whether a predicted target-layer state can replace skipped blocks. Because the cosine transition loss mainly controls direction, we attach a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. This route is appendix-only and is not used for the main generation results.
+This diagnostic compares two ways to bypass the same block range: feed the unchanged source-layer state directly to the downstream backbone, or feed a predicted target-layer state. Because the cosine transition loss mainly controls direction, the predictor route uses a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. These routes are diagnostic only and are not used for the main generation results.
 
 \begin{table}[!t]
     \centering
-    \caption{\textbf{Magnitude-calibrated layer skipping.} Appendix diagnostic for testing whether LARA's transition predictor can replace a skipped block range after training. All rows use the same checkpoint, ODE sampler, and 250 sampling steps; only the internal route changes. Relative cost counts transformer blocks for a 12-block backbone, so jump $(3,7)$ skips $4/12$ blocks.}
+    \caption{\textbf{Functional transition diagnostic.} The naive route passes the unchanged block-3 state to the downstream backbone; predictor transitions use the magnitude-calibrated target-depth state. All rows use the same checkpoint, ODE sampler, and 250 sampling steps; only the internal route changes. Relative cost counts transformer blocks for a 12-block backbone, so jump $(3,7)$ skips $4/12$ blocks.}
     \label{tab:appendix_magnitude_layer_skip}
-    \footnotesize
+    \scriptsize
     \setlength{\tabcolsep}{1pt}
     \begin{tabular}{@{}lcccc@{}}
         \toprule
         Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
         \midrule
         Full backbone & -- & -- & \textbf{35.12} & 1.00$\times$ \\
-        Direction-only skip & $(3,7)$ & off & 65.37 & 0.67$\times$ \\
-        Calibrated skip (250 steps) & $(3,7)$ & on, stop-grad & 54.17 & 0.67$\times$ \\
-        Calibrated skip (first 125) & $(3,7)$ & on, stop-grad & 45.84 & 0.83$\times$ \\
+        Naive skip, no predictor & $(3,7)$ & -- & 128.25 & 0.67$\times$ \\
+        Predictor transition, all steps & $(3,7)$ & on, stop-grad & 54.17 & 0.67$\times$ \\
+        \shortstack[l]{Predictor transition,\\first 125 steps} & $(3,7)$ & on, stop-grad & 45.84 & 0.83$\times$ \\
         \bottomrule
     \end{tabular}
 \end{table}

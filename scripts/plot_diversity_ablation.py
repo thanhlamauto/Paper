@@ -30,7 +30,7 @@ plt.rcParams.update({
 fig = plt.figure(figsize=(7.15, 2.4), layout="constrained")
 gs = fig.add_gridspec(1, 3, wspace=0.05)
 heatmap_axes = []
-for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best FID / sFID", "Lowest correlation"])):
+for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best FID / sFID", ""])):
     ax = fig.add_subplot(gs[0, i])
     heatmap_axes.append(ax)
     svg = ET.parse(ROOT / "rebuttal image" / row["heatmap"]).getroot()

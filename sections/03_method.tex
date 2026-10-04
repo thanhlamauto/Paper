@@ -27,9 +27,9 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 Following PCA-based representation visualizations used in recent alignment work~\citep{jiang2025sra,yu2024repa,singh2025irepa}, we project SiT-XL/2 hidden tokens onto their leading three principal components in \Cref{fig:projection_layout_observation}(a). The maps show a consistent spatial scaffold across depth and denoising time, while the semantic emphasis changes across blocks. This suggests that layers share reusable structure but are not interchangeable. Direct matching of one hand-picked pair, as in LayerSync~\citep{haghighi2026layersync}, or supervision from a narrow internal EMA teacher, as in SRA~\citep{jiang2025sra}, can exploit part of this structure but ties the signal to a limited alignment relation. LARA instead learns a shared transition interface: common structure is captured by shared parameters, while source, target, and timestep embeddings adapt the mapping to each pair.
 
 \paragraph{Transition difficulty across depth}
-\Cref{fig:projection_layout_observation}(b,c) quantifies how prediction error varies across the representation hierarchy. It rises from 0.025 in the shortest-gap quartile to 0.152 in the longest. Source position matters as well: the middle two quartiles yield errors of 0.023 and 0.027, compared with 0.060 and 0.110 near the depth boundaries. Together with the shared spatial structure in panel (a), these patterns motivate a shared transition predictor with explicit source-depth, target-depth, and gap conditioning. The values are tabulated in Supplementary \Cref{tab:appendix_transition_difficulty}.
+\Cref{fig:projection_layout_observation}(b,c) quantifies how prediction error varies across the representation hierarchy. It rises from 0.025 in the shortest-gap quartile to 0.152 in the longest. Source position matters as well: the middle two quartiles yield errors of 0.023 and 0.027, compared with 0.060 and 0.110 near the depth boundaries. Together with the shared spatial structure in panel (a), these patterns motivate a shared transition predictor conditioned on source and target depth. The values are tabulated in Supplementary \Cref{tab:appendix_transition_difficulty}.
 
-\subsection{Layer-Aware Transition Predictor}
+\subsection{Layer-Aware Transition Prediction}
 \label{sec:predictor}
 
 Let $A_{\theta,\ell}^t\in\mathbb{R}^{N\times C}$ denote the token activation produced by the diffusion transformer after block $\ell$ when processing $(x_t,t,c)$, where $N$ is the number of latent tokens and $C$ is the channel dimension. For readability, we omit $\theta$ from $A_{\theta,\ell}^t$ when the dependency is clear.
@@ -38,23 +38,12 @@ Given a source layer $a$ and target layer $b$ with $a<b$, LARA predicts the targ
 \begin{equation}
 \widehat A_{a\to b}^{\,t}
 =
-G_\psi(A_a^t;q_{a,b,t,y}),
+G_\psi(A_a^t,e_a,e_b,e_t),
 \qquad
 \widehat A_{a\to b}^{\,t}\in\mathbb{R}^{N\times C}.
 \label{eq:realign_predictor}
 \end{equation}
-Here $y$ denotes the class condition, and $q_{a,b,t,y}$ combines embeddings of timestep $t$, class $y$, source layer $a$, target layer $b$, and relative gap $g=b-a$. The timestep embedding follows the general mechanism used by the SiT backbone; the source layer, target layer, and gap are encoded and projected separately into learnable embeddings. The combined vector enters predictor blocks through AdaLN-style channel-wise scale and shift. Layer indices are not concatenated with the spatial input. The predictor is trained to map the source activation into the representation space of layer $b$, and its main parameters are shared across layer pairs.
-
-For the main image experiments, the default predictor first projects source tokens to a lower-dimensional feature space and reshapes them to a two-dimensional grid. A lightweight stack of ConvNeXt-style blocks processes the grid, with multi-head self-attention after every four blocks for non-local interactions. Final features are normalized, projected to the original channel dimension, and reshaped into target-layer tokens. \Cref{fig:main_predictor_architecture} shows the SiT-B/2 instantiation: $256$ tokens enter with $768$ channels, are processed at $384$ channels by ten conditioned spatial blocks, and return to the target-layer width. This backbone is an implementation choice, not a requirement of the transition framework; alternative predictor backbones are compared in \Cref{sec:predictor_ablation}.
-
-\begin{figure*}[!t]
-    \centering
-    \includegraphics[width=0.9\textwidth]{Predictor_Arch.pdf}
-    \caption{\textbf{Layer-aware transition predictor on SiT-B/2.} The shared predictor is trained to map source-layer tokens toward the target-layer representation. Timestep, class, source and target depths, and their gap condition the spatial blocks; attention follows every fourth block. Additional implementation details are in Supplementary Sec.~\ref{app:predictor_architecture_capacity}.}
-    \label{fig:main_predictor_architecture}
-\end{figure*}
-
-\subsection{Transition Prediction and Shared Predictor Training}
+Here $G_\psi$ is a lightweight transition predictor, and $e_a$, $e_b$, $e_t$ are source-layer, target-layer, and timestep embeddings. The predicted activation $\widehat A_{a\to b}^{\,t}$ lives in the coordinate system of layer $b$. The same predictor is reused for all valid layer pairs, which removes the need to train a separate adapter for each manually selected pair.
 
 The transition prediction loss is
 \begin{equation}
@@ -69,35 +58,23 @@ d\left(
 \right],
 \label{eq:align_loss}
 \end{equation}
-where $\operatorname{sg}$ stops gradients through the target activation. The distance averages tokenwise cosine mismatch:
-\begin{equation}
-\begin{aligned}
-d\!\left(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t)\right)
-&=\frac{1}{N}\sum_{n=1}^{N}\bigl(1-\\[-0.2em]
-&\quad\cos\!\left(\widehat A_{a\to b,n}^{\,t},\operatorname{sg}(A_{b,n}^t)\right)\bigr).
-\end{aligned}
-\label{eq:main_transition_distance}
-\end{equation}
-The predictor output is formed before token normalization, as detailed in Supplementary \Cref{alg:lara_transition_distance}. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
-
-\paragraph{Shared predictor training.}
-At each iteration, LARA samples source--target layer pairs and trains one shared predictor with $\mathcal{L}_{\mathrm{pred}}$. The objective supervises a predicted target-layer state without directly matching raw activations from two semantically different depths. The training curves in \Cref{fig:training_curve} compare this joint objective with the baseline and LayerSync.
+where $d(\cdot,\cdot)$ is a tokenwise cosine distance and $\operatorname{sg}$ stops gradients through the target activation. In implementation, the predictor output is formed before token normalization, as detailed in \Cref{alg:lara_transition_distance}. This loss updates the predictor and the source-side backbone representation, while the target layer serves as a stable internal reference.
 
 \subsection{Transition Consistency}
 
-Multi-pair prediction supervises relations with different levels of difficulty: \Cref{fig:projection_layout_observation}(b,c) shows larger errors for longer transitions and variation with source depth. Pairwise prediction alone does not explicitly require different routes between the same endpoints to agree. LARA therefore introduces compositional consistency to coordinate the shared transition family across transition lengths, encouraging direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
+A single long transition can be difficult to learn directly (\Cref{fig:projection_layout_observation}(b,c)). To propagate supervision across distant layers without committing to one fixed pair, LARA encourages direct transitions to agree with compositions of shorter transitions. We keep an EMA copy $G_{\bar\psi}$ of the predictor for the composed target, while the intermediate $a\to b$ state is the cached online prediction from \Cref{eq:align_loss}. Thus the direct branch uses the online predictor, and the composed branch provides a stop-gradient EMA target. For $a<b<c$, we define
 
 \begin{equation}
 \begin{aligned}
 \widehat A_{a\to c}^{\,t}
 =
-G_\psi(\operatorname{sg}(A_a^t);q_{a,c,t,y}),
+G_\psi(\operatorname{sg}(A_a^t),e_a,e_c,e_t),
 \\
 \widetilde A_{a\to b\to c}^{\,t}
 =
 G_{\bar\psi}\!\left(
 \operatorname{sg}(\widehat A_{a\to b}^{\,t}),
-q_{b,c,t,y}
+e_b,e_c,e_t
 \right),
 \end{aligned}
 \label{eq:direct_transition}
