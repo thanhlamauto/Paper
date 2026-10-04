@@ -1,14 +1,11 @@
 # IEEE Computer Society manuscript build
 
-Build from the repository root with a LaTeX installation that includes IEEEtran, IEEEtranN, BibTeX, natbib, cleveref, xr-hyper, and the packages named in `ieee_preamble.tex`.
+Build from the repository root with a LaTeX installation that includes IEEEtran, IEEEtranN, BibTeX, natbib, cleveref, and the packages named in `ieee_preamble.tex`.
 
-The manuscripts import one another's labels, so a clean build needs both auxiliary files before references settle:
+The main paper and Supplementary are one document. Build only `main.tex`:
 
 ```sh
-latexmk -pdf -interaction=nonstopmode -halt-on-error supplementary.tex
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
-latexmk -pdf -interaction=nonstopmode -halt-on-error supplementary.tex
 latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 ```
 
-The outputs are `main.pdf` and `supplementary.pdf`. The NeurIPS checklist and appendix are excluded from `main.pdf`; the existing appendix content is included in `supplementary.pdf`.
+Alternatively, run `bash scripts/build_paper.sh` with Tectonic. The output is `main.pdf`, with Supplementary Material after the references. On Overleaf, select `main.tex` as the main file.

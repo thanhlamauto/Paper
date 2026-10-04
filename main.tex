@@ -1,7 +1,6 @@
 % !TEX root = main.tex
 \documentclass[10pt,journal,compsoc]{IEEEtran}
 \input{ieee_preamble}
-\externaldocument[][nocite]{supplementary}
 
 \title{LARA: Layer-Aware Representation Alignment for Diffusion Transformers}
 \author{Anonymous Authors}
@@ -44,4 +43,25 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
 
 \bibliographystyle{IEEEtranN}
 \bibliography{refs}
+
+\clearpage
+\twocolumn[{\centering\LARGE\bfseries Supplementary Material\par\vspace{1em}}]
+\setcounter{section}{0}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\setcounter{algorithm}{0}
+\setcounter{equation}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thealgorithm}{S\arabic{algorithm}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\def\theHsection{supp.\arabic{section}}
+\def\theHsubsection{supp.\arabic{section}.\arabic{subsection}}
+\def\theHsubsubsection{supp.\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+\def\theHtable{supp.\arabic{table}}
+\def\theHfigure{supp.\arabic{figure}}
+\def\theHalgorithm{supp.\arabic{algorithm}}
+\def\theHequation{supp.\arabic{equation}}
+\input{figures/appendices/appendix_main}
 \end{document}
