@@ -1,7 +1,7 @@
 \section{Empirical Experiments}
 \label{sec:experiments}
 
-We study controlled SiT ImageNet generation, a system-level ImageNet comparison and direct REPA efficiency trade-off, transfer to DiT and JiT, HumanML3D motion generation, and intermediate representations. Training settings, sampling protocols, and extended sweeps are reported in Supplementary Secs.~\ref{app:experimental_details}, \ref{app:realign_ablation_protocols} and \ref{app:metric_definitions}; design controls appear in \Cref{sec:ablation_study}.
+We study controlled SiT ImageNet generation, a system-level ImageNet comparison and direct REPA efficiency trade-off, transfer to DiT and JiT, HumanML3D motion generation, and intermediate representations. Training settings, sampling protocols, and measurement definitions are reported in Supplementary Secs.~\ref{app:experimental_details} and \ref{app:metric_definitions}; design controls appear in \Cref{sec:ablation_study}.
 
 \subsection{Image Generation}
 \label{sec:image_generation}
@@ -272,17 +272,17 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/predictor_output_behavior.pdf}
-    \caption{\textbf{Predictor-output visualization.} Predicted target-layer states show spatial structure at the requested target depth.}
+    \caption{\textbf{Predictor-output visualization.} PCA maps for the long-range transition from layer 1 to layer 11 at all five timesteps in the diagnostic grid, ordered from $t=0.1$ (noise side) to $t=0.9$ (image side). The multicolored target maps make the recovered spatial layout easier to inspect. The prediction follows the target's broad color regions, although some fine boundaries remain smoother. Colors represent PCA coordinates rather than reconstructed pixels.}
     \label{fig:predictor_output_behavior}
 \end{figure*}
 
 \textbf{Predictor-output behavior.}
-\Cref{fig:predictor_output_behavior} visually compares predicted states with target-layer activations across selected depths and denoising timesteps. The examples let us inspect whether $\widehat A_{a\to b}^{\,t}$ resembles the spatial layout of $A_b^t$ at the requested target depth. This qualitative diagnostic is consistent with learning target-specific transitions.
+\Cref{fig:predictor_output_behavior} compares the source, predicted, and actual target states for the layer-1-to-layer-11 transition. The target maps have distinct color regions across the five sampled timesteps, and the prediction follows their broad spatial layout more closely than the source. The panels are ordered with increasing $t$, from the noise side toward the image side. This qualitative diagnostic illustrates target-depth transition learning while also showing that the predicted boundaries are not exact.
 
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, or require an oversized predictor. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Extended controls are reported in Supplementary Sec.~\ref{app:realign_ablation_protocols}.
+\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, or require an oversized predictor. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Further details of the matched controls appear in Supplementary Sec.~\ref{app:realign_ablation_protocols}.
 
 \subsection{Objective Decomposition}
 \label{sec:objective_decomposition}
@@ -345,17 +345,15 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
     \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.}
     SiT-B at 100K iterations, batch size 128. Layerwise correlation heatmaps are shown for
     $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$.
-    The $\lambda_{\mathrm{div}}=0.4$ setting gives the best FID and sFID, whereas
-    $\lambda_{\mathrm{div}}=0.8$ gives the lowest cross-layer correlation, showing that stronger
-    decorrelation is not always beneficial for generation quality.
-    The full sweep is reported in Supplementary
-    \Cref{tab:appendix_redundancy_strength}.}
+    The $0.4$ setting gives the best FID among these weights, whereas $0.8$ gives the lowest
+    cross-layer correlation. This diagnostic uses a different training budget from the
+    objective decomposition in \Cref{tab:realign_ablation}.}
     \label{fig:cosine_squared_heatmap}
 \end{figure*}
 
-\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation. The full sweep appears in Supplementary \Cref{tab:appendix_redundancy_strength}.
+\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation.
 
-\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most alternatives stay close to its 35.12 FID, but larger diversity weights worsen quality: FID rises to 36.36 at $\lambda_{\mathrm{div}}=0.60$ and 37.74 at $0.80$.
+\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most sampler, prediction-weight, and consistency-weight alternatives remain close to 35.12 FID. Within the diversity-weight sweep, removing the penalty raises FID to 38.57, while increasing $\lambda_{\mathrm{div}}$ to $0.60$ and $0.80$ yields 36.36 and 37.74, respectively.
 
 \begin{table*}[!t]
     \centering
@@ -419,7 +417,7 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
             \toprule
             Value & FID-10K $\downarrow$ \\
             \midrule
-            0 & 38.07 \\
+            0 & 38.57 \\
             0.20 & 35.31 \\
             \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
             0.60 & 36.36 \\

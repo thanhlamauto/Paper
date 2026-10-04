@@ -56,7 +56,7 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
 \end{algorithmic}
 \end{algorithm}
 
-The timestep law $p_t$ is a protocol choice rather than part of the transition objective. Main LARA runs use the default training sampler reported in \Cref{tab:appendix_imagenet_protocol}; timestep-sampler alternatives are evaluated separately in \Cref{tab:main_hyperparameter_tuning}.
+The timestep law $p_t$ is a protocol choice rather than part of the transition objective. Main LARA runs use the default training sampler reported in \Cref{tab:appendix_imagenet_protocol}; timestep-sampler alternatives are evaluated in Main \Cref{tab:main_sensitivity_summary}.
 
 \paragraph{Predictor-induced transition distance}
 The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
@@ -222,7 +222,7 @@ For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from I
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{tab:realign_ablation,tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility} and Supplementary Table~\ref{tab:main_hyperparameter_tuning}; each ablation changes only the factor shown in its own table.}
+    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{tab:realign_ablation,tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
     \label{tab:appendix_common_ablation_setting}
     \scriptsize
@@ -361,7 +361,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main \Cref{tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         Main \Cref{tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
-        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K, sFID & SiT-B, 100K iterations, batch size 128; vary the diversity weight over four multipliers, with three shown in the main figure and all four tabulated in Supplementary \Cref{tab:appendix_redundancy_strength}. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
+        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         Main \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
@@ -385,106 +385,7 @@ For Main \Cref{fig:projection_layout_observation}(a), PCA maps are computed from
 \section{Additional Ablations}
 \label{app:realign_ablation_protocols}
 
-The main ablation tables isolate the components needed for LARA. This appendix reports the broader sweeps that are useful for interpretation but too detailed for the main paper. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes explicit depth conditioning. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to $(4,7)$, the pair used for LayerSync's main SiT-B/2 setting~\citep{haghighi2026layersync}.
-
-\subsection{Hyperparameter Tuning}
-\label{app:hyperparameter_tuning}
-
-\begin{table*}[!t]
-    \centering
-    \caption{\textbf{Hyperparameter tuning on SiT-B/2.} All panels use the same matched ablation setting as Main \Cref{tab:realign_ablation}. Default settings are marked in gray; each panel varies one factor around the selected recipe. Common ablation settings are in \Cref{tab:appendix_common_ablation_setting}.}
-    \label{tab:main_hyperparameter_tuning}
-    \footnotesize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{1.0}
-    \begin{minipage}[t]{0.47\linewidth}
-        \centering
-        \textbf{Timestep}\\[0.20em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Sampler & FID $\downarrow$ \\
-            \midrule
-            uniform & 35.86 \\
-            \cellcolor{gray!20}logitN$(-.2,1.0)$ & \cellcolor{gray!20}\textbf{35.12} \\
-            logitN$(-.2,1.2)$ & 35.28 \\
-            logitN$(-.4,1.0)$ & 35.41 \\
-            logitN$(-.4,1.2)$ & 35.63 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.47\linewidth}
-        \centering
-        \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Value & FID $\downarrow$ \\
-            \midrule
-            0.25 & 35.86 \\
-            0.50 & 35.54 \\
-            0.75 & 35.31 \\
-            \cellcolor{gray!20}1.00 & \cellcolor{gray!20}\textbf{35.12} \\
-            1.50 & 35.38 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \par\smallskip
-    \begin{minipage}[t]{0.47\linewidth}
-        \centering
-        \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Value & FID $\downarrow$ \\
-            \midrule
-            0.10 & 35.42 \\
-            \cellcolor{gray!20}0.25 & \cellcolor{gray!20}\textbf{35.12} \\
-            0.50 & 35.29 \\
-            0.75 & 35.61 \\
-            1.00 & 35.88 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.47\linewidth}
-        \centering
-        \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Value & FID $\downarrow$ \\
-            \midrule
-            0.10 & 35.58 \\
-            0.25 & 35.31 \\
-            \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
-            0.60 & 36.36 \\
-            0.80 & 37.74 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-
-\end{table*}
-
-\subsection{Redundancy-Strength Sweep}
-\label{app:redundancy_strength}
-
-\Cref{tab:appendix_redundancy_strength} reports all four tested relative weights; the first three appear in Main \Cref{fig:cosine_squared_heatmap} at $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$. This diagnostic uses SiT-B on ImageNet $256\times256$ for 100K iterations with batch size 128. The $2\times$ setting ($\lambda_{\mathrm{div}}=0.4$) gives the lowest FID-10K and sFID among the tested weights. Mean off-diagonal correlation reaches its minimum of 0.62781 at $4\times$ ($\lambda_{\mathrm{div}}=0.8$), then rises to 0.76206 at $8\times$. Thus, stronger diversity regularization does not monotonically improve either correlation or generation quality.
-
-\begin{table}[!htbp]
-    \centering
-    \caption{\textbf{Cross-layer redundancy-strength trade-off.} SiT-B, 100K iterations, batch size 128. Relative weights $0\times$, $2\times$, and $4\times$ correspond to $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$ in Main \Cref{fig:cosine_squared_heatmap}. Lower FID-10K and sFID are better; the lowest correlation need not yield the best generation quality.}
-    \label{tab:appendix_redundancy_strength}
-    \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{@{}cccc@{}}
-        \toprule
-        Weight & FID-10K $\downarrow$ & sFID $\downarrow$ & Off-diag. corr. \\
-        \midrule
-        $0\times$ & 78.6308 & 137.2109 & 0.82353 \\
-        $2\times$ & \textbf{66.6759} & \textbf{124.6616} & 0.66316 \\
-        $4\times$ & 76.7636 & 144.3796 & \textbf{0.62781} \\
-        $8\times$ & 76.9079 & 147.9986 & 0.76206 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+The main ablation tables isolate the components needed for LARA. The depth-conditioning control in Main \Cref{tab:realign_ablation} uses the same SiT-B/2 prediction-only multi-pair setting and removes explicit depth conditioning. The matched fixed-pair control retains full depth conditioning and the prediction-only objective, but restricts transition supervision to $(4,7)$, the pair used for LayerSync's main SiT-B/2 setting~\citep{haghighi2026layersync}.
 
 \subsection{Predictor-Size Ablation}
 \label{app:predictor_size_ablation}
@@ -528,24 +429,6 @@ Each diagnostic must report the skip rate, chosen layer jumps, and whether the s
 \label{app:magnitude_layer_skip}
 
 This diagnostic compares two ways to bypass the same block range: feed the unchanged source-layer state directly to the downstream backbone, or feed a predicted target-layer state. Because the cosine transition loss mainly controls direction, the predictor route uses a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. These routes are diagnostic only and are not used for the main generation results.
-
-\begin{table}[!t]
-    \centering
-    \caption{\textbf{Functional transition diagnostic.} The naive route passes the unchanged block-3 state to the downstream backbone; predictor transitions use the magnitude-calibrated target-depth state. All rows use the same checkpoint, ODE sampler, and 250 sampling steps; only the internal route changes. Relative cost counts transformer blocks for a 12-block backbone, so jump $(3,7)$ skips $4/12$ blocks.}
-    \label{tab:appendix_magnitude_layer_skip}
-    \scriptsize
-    \setlength{\tabcolsep}{1pt}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        Route & Jump $(a,b)$ & Magnitude head & FID $\downarrow$ & Rel. cost \\
-        \midrule
-        Full backbone & -- & -- & \textbf{35.12} & 1.00$\times$ \\
-        Naive skip, no predictor & $(3,7)$ & -- & 128.25 & 0.67$\times$ \\
-        Predictor transition, all steps & $(3,7)$ & on, stop-grad & 54.17 & 0.67$\times$ \\
-        \shortstack[l]{Predictor transition,\\first 125 steps} & $(3,7)$ & on, stop-grad & 45.84 & 0.83$\times$ \\
-        \bottomrule
-    \end{tabular}
-\end{table}
 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
