@@ -58,7 +58,7 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
 
 The timestep law $p_t$ is a protocol choice rather than part of the transition objective. Main LARA runs use the default training sampler reported in \Cref{tab:appendix_imagenet_protocol}; timestep-sampler alternatives are evaluated separately in \Cref{tab:main_hyperparameter_tuning}.
 
-\paragraph{Predictor-induced transition distance.}
+\paragraph{Predictor-induced transition distance}
 The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
 
 \begin{algorithm}[!htbp]
@@ -162,10 +162,10 @@ We first specify how the transition predictor is attached to the SiT backbones, 
 \subsection{Image Generation Experimental Details}
 \label{app:image_generation_details}
 
-\paragraph{Compute.}
+\paragraph{Compute}
 We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_realign_hparams,tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
-\paragraph{Existing assets.}
+\paragraph{Existing assets}
 We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
 
 \subsubsection{Baseline Reporting Protocol}
@@ -173,13 +173,13 @@ We use public research assets only for evaluation and baselines, including Image
 
 The ImageNet comparison tables report only methods included in Main \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. System-level rows use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
 
-\paragraph{Classification.}
+\paragraph{Classification}
 We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
 
-\paragraph{Segmentation.}
+\paragraph{Segmentation}
 For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and train linear heads for 25 epochs.
 
-\paragraph{CKA.}
+\paragraph{CKA}
 For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from ImageNet $256\times256$.
 
 \begin{table*}[!t]
@@ -311,13 +311,13 @@ We use the same SiT-style transformer stack as the internal-alignment baselines~
 \subsection{HumanML3D Setup}
 \label{app:humanml3d_details}
 
-\paragraph{Task.}
+\paragraph{Task}
 Given a sentence that describes a motion as a sequence of actions, the task is to generate a corresponding human motion. Each motion sequence consists of a series of human poses, where each pose is represented by 22 joints defined as 3D points in space.
 
-\paragraph{Benchmark.}
+\paragraph{Benchmark}
 We evaluate on HumanML3D~\citep{guo2022generating}, a standard text-to-motion benchmark built from motion-capture sequences and paired natural-language descriptions. To keep the comparison focused on the effect of internal alignment, all methods use the same motion representation, train/test split, text encoder, and evaluator as MDM~\citep{tevet2022mdm}. We therefore treat the HumanML3D preprocessing pipeline as fixed and vary only the internal training objective.
 
-\paragraph{Implementation details.}
+\paragraph{Implementation details}
 The motion backbone has eight transformer blocks. MDM and LayerSync are trained for 600K iterations, while LARA is evaluated at the 300K checkpoint reported in Main Table~\ref{tab:humanml3d_results}. LayerSync applies its direct hidden-state alignment to the selected internal pair $(3,6)$. LARA uses the same backbone but replaces direct matching with the transition predictor described in Main \Cref{sec:method}.
 
 \begin{table*}[!t]
