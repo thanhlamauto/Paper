@@ -1,25 +1,26 @@
 {
-  "latex-workshop.latex.recipe.default": "tectonic",
+  "latex-workshop.latex.recipe.default": "paper",
   "latex-workshop.latex.recipes": [
     {
-      "name": "tectonic",
+      "name": "paper",
       "tools": [
-        "tectonic"
+        "paper-build"
       ]
     }
   ],
   "latex-workshop.latex.tools": [
     {
-      "name": "tectonic",
-      "command": "tectonic",
+      "name": "paper-build",
+      "command": "bash",
       "args": [
-        "--synctex",
-        "--keep-logs",
-        "--keep-intermediates",
-        "%DOC%.tex"
+        "%DIR%/scripts/build_paper.sh"
       ]
     }
   ],
   "latex-workshop.linting.chktex.enabled": false,
-  "latex.linter.enabled": false
+  "latex.linter.enabled": false,
+  "workbench.colorCustomizations": {
+    "statusBarItem.warningBackground": "#2EB872",
+    "statusBarItem.warningForeground": "#EAFFF2"
+  }
 }
