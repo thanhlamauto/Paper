@@ -7,7 +7,7 @@ We study controlled SiT ImageNet generation, a system-level ImageNet comparison 
 \label{sec:image_generation}
 \label{sec:experimental_setup}
 
-\paragraph{Implementation details}
+\noindent\textbf{Implementation details.}
 Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. We sample source--target layer pairs uniformly from all valid pairs $(a,b)$ with $a<b$. Additional details on architecture, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in Supplementary Sec.~\ref{app:experimental_details}.
 
 \begin{figure}[!t]
@@ -107,15 +107,15 @@ Unless otherwise stated, we follow the class-conditional ImageNet training setup
 \end{minipage}
 \end{table*}
 
-\paragraph{Evaluation}
+\noindent\textbf{Evaluation.}
 We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved,szegedy2016rethinking}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. For the SiT, LayerSync, and LARA rows of \Cref{tab:imagenet_no_cfg}, we re-evaluate a fixed trained checkpoint with five independent sampling seeds, generating 50K images per seed. The checkpoint, sampler, sampling steps, CFG setting, class-label schedule, evaluator, and reference statistics remain fixed; we report the FID mean and sample standard deviation across those seeds. Dispersive and SRA also report FID means and sample standard deviations from sampling re-evaluations. Metric definitions are in Supplementary Sec.~\ref{app:metric_definitions}.
 
-\paragraph{Comparison methods}
+\noindent\textbf{Comparison methods.}
 Our controlled comparisons use the same SiT backbone and training budget as the base model, and compare against the self-contained internal baselines reported in \Cref{tab:imagenet_no_cfg}: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}.
 
 For system-level context in \Cref{tab:imagenet_cfg}, we include the reported ImageNet baselines that appear in the table: pixel diffusion methods ADM-U, VDM++, Simple diffusion, and CDM~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}; autoregressive or predictive methods VAR and D-JEPA~\citep{tian2024visual,chen2024jepa}; latent U-Net and transformer-hybrid methods LDM, U-ViT, DiffiT, and MDTv2~\citep{rombach2022ldm,bao2023all,hatamizadeh2024diffit,gao2023mdtv2}; and transformer baselines DiT, SiT, and REPA~\citep{peebles2023scalable,ma2024sit,yu2024repa}. Detailed baseline descriptions and the reporting protocol are deferred to Supplementary Secs.~\ref{app:baseline_descriptions} and \ref{app:baseline_protocol}.
 
-\paragraph{Results}
+\noindent\textbf{Results.}
 ImageNet provides the main experiment because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, holding model size, sampler, and guidance fixed when assessing the auxiliary alignment objectives. We then include a CFG-based system comparison to place the final model among standard ImageNet generators, where guidance can change the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}.
 
 
@@ -140,7 +140,7 @@ Trainable auxiliary parameters & 8.1M & 31.43M \\
 \end{tabular}
 \end{table}
 
-\paragraph{Training efficiency relative to internal alignment}
+\noindent\textbf{Training efficiency relative to internal alignment.}
 \Cref{tab:internal_alignment_profile} places no-CFG generation quality at the stated training iterations beside per-step costs from a separate matched SiT-XL/2 profile; these FID values are distinct from the CFG system results in \Cref{tab:imagenet_cfg}. In the profile, LARA takes 0.30~s per step, compared with 0.42~s for SRA and 0.25~s for LayerSync. At 2M iterations, SRA and LayerSync record 7.97 and 6.81 FID, respectively. Although LARA incurs a modestly higher per-step cost than LayerSync, its faster convergence more than offsets this overhead in the reported comparison: LARA at 2M iterations reaches 5.08 FID, outperforming LayerSync even after 4M iterations at 6.37.
 
 \begin{table}[!htbp]
@@ -161,7 +161,7 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
 \end{tabular}
 \end{table}
 
-\paragraph{Scaling across SiT model sizes} LARA enhances the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage remains at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling seed. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
+\noindent\textbf{Scaling across SiT model sizes.} LARA enhances the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage remains at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling seed. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
 
 \Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{app:qualitative_examples}.
 
@@ -174,7 +174,7 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
     \label{fig:imagenet_qualitative_samples}
 \end{figure*}
 
-\paragraph{Qualitative comparison}
+\noindent\textbf{Qualitative comparison.}
 \Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details and all four methods receive the same initial noise latent within each column. These curated examples complement the quantitative results.
 
 \input{figures/qualitative_comparison/figure}
@@ -206,10 +206,10 @@ JiT-B & Yes & \textbf{33.71} \\
 
 To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2020action2motion,guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
-\paragraph{Implementation details}
+\noindent\textbf{Implementation details.}
 We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer backbone for all rows. MDM and LayerSync are trained for $600\mathrm{K}$ iterations, while LARA is evaluated at the $300\mathrm{K}$ checkpoint reported in \Cref{tab:humanml3d_results}; the motion setup is described in Supplementary Sec.~\ref{app:humanml3d_details}.
 
-\paragraph{Evaluation metrics}
+\noindent\textbf{Evaluation metrics.}
 We report FID and R-Precision (top 3) using the standard HumanML3D evaluation protocol. Definitions and reporting conventions are provided in Supplementary Sec.~\ref{app:metric_definitions}. Lower FID is better, while higher R-Precision indicates better text-motion retrieval alignment.
 
 \begin{table}[!htbp]
@@ -230,7 +230,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
     \end{tabular}
 \end{table}
 
-\paragraph{Results}
+\noindent\textbf{Results.}
 \Cref{tab:humanml3d_results} tests whether the same transition signal transfers to a smaller, non-image transformer without changing the generative task.
 
 \textbf{Transfer beyond image latents.} LARA records better HumanML3D metrics at $300\mathrm{K}$ training iterations, while MDM and LayerSync use $600\mathrm{K}$. Relative to MDM, FID falls from $0.503$ to $0.4343$ and R-Precision rises from $0.7202$ to $0.7675$. LayerSync records $0.4801$ FID and $0.7434$ R-Precision. These results show that the transition objective can be applied to the tested motion transformer.
