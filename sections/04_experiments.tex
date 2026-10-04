@@ -116,11 +116,11 @@ Our controlled comparisons use the same SiT backbone and training budget as the 
 For system-level context in \Cref{tab:imagenet_cfg}, we include the reported ImageNet baselines that appear in the table: pixel diffusion methods ADM-U, VDM++, Simple diffusion, and CDM~\citep{dhariwal2021diffusion,kingma2023understanding,hoogeboom2023simple,ho2022cascaded}; autoregressive or predictive methods VAR and D-JEPA~\citep{tian2024visual,chen2024jepa}; latent U-Net and transformer-hybrid methods LDM, U-ViT, DiffiT, and MDTv2~\citep{rombach2022ldm,bao2023all,hatamizadeh2024diffit,gao2023mdtv2}; and transformer baselines DiT, SiT, and REPA~\citep{peebles2023scalable,ma2024sit,yu2024repa}. Detailed baseline descriptions and the reporting protocol are deferred to Supplementary Secs.~\ref{app:baseline_descriptions} and \ref{app:baseline_protocol}.
 
 \paragraph{Results.}
-ImageNet provides the main testbed because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, holding model size, sampler, and guidance fixed when assessing the auxiliary alignment objectives. We then include a CFG-based system comparison to place the final model among standard ImageNet generators, where guidance can change the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}.
+ImageNet provides the main experiment because it exposes both optimization quality and scaling behavior. We compare methods within the same SiT backbone and training budget, holding model size, sampler, and guidance fixed when assessing the auxiliary alignment objectives. We then include a CFG-based system comparison to place the final model among standard ImageNet generators, where guidance can change the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}.
 
 
 \noindent\textbf{Training Efficiency Relative to External Alignment.}
-\Cref{tab:repa_profile} complements the generation-quality comparison in \Cref{tab:imagenet_cfg} with a matched training-cost profile against REPA. Under the same SiT-XL/2 hardware, batch size, precision, data pipeline, and training budget, LARA reduces wall-clock time per step from 0.467~s to 0.300~s (35.8\%) and peak training-memory overhead from 21.97~GiB to 16.68~GiB (24.1\%). LARA also removes the 86.1M-parameter frozen representation encoder required by REPA. This efficiency is achieved by replacing external feature extraction with an internal trainable transition module: LARA uses 31.43M auxiliary trainable parameters, compared with 8.1M for REPA. Overall, the matched profile shows that LARA trades additional trainable auxiliary capacity for substantially lower measured runtime and memory while remaining self-contained.
+\Cref{tab:repa_profile} complements the generation-quality comparison in \Cref{tab:imagenet_cfg} with a matched training-cost profile against REPA. Under the same SiT-XL/2 hardware, batch size, precision, data pipeline, and training budget, LARA reduces wall-clock time per step from 0.467~s to 0.300~s (35.8\%) and peak training-memory overhead from 21.97~GiB to 16.68~GiB (24.1\%). LARA also removes the 86.1M-parameter frozen representation encoder required by REPA. This efficiency is achieved by replacing external feature extraction with an internal trainable transition module: LARA uses 31.43M auxiliary trainable parameters, compared with 8.1M for REPA. Overall, the matched profile shows that LARA trades additional trainable auxiliary capacity for substantially lower measured runtime and memory while remaining not using any external alignment.
 
 \begin{table}[!htbp]
 \centering
@@ -141,7 +141,7 @@ Trainable auxiliary parameters & 8.1M & 31.43M \\
 \end{table}
 
 \paragraph{Training efficiency relative to internal alignment}
-\Cref{tab:internal_alignment_profile} places no-CFG generation quality at the stated training iterations beside per-step costs from a separate matched SiT-XL/2 profile; these FID values are distinct from the CFG system results in \Cref{tab:imagenet_cfg}. In the profile, LARA takes 0.30~s per step, compared with 0.42~s for SRA and 0.25~s for LayerSync. At 2M iterations, SRA and LayerSync record 7.97 and 6.81 FID, respectively. Although LARA incurs a modestly higher per-step cost than LayerSync, its stronger convergence more than offsets this overhead in the reported comparison: LARA at 2M iterations reaches 5.08 FID, outperforming LayerSync even after 4M iterations at 6.37.
+\Cref{tab:internal_alignment_profile} places no-CFG generation quality at the stated training iterations beside per-step costs from a separate matched SiT-XL/2 profile; these FID values are distinct from the CFG system results in \Cref{tab:imagenet_cfg}. In the profile, LARA takes 0.30~s per step, compared with 0.42~s for SRA and 0.25~s for LayerSync. At 2M iterations, SRA and LayerSync record 7.97 and 6.81 FID, respectively. Although LARA incurs a modestly higher per-step cost than LayerSync, its faster convergence more than offsets this overhead in the reported comparison: LARA at 2M iterations reaches 5.08 FID, outperforming LayerSync even after 4M iterations at 6.37.
 
 \begin{table}[!htbp]
 \centering
@@ -161,7 +161,7 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
 \end{tabular}
 \end{table}
 
-\paragraph{Scaling across SiT model sizes.} LARA consistently improves the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage persists at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling seed, although these error bars do not measure variability across independently trained models. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
+\paragraph{Scaling across SiT model sizes.} LARA enhances the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage remains at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling see. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
 
 \Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{app:qualitative_examples}.
 
@@ -175,7 +175,7 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
 \end{figure*}
 
 \paragraph{Qualitative comparison.}
-\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details, such as the Labrador's eye and muzzle, and coherent structures such as the can opener's cutting wheel and the window shade's vertical slats. All four methods receive the same initial noise latent within each column. These curated examples complement the quantitative results.
+\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details and all four methods receive the same initial noise latent within each column. These curated examples complement the quantitative results.
 
 \input{figures/qualitative_comparison/figure}
 
