@@ -267,7 +267,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 \textbf{Layerwise behavior.}
 \Cref{fig:representation_analysis} shows higher probe scores for LARA across the hidden hierarchy in the checkpoints examined. LARA is evaluated at $500\mathrm{K}$ iterations, whereas LayerSync uses $800\mathrm{K}$ and the SiT baseline uses $2\mathrm{M}$. Averaged over layers, LARA exceeds SiT by $54.8\%$ on Tiny ImageNet classification, $113.6\%$ on PASCAL VOC segmentation, and $155.6\%$ on DINOv2-g CKA. It also exceeds LayerSync by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The best layer reaches $55.71$ classification accuracy, $47.15$ segmentation mIoU, and $0.287$ CKA. 
 
-The shape of the curves adds information beyond the averages. LayerSync has a relatively sharp layerwise profile near its selected alignment region, whereas LARA's higher probe scores extend across a wider portion of the network. This pattern is consistent with LARA's multi-pair transition objective, whose supervision is distributed across source--target relations rather than concentrated on one selected pair. The broader layerwise gains support the hypothesis that transition learning distributes useful supervision across depth. The matched prediction-only control in \Cref{tab:realign_ablation} separately evaluates generation quality under multi-pair training and the fixed pair $(4,7)$.
+The shape of the curves adds information beyond the averages. LayerSync has a relatively sharp layerwise profile near its selected alignment region, whereas LARA's higher probe scores extend across a wider portion of the network. This pattern is consistent with LARA's multi-pair transition objective, whose supervision is distributed across source--target relations rather than concentrated on one selected pair. The broader layerwise gains support the hypothesis that transition learning distributes useful supervision across depth. The matched prediction-only control in \Cref{tab:realign_ablation} separately evaluates generation quality under multi-pair training and the fixed pair.
 
 \begin{figure*}[!t]
     \centering
@@ -519,5 +519,3 @@ The key comparison is therefore between bypassing the same depth interval with a
         \bottomrule
     \end{tabular}
 \end{table}
-
-\textbf{Takeaway.} The objective ablation shows that redundancy regularization alone does not account for the measured gain, while transition prediction supplies cross-depth supervision. Predictor architecture affects FID even with similar parameter counts, and increasing capacity beyond the Base configuration does not improve FID in the tested sweep. The functional intervention further shows that the predictor learns a usable cross-depth transition: for the same block-3-to-block-7 bypass, inserting the predicted target-depth state reduces FID from 128.25 to 54.17.
