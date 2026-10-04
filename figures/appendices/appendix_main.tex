@@ -455,8 +455,8 @@ The main ablation tables isolate the components needed for LARA. This appendix r
             0.10 & 35.58 \\
             0.25 & 35.31 \\
             \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
-            0.60 & 35.36 \\
-            0.80 & 35.74 \\
+            0.60 & 36.36 \\
+            0.80 & 37.74 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}
@@ -466,11 +466,11 @@ The main ablation tables isolate the components needed for LARA. This appendix r
 \subsection{Redundancy-Strength Sweep}
 \label{app:redundancy_strength}
 
-\Cref{tab:appendix_redundancy_strength} reports all four tested weights; the first three appear in Main \Cref{fig:cosine_squared_heatmap}. This diagnostic uses SiT-B on ImageNet $256\times256$ for 100K iterations with batch size 128. The $2\times$ setting gives the lowest FID-10K and sFID among the tested weights. Mean off-diagonal correlation reaches its minimum of 0.62781 at $4\times$, then rises to 0.76206 at $8\times$. Thus, stronger diversity regularization does not monotonically improve either correlation or generation quality.
+\Cref{tab:appendix_redundancy_strength} reports all four tested relative weights; the first three appear in Main \Cref{fig:cosine_squared_heatmap} at $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$. This diagnostic uses SiT-B on ImageNet $256\times256$ for 100K iterations with batch size 128. The $2\times$ setting ($\lambda_{\mathrm{div}}=0.4$) gives the lowest FID-10K and sFID among the tested weights. Mean off-diagonal correlation reaches its minimum of 0.62781 at $4\times$ ($\lambda_{\mathrm{div}}=0.8$), then rises to 0.76206 at $8\times$. Thus, stronger diversity regularization does not monotonically improve either correlation or generation quality.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Cross-layer redundancy-strength trade-off.} SiT-B, 100K iterations, batch size 128. Relative diversity weights are specific to this sweep. Lower FID-10K and sFID are better; the lowest correlation need not yield the best generation quality.}
+    \caption{\textbf{Cross-layer redundancy-strength trade-off.} SiT-B, 100K iterations, batch size 128. Relative weights $0\times$, $2\times$, and $4\times$ correspond to $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$ in Main \Cref{fig:cosine_squared_heatmap}. Lower FID-10K and sFID are better; the lowest correlation need not yield the best generation quality.}
     \label{tab:appendix_redundancy_strength}
     \footnotesize
     \setlength{\tabcolsep}{4pt}

@@ -1,5 +1,5 @@
-relative_div_weight,fid,sfid,off_diagonal_correlation,heatmap
-0,78.6308,137.2109,0.82353,lambda-div-0x-heatmap-step100000-paper-blues.svg
-2,66.6759,124.6616,0.66316,lambda-div-2x-heatmap-step100000-paper-blues.svg
-4,76.7636,144.3796,0.62781,lambda-div-4x-heatmap-step100000-paper-blues.svg
-8,76.9079,147.9986,0.76206,
+relative_div_weight,lambda_div,fid,sfid,off_diagonal_correlation,heatmap
+0,0,78.6308,137.2109,0.82353,lambda-div-0x-heatmap-step100000-paper-blues.svg
+2,0.4,66.6759,124.6616,0.66316,lambda-div-2x-heatmap-step100000-paper-blues.svg
+4,0.8,76.7636,144.3796,0.62781,lambda-div-4x-heatmap-step100000-paper-blues.svg
+8,,76.9079,147.9986,0.76206,

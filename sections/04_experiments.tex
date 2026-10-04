@@ -349,22 +349,22 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
     \renewcommand{\arraystretch}{1.08}
     \begin{tabular}{@{}cccc@{}}
         \toprule
-        Relative $\lambda_{\mathrm{div}}$ & FID-10K $\downarrow$ & sFID $\downarrow$ & Off-diagonal correlation \\
+        $\lambda_{\mathrm{div}}$ & FID-10K $\downarrow$ & sFID $\downarrow$ & Off-diagonal correlation \\
         \midrule
-        $0\times$ & 78.6308 & 137.2109 & 0.82353 \\
+        $0$ & 78.6308 & 137.2109 & 0.82353 \\
         \rowcolor{gray!10}
-        $2\times$ & \textbf{66.6759} & \textbf{124.6616} & 0.66316 \\
-        $4\times$ & 76.7636 & 144.3796 & \textbf{0.62781} \\
+        $0.4$ & \textbf{66.6759} & \textbf{124.6616} & 0.66316 \\
+        $0.8$ & 76.7636 & 144.3796 & \textbf{0.62781} \\
         \bottomrule
     \end{tabular}\par}
 
-    \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.} SiT-B at 100K iterations, batch size 128. (a--c) Layerwise heatmaps at $0\times$, $2\times$, and $4\times$ diversity weight. (d) A compact table reports FID-10K, sFID, and mean off-diagonal correlation for these three multipliers; the shaded row marks $2\times$. The $2\times$ setting gives the best FID and sFID, while $4\times$ gives the lowest correlation. The multipliers refer to this diagnostic sweep; its training budget differs from the objective decomposition in \Cref{tab:realign_ablation}. The full sweep is in Supplementary \Cref{tab:appendix_redundancy_strength}.}
+    \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.} SiT-B at 100K iterations, batch size 128. (a--c) Layerwise heatmaps at $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$. (d) A compact table reports FID-10K, sFID, and mean off-diagonal correlation for these three weights; the shaded row marks $0.4$. The $0.4$ setting gives the best FID and sFID, while $0.8$ gives the lowest correlation. This diagnostic sweep has a different training budget from the objective decomposition in \Cref{tab:realign_ablation}. The full sweep is in Supplementary \Cref{tab:appendix_redundancy_strength}.}
     \label{fig:cosine_squared_heatmap}
 \end{figure*}
 
-\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing the relative weight to $2\times$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $4\times$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy substantially outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation. The full sweep, including $8\times$, appears in Supplementary \Cref{tab:appendix_redundancy_strength}.
+\textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy substantially outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation. The full sweep appears in Supplementary \Cref{tab:appendix_redundancy_strength}.
 
-\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. Across the tested alternatives, FID remains within 0.76 of the selected setting's 35.12. These local ranges suggest that the recipe does not depend on a sharply tuned loss weight, while the selected combination remains best among the tested values.
+\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most alternatives stay close to its 35.12 FID, but larger diversity weights worsen quality: FID rises to 36.36 at $\lambda_{\mathrm{div}}=0.60$ and 37.74 at $0.80$.
 
 \begin{table*}[!t]
     \centering
@@ -431,8 +431,8 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
             0.10 & 35.58 \\
             0.25 & 35.31 \\
             \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
-            0.60 & 35.36 \\
-            0.80 & 35.74 \\
+            0.60 & 36.36 \\
+            0.80 & 37.74 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}

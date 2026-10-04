@@ -19,7 +19,6 @@ from matplotlib.colors import Normalize
 ROOT = Path(__file__).resolve().parents[1]
 with (ROOT / "figures/diversity_ablation_metrics.csv").open() as f:
     rows = list(csv.DictReader(f))
-weights = [int(r["relative_div_weight"]) for r in rows]
 colors = ["#687686", "#237E74", "#C08235", "#99506C"]
 plt.rcParams.update({
     "font.family": "DejaVu Sans", "font.size": 8,
@@ -33,6 +32,7 @@ heatmap_axes = []
 for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best FID / sFID", ""])):
     ax = fig.add_subplot(gs[0, i])
     heatmap_axes.append(ax)
+    lambda_div = float(row["lambda_div"])
     svg = ET.parse(ROOT / "rebuttal image" / row["heatmap"]).getroot()
     for cell in svg.iter("{http://www.w3.org/2000/svg}rect"):
         ax.add_patch(Rectangle((float(cell.attrib["x"]), float(cell.attrib["y"])),
@@ -42,7 +42,7 @@ for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best 
     ticks = [0.5, 3.5, 7.5, 11.5]
     ax.set_xticks(ticks, [1, 4, 8, 12])
     ax.set_yticks(ticks, [1, 4, 8, 12])
-    ax.set_title(f"({chr(97+i)}) {weights[i]}× diversity weight\n{descriptor}",
+    ax.set_title(f"({chr(97+i)}) $\\lambda_{{\\mathrm{{div}}}}={lambda_div:g}$\n{descriptor}",
                  fontweight="bold", color=colors[i], pad=7)
     ax.tick_params(length=0)
     for spine in ax.spines.values():
