@@ -361,6 +361,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main \Cref{tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         Main \Cref{tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
+        Main \Cref{fig:projection_layout_observation}(b,c) & Pairwise direction error & Evaluate eight prespecified layer pairs with EMA LARA-B at 400K steps on all 49,920 held-out validation latents; average tokenwise $1-\cos$ over images. & This work \\
         Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
         Main \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
@@ -436,22 +437,27 @@ This diagnostic compares two ways to bypass the same block range: feed the uncha
 \subsection{Transition Difficulty by Gap and Source Depth}
 \label{app:transition_difficulty}
 
-\Cref{tab:appendix_transition_difficulty} groups predictor transition errors by normalized layer-gap and source-position quartiles, as plotted in Main \Cref{fig:projection_layout_observation}(b,c). Lower error means an easier predicted transition under this measurement.
+\Cref{tab:appendix_transition_difficulty} reports eight prespecified source--target pairs from the 400K-step LARA-B checkpoint. We use the EMA backbone and EMA predictor in deterministic mode and evaluate all 49,920 held-out ImageNet validation latents. For each image, we draw one Gaussian noise sample and one discrete timestep from the run's 50-bin logit-normal law, then reuse that perturbed input for every pair. The score is the image-and-token mean of $1-\cos(\widehat A_{a\to b},A_b)$, matching Algorithm~\ref{alg:lara_transition_distance}. A fixed seed (20261005) controls record order, noise, and timesteps. Source and target indices refer to outputs after the numbered transformer blocks. Normal-approximation 95\% confidence-interval half-widths over images are at most 0.00021.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Transition difficulty across depth.} Predictor transition error grouped separately by normalized layer gap and source-layer position. Lower is better.}
+    \caption{\textbf{Measured transition difficulty for explicit layer pairs.} EMA LARA-B at 400K steps; lower directional error is better. The pair set was chosen before evaluation.}
     \label{tab:appendix_transition_difficulty}
     \footnotesize
     \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{@{}ccc@{}}
+    \begin{tabular}{@{}llcc@{}}
         \toprule
-        Quartile & By layer gap $\downarrow$ & By source position $\downarrow$ \\
+        Comparison & Pair $a\to b$ & Gap $b-a$ & Error $\downarrow$ \\
         \midrule
-        0--25\% & 0.025 & 0.060 \\
-        25--50\% & 0.039 & 0.023 \\
-        50--75\% & 0.057 & 0.027 \\
-        75--100\% & 0.152 & 0.110 \\
+        Fixed source $a=3$ & $3\to4$ & 1 & 0.0179 \\
+        & $3\to6$ & 3 & 0.0335 \\
+        & $3\to9$ & 6 & 0.0436 \\
+        & $3\to12$ & 9 & 0.0563 \\
+        \midrule
+        Fixed gap $b-a=2$ & $1\to3$ & 2 & 0.0719 \\
+        & $3\to5$ & 2 & 0.0330 \\
+        & $6\to8$ & 2 & 0.0154 \\
+        & $10\to12$ & 2 & 0.0473 \\
         \bottomrule
     \end{tabular}
 \end{table}

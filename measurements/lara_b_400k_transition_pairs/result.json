@@ -1,0 +1,88 @@
+{
+  "checkpoint": "/home/thanhlamtba31/checkpoints/depth-shortcut-B-hybrid-deep10-outputdistill-r010-l005-classcond-centered-logitnormal-mag-full",
+  "data_path": "/home/thanhlamtba31/datasets/imagenet-vae-latents-train-v3",
+  "weights": "ema",
+  "seed": 20261005,
+  "max_examples": 49920,
+  "batch_size": 16,
+  "metric": "mean over images and tokens of 1 - cosine(predicted direction, target hidden-state direction)",
+  "timestep_sampling": "discrete logit_normal(0,1), 50 bins",
+  "data_sampling": "fixed-seed shuffled subset of held-out validation latents",
+  "unique_classes": 1000,
+  "deterministic_backbone": true,
+  "elapsed_s": 56.53304719924927,
+  "pairs": [
+    {
+      "source": 3,
+      "target": 4,
+      "gap": 1,
+      "n": 49920,
+      "mean": 0.01786987243248381,
+      "sd": 0.005938115467537658,
+      "se": 2.6577330062920863e-05
+    },
+    {
+      "source": 3,
+      "target": 6,
+      "gap": 3,
+      "n": 49920,
+      "mean": 0.03348219401472866,
+      "sd": 0.011582110914441657,
+      "se": 5.1838261866288305e-05
+    },
+    {
+      "source": 3,
+      "target": 9,
+      "gap": 6,
+      "n": 49920,
+      "mean": 0.043552608427461774,
+      "sd": 0.016975508219928614,
+      "se": 7.597758706668461e-05
+    },
+    {
+      "source": 3,
+      "target": 12,
+      "gap": 9,
+      "n": 49920,
+      "mean": 0.05627853673429808,
+      "sd": 0.023563437727661986,
+      "se": 0.00010546330150175427
+    },
+    {
+      "source": 1,
+      "target": 3,
+      "gap": 2,
+      "n": 49920,
+      "mean": 0.07192730342790944,
+      "sd": 0.02089631792205185,
+      "se": 9.352602547898815e-05
+    },
+    {
+      "source": 3,
+      "target": 5,
+      "gap": 2,
+      "n": 49920,
+      "mean": 0.03295789389433197,
+      "sd": 0.010023065996039821,
+      "se": 4.486041652026862e-05
+    },
+    {
+      "source": 6,
+      "target": 8,
+      "gap": 2,
+      "n": 49920,
+      "mean": 0.01540682406887824,
+      "sd": 0.005357090392280311,
+      "se": 2.3976825696785442e-05
+    },
+    {
+      "source": 10,
+      "target": 12,
+      "gap": 2,
+      "n": 49920,
+      "mean": 0.04731419620166446,
+      "sd": 0.021180078391032028,
+      "se": 9.47960573071201e-05
+    }
+  ]
+}

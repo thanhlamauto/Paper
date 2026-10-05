@@ -33,7 +33,7 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
     \includegraphics[width=\textwidth]{figures/PCA.png}
     \par\smallskip
     \includegraphics[width=\textwidth]{figures/transition_difficulty.pdf}
-    \caption{\textbf{Shared spatial structure and heterogeneous transition difficulty.} (a) PCA maps of SiT-XL/2 hidden states reveal recurring spatial organization across network depth and denoising time, despite substantial changes in representation content. Predictor transition error (lower is better) is grouped separately by (b) normalized layer gap and (c) source-layer position. Error increases steadily with transition distance and is lowest for intermediate source depths, while rising near the hierarchy boundaries. These observations suggest two complementary properties of the representation hierarchy: reusable structure that can be captured by a shared transition predictor, and pair-dependent transition difficulty that motivates explicit depth-aware conditioning. PCA measurement details and tabulated transition errors are provided in Supplementary Secs.~\ref{app:metric_definitions} and \ref{app:transition_difficulty}, respectively.}
+    \caption{\textbf{Shared structure and pair-dependent difficulty.} (a) SiT-XL/2 PCA maps show recurring spatial patterns across depth and denoising time. For LARA-B at 400K steps, direction error (b) rises with the gap from source layer 3 and (c) varies with source depth at a fixed two-layer gap. Panels (b,c) show mean $1-\cos$ on 49,920 validation latents using EMA weights; lower is better.}
     \label{fig:projection_layout_observation}
 \end{figure*}
 
