@@ -1,7 +1,7 @@
 \section{Methodology}
 \label{sec:method}
 
-\subsection{Preliminary and Empirical Motivation}
+\subsection{Preliminaries }
 
 We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
 \begin{equation}
@@ -110,7 +110,7 @@ LARA further introduces a cross-layer redundancy regularizer, motivated by featu
 \end{equation}
 Minimizing this term discourages representation homogenization across depth. It does not enforce statistical independence between layers; it penalizes excessive directional similarity as a simple, inexpensive decorrelation signal. The ablation in \Cref{fig:cosine_squared_heatmap} examines how the strength of this penalty affects cross-layer correlation and generation quality.
 
-\subsection{Full Objective}
+\subsection{ Objectives}
 
 The LARA regularizer assigns a separate weight to each component:
 \begin{equation}
