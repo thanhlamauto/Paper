@@ -16,11 +16,12 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
 
 \begin{figure*}[!t]
   \centering
-  \includegraphics[width=\textwidth]{figures/arch.png}
+  \includegraphics[width=\textwidth]{figures/fig1_v2.pdf}
   \caption{\textbf{Layer-aware representation alignment.}
   \textbf{(a) SRA} aligns through an EMA/projection branch.
   \textbf{(b) LayerSync} aligns selected internal layer pairs.
-  \textbf{(c) Layer-aware transition (LARA)} uses a shared predictor across source--target depths.}
+  \textbf{(c) Layer-aware transition (LARA)} uses a shared predictor across source--target depths.
+  The illustrative input thumbnails show Gaussian corruption of the same image, with more noise at $t'<t$.}
   \label{fig:projection_as_transition}
 \end{figure*}
 
@@ -33,7 +34,7 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
     \includegraphics[width=\textwidth]{figures/PCA.png}
     \par\smallskip
     \includegraphics[width=\textwidth]{figures/transition_difficulty.pdf}
-    \caption{\textbf{Shared structure and pair-dependent difficulty.} (a) SiT-XL/2 PCA maps show recurring spatial patterns across depth and denoising time. For LARA-B at 400K steps, direction error (b) rises with the gap from source layer 3 and (c) varies with source depth at a fixed two-layer gap. Panels (b,c) show mean $1-\cos$ on 49,920 validation latents using EMA weights; lower is better.}
+    \caption{\textbf{Shared structure and pair-dependent difficulty.} (a) SiT-XL/2 PCA maps show recurring spatial patterns across depth and denoising time. For LARA-B at 400K steps, direction error (b) rises with the gap from source layer 3 and (c) varies with source depth at a fixed two-layer gap. Panels (b,c) show mean $1-\cos$ on 49,920 validation latents; lower is better.}
     \label{fig:projection_layout_observation}
 \end{figure*}
 

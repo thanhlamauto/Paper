@@ -29,6 +29,13 @@ Following PCA-based representation visualizations used in recent alignment work~
 \paragraph{Transition difficulty across depth}
 \Cref{fig:projection_layout_observation}(b,c) reports direction error for prespecified layer pairs in LARA-B at 400K steps. Holding the source at layer 3, error rises from 0.018 for $3\to4$ to 0.056 for $3\to12$. Holding the gap at two layers, error is 0.072 for $1\to3$, 0.033 for $3\to5$, 0.015 for $6\to8$, and 0.047 for $10\to12$. These measured examples show that both separation and position affect predictor difficulty in this checkpoint, motivating a shared transition predictor conditioned on source and target depth. The protocol and complete values are in Supplementary \Cref{tab:appendix_transition_difficulty}.
 
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/predictor_arch_redrawn.pdf}
+    \caption{\textbf{Shared layer-aware transition predictor (SiT-B/2).} Panel 01 forms the source-depth, target-depth, and timestep condition. Panel 02 expands a conditioned ConvNeXt-style spatial block with periodic attention. Panel 03 shows the complete shared predictor: a $768\to384\to768$ channel path with ten conditioned blocks, including attention after blocks 4 and 8.}
+    \label{fig:transition_predictor_arch}
+\end{figure*}
+
 \subsection{Layer-Aware Transition Prediction}
 \label{sec:predictor}
 
@@ -43,7 +50,10 @@ G_\psi(A_a^t,e_a,e_b,e_t),
 \widehat A_{a\to b}^{\,t}\in\mathbb{R}^{N\times C}.
 \label{eq:realign_predictor}
 \end{equation}
+
 Here $G_\psi$ is a lightweight transition predictor, and $e_a$, $e_b$, $e_t$ are source-layer, target-layer, and timestep embeddings. The predicted activation $\widehat A_{a\to b}^{\,t}$ lives in the coordinate system of layer $b$. The same predictor is reused for all valid layer pairs, which removes the need to train a separate adapter for each manually selected pair.
+
+\Cref{fig:transition_predictor_arch} shows how the shared predictor implements this mapping in SiT-B/2. An input projection reduces the 768-channel source tokens to 384 channels while preserving their $16\times16$ spatial layout. ConvNeXt-style residual blocks mix nearby token positions, and attention after blocks 4 and 8 provides global exchange without adding attention to every block. Channel-wise scale and shift inject the source-depth, target-depth, and timestep conditioning throughout the ten-block predictor. A final projection returns tokens to the 768-channel target space. This architecture supports a single transition model whose behavior changes with the requested layer pair; the architecture and capacity controls in \Cref{sec:predictor_ablation} test how strongly the result depends on this particular backbone.
 
 The transition prediction loss is
 \begin{equation}

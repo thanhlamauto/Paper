@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1260" viewBox="0 0 2400 1260" font-family="Verdana,Arial,sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#345068"/></marker><marker id="arrowWarm" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#b58663"/></marker><marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#7796a9"/></marker><marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8d78a7"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/></filter></defs>
+<rect width="2400" height="1260" fill="#f4f7f9"/>
+<rect x="28" y="28" width="930" height="710" rx="20" fill="#ffffff" stroke="#d8e2eb" stroke-width="2"/>
+<path d="M48 28 H938 Q958 28 958 48 V98 H28 V48 Q28 28 48 28 Z" fill="#527889"/>
+<text x="60" y="72" text-anchor="start" fill="#ffffff" font-size="30" font-weight="800">01  Layer-aware conditioning</text>
+<text x="926" y="71" text-anchor="end" fill="#ecf2f5" font-size="18" font-weight="550">timestep + source + target</text>
+<rect x="978" y="28" width="1394" height="710" rx="20" fill="#ffffff" stroke="#d8e2eb" stroke-width="2"/>
+<path d="M998 28 H2352 Q2372 28 2372 48 V98 H978 V48 Q978 28 998 28 Z" fill="#687185"/>
+<text x="1010" y="72" text-anchor="start" fill="#ffffff" font-size="30" font-weight="800">02  Conditioned spatial block</text>
+<text x="2340" y="71" text-anchor="end" fill="#ecf2f5" font-size="18" font-weight="550">ConvNeXt + periodic attention</text>
+<rect x="28" y="758" width="2344" height="474" rx="20" fill="#ffffff" stroke="#d8e2eb" stroke-width="2"/>
+<path d="M48 758 H2352 Q2372 758 2372 778 V828 H28 V778 Q28 758 48 758 Z" fill="#23475e"/>
+<text x="60" y="802" text-anchor="start" fill="#ffffff" font-size="30" font-weight="800">03  Predictor data path</text>
+<text x="2340" y="801" text-anchor="end" fill="#ecf2f5" font-size="18" font-weight="550">SiT-B/2 · 16 × 16 tokens</text>
+<g filter="url(#shadow)"><path d="M86 176 L99 163 L374 163 L361 176 Z" fill="#f8fbfd" stroke="#829faf" stroke-width="1.5"/><path d="M361 176 L374 163 L374 248 L361 261 Z" fill="#acc3d0" stroke="#829faf" stroke-width="1.5"/><rect x="86" y="176" width="275" height="85" rx="5" fill="#e9f0f4" stroke="#829faf" stroke-width="2"/></g>
+<text x="223.5" y="215.5" text-anchor="middle" fill="#293d50" font-size="23" font-weight="700">Timestep t</text>
+<text x="223.5" y="243.5" text-anchor="middle" fill="#293d50" font-size="21" font-weight="550">backbone embed e_t</text>
+<g filter="url(#shadow)"><path d="M86 303 L99 290 L374 290 L361 303 Z" fill="#f3fbfc" stroke="#5c9ba9" stroke-width="1.5"/><path d="M361 303 L374 290 L374 375 L361 388 Z" fill="#8abcc5" stroke="#5c9ba9" stroke-width="1.5"/><rect x="86" y="303" width="275" height="85" rx="5" fill="#daedf0" stroke="#5c9ba9" stroke-width="2"/></g>
+<text x="223.5" y="342.5" text-anchor="middle" fill="#293d50" font-size="23" font-weight="700">Source layer a</text>
+<text x="223.5" y="370.5" text-anchor="middle" fill="#293d50" font-size="21" font-weight="550">embedding e_a</text>
+<g filter="url(#shadow)"><path d="M86 430 L99 417 L374 417 L361 430 Z" fill="#fdf5f7" stroke="#b97991" stroke-width="1.5"/><path d="M361 430 L374 417 L374 502 L361 515 Z" fill="#d4a1b2" stroke="#b97991" stroke-width="1.5"/><rect x="86" y="430" width="275" height="85" rx="5" fill="#f6e5ea" stroke="#b97991" stroke-width="2"/></g>
+<text x="223.5" y="469.5" text-anchor="middle" fill="#293d50" font-size="23" font-weight="700">Target layer b</text>
+<text x="223.5" y="497.5" text-anchor="middle" fill="#293d50" font-size="21" font-weight="550">embedding e_b</text>
+<path d="M375 218 H425 L467 342" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M375 345 H460" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M375 472 H425 L467 353" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="495" cy="347" r="28" fill="white" stroke="#345068" stroke-width="3"/>
+<path d="M477 347 H513" fill="none" stroke="#345068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M495 329 V365" fill="none" stroke="#345068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M527 347 H604" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g filter="url(#shadow)"><path d="M614 305 L627 292 L892 292 L879 305 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M879 305 L892 292 L892 377 L879 390 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="614" y="305" width="265" height="85" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="746.5" y="355.1666666666667" text-anchor="middle" fill="#293d50" font-size="23" font-weight="600">Condition vector</text>
+<path d="M746 396 V455" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g filter="url(#shadow)"><path d="M625 467 L638 454 L883 454 L870 467 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M870 467 L883 454 L883 531 L870 544 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="625" y="467" width="245" height="77" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="747.5" y="513.1666666666666" text-anchor="middle" fill="#293d50" font-size="23" font-weight="600">AdaLN / FiLM</text>
+<rect x="88" y="588" width="790" height="92" rx="14" fill="#f7f4fa" stroke="#dcd3e6" stroke-width="1.6"/>
+<text x="483" y="626" text-anchor="middle" fill="#77668b" font-size="22" font-weight="700">Depth-conditioned vector modulates all predictor blocks</text>
+<text x="483" y="657" text-anchor="middle" fill="#687b91" font-size="18" font-weight="500">Target-layer activation is a stop-gradient reference</text>
+<text x="1355" y="123" text-anchor="middle" fill="#60758c" font-size="20" font-weight="750">NORMAL BLOCK</text>
+<g filter="url(#shadow)"><path d="M1222 594 L1235 581 L1505 581 L1492 594 Z" fill="#f8fbfd" stroke="#829faf" stroke-width="1.5"/><path d="M1492 594 L1505 581 L1505 643 L1492 656 Z" fill="#acc3d0" stroke="#829faf" stroke-width="1.5"/><rect x="1222" y="594" width="270" height="62" rx="5" fill="#e9f0f4" stroke="#829faf" stroke-width="2"/></g>
+<text x="1357.0" y="632.3333333333334" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">Input tokens</text>
+<g filter="url(#shadow)"><path d="M1222 510 L1235 497 L1505 497 L1492 510 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M1492 510 L1505 497 L1505 559 L1492 572 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1222" y="510" width="270" height="62" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="1357.0" y="548.3333333333334" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">Layer norm</text>
+<g filter="url(#shadow)"><path d="M1222 426 L1235 413 L1505 413 L1492 426 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M1492 426 L1505 413 L1505 475 L1492 488 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="1222" y="426" width="270" height="62" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="1357.0" y="464.0" text-anchor="middle" fill="#293d50" font-size="21" font-weight="600">Scale + shift 1</text>
+<g filter="url(#shadow)"><path d="M1222 307 L1235 294 L1505 294 L1492 307 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M1492 307 L1505 294 L1505 380 L1492 393 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="1222" y="307" width="270" height="86" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="1357.0" y="357.3333333333333" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">ConvNeXt block</text>
+<circle cx="1357" cy="258" r="24" fill="white" stroke="#345068" stroke-width="3"/>
+<path d="M1343 258 H1371" fill="none" stroke="#345068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1357 244 V272" fill="none" stroke="#345068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#shadow)"><path d="M1222 149 L1235 136 L1505 136 L1492 149 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M1492 149 L1505 136 L1505 200 L1492 213 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1222" y="149" width="270" height="64" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="1357.0" y="188.33333333333334" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">Normal output</text>
+<path d="M1357 590 V578" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1357 506 V494" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1357 422 V399" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1357 303 V288" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1357 230 V219" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1218 625 H1135 V258 H1327" fill="none" stroke="#7796a9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowBlue)" stroke-dasharray="8 7"/>
+<text x="1055" y="442" text-anchor="middle" fill="#7796a9" font-size="17" font-weight="600">residual</text>
+<text x="2047" y="123" text-anchor="middle" fill="#a47859" font-size="20" font-weight="750">EVERY 4TH BLOCK</text>
+<path d="M1506 181 H1882" fill="none" stroke="#b58663" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 149 L1904 136 L2174 136 L2161 149 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M2161 149 L2174 136 L2174 200 L2161 213 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1891" y="149" width="270" height="64" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="2026.0" y="188.33333333333334" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">Normal output</text>
+<path d="M2026 218 V230" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 239 L1904 226 L2174 226 L2161 239 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M2161 239 L2174 226 L2174 288 L2161 301 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1891" y="239" width="270" height="62" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="2026.0" y="277.3333333333333" text-anchor="middle" fill="#293d50" font-size="22" font-weight="600">Layer norm</text>
+<path d="M2026 307 V319" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 328 L1904 315 L2174 315 L2161 328 Z" fill="#fdf7f1" stroke="#b58663" stroke-width="1.5"/><path d="M2161 328 L2174 315 L2174 377 L2161 390 Z" fill="#dbb595" stroke="#b58663" stroke-width="1.5"/><rect x="1891" y="328" width="270" height="62" rx="5" fill="#f7e9dd" stroke="#b58663" stroke-width="2"/></g>
+<text x="2026.0" y="366.0" text-anchor="middle" fill="#293d50" font-size="21" font-weight="600">Scale + shift 2</text>
+<path d="M2026 396 V408" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 417 L1904 404 L2174 404 L2161 417 Z" fill="#fdf7f1" stroke="#b58663" stroke-width="1.5"/><path d="M2161 417 L2174 404 L2174 474 L2161 487 Z" fill="#dbb595" stroke="#b58663" stroke-width="1.5"/><rect x="1891" y="417" width="270" height="70" rx="5" fill="#f7e9dd" stroke="#b58663" stroke-width="2"/></g>
+<text x="2026.0" y="459.6666666666667" text-anchor="middle" fill="#293d50" font-size="23" font-weight="600">MHSA</text>
+<path d="M2026 493 V505" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 514 L1904 501 L2174 501 L2161 514 Z" fill="#fdf7f1" stroke="#b58663" stroke-width="1.5"/><path d="M2161 514 L2174 501 L2174 563 L2161 576 Z" fill="#dbb595" stroke="#b58663" stroke-width="1.5"/><rect x="1891" y="514" width="270" height="62" rx="5" fill="#f7e9dd" stroke="#b58663" stroke-width="2"/></g>
+<text x="2026.0" y="552.0" text-anchor="middle" fill="#293d50" font-size="21" font-weight="600">Output projection</text>
+<path d="M2026 582 V591" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<circle cx="2026" cy="620" r="24" fill="white" stroke="#b58663" stroke-width="3"/>
+<path d="M2012 620 H2040" fill="none" stroke="#b58663" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2026 606 V634" fill="none" stroke="#b58663" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2026 647 V656" fill="none" stroke="#b58663" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)"/>
+<g filter="url(#shadow)"><path d="M1891 665 L1904 652 L2174 652 L2161 665 Z" fill="#fdf5f7" stroke="#b97991" stroke-width="1.5"/><path d="M2161 665 L2174 652 L2174 707 L2161 720 Z" fill="#d4a1b2" stroke="#b97991" stroke-width="1.5"/><rect x="1891" y="665" width="270" height="55" rx="5" fill="#f6e5ea" stroke="#b97991" stroke-width="2"/></g>
+<text x="2026.0" y="699.1666666666666" text-anchor="middle" fill="#293d50" font-size="20" font-weight="600">Conv + attn output</text>
+<path d="M2175 181 H2250 V620 H2058" fill="none" stroke="#b58663" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowWarm)" stroke-dasharray="8 7"/>
+<text x="2306" y="442" text-anchor="middle" fill="#a47859" font-size="17" font-weight="600">residual</text>
+<g filter="url(#shadow)"><path d="M1573 505 L1586 492 L1818 492 L1805 505 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M1805 505 L1818 492 L1818 552 L1805 565 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="1573" y="505" width="232" height="60" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="1689.0" y="541.6666666666666" text-anchor="middle" fill="#293d50" font-size="20" font-weight="600">Condition vector</text>
+<path d="M1689 571 V581" fill="none" stroke="#8d78a7" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowPurple)"/>
+<g filter="url(#shadow)"><path d="M1573 590 L1586 577 L1818 577 L1805 590 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M1805 590 L1818 577 L1818 637 L1805 650 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="1573" y="590" width="232" height="60" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="1689.0" y="626.6666666666666" text-anchor="middle" fill="#293d50" font-size="20" font-weight="600">MLP → γ, β</text>
+<path d="M1566 619 H1533 V457 H1506" fill="none" stroke="#8d78a7" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowPurple)"/>
+<path d="M1818 619 H1855 V359 H1883" fill="none" stroke="#8d78a7" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowPurple)"/>
+<text x="1550" y="444" text-anchor="middle" fill="#8d78a7" font-size="16" font-weight="650">γ1, β1</text>
+<text x="1840" y="347" text-anchor="middle" fill="#8d78a7" font-size="16" font-weight="650">γ2, β2</text>
+<g filter="url(#shadow)"><path d="M88 925 L101 912 L361 912 L348 925 Z" fill="#f8fbfd" stroke="#829faf" stroke-width="1.5"/><path d="M348 925 L361 912 L361 1022 L348 1035 Z" fill="#acc3d0" stroke="#829faf" stroke-width="1.5"/><rect x="88" y="925" width="260" height="110" rx="5" fill="#e9f0f4" stroke="#829faf" stroke-width="2"/></g>
+<text x="218.0" y="977.0" text-anchor="middle" fill="#293d50" font-size="27" font-weight="700">Input x</text>
+<text x="218.0" y="1005.0" text-anchor="middle" fill="#293d50" font-size="25" font-weight="550">[B, 256, 768]</text>
+<g filter="url(#shadow)"><path d="M420 925 L433 912 L688 912 L675 925 Z" fill="#f5faf6" stroke="#6d9b79" stroke-width="1.5"/><path d="M675 925 L688 912 L688 1022 L675 1035 Z" fill="#a4c4aa" stroke="#6d9b79" stroke-width="1.5"/><rect x="420" y="925" width="255" height="110" rx="5" fill="#e1eee4" stroke="#6d9b79" stroke-width="2"/></g>
+<text x="547.5" y="977.0" text-anchor="middle" fill="#293d50" font-size="26" font-weight="700">Linear</text>
+<text x="547.5" y="1005.0" text-anchor="middle" fill="#293d50" font-size="24" font-weight="550">+ reshape</text>
+<g filter="url(#shadow)"><path d="M765 906 L783 888 L1243 888 L1225 906 Z" fill="#f8f4fb" stroke="#8d78a7" stroke-width="1.5"/><path d="M1225 906 L1243 888 L1243 1038 L1225 1056 Z" fill="#b8a4ce" stroke="#8d78a7" stroke-width="1.5"/><rect x="765" y="906" width="460" height="150" rx="5" fill="#eae2f2" stroke="#8d78a7" stroke-width="2"/></g>
+<text x="995.0" y="978.0" text-anchor="middle" fill="#293d50" font-size="26" font-weight="700">Conditioned spatial blocks</text>
+<text x="995.0" y="1006.0" text-anchor="middle" fill="#293d50" font-size="24" font-weight="550">× 10</text>
+<g filter="url(#shadow)"><path d="M1315 925 L1328 912 L1553 912 L1540 925 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M1540 925 L1553 912 L1553 1022 L1540 1035 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1315" y="925" width="225" height="110" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="1427.5" y="988.3333333333334" text-anchor="middle" fill="#293d50" font-size="25" font-weight="600">Layer norm</text>
+<g filter="url(#shadow)"><path d="M1620 925 L1633 912 L1888 912 L1875 925 Z" fill="#f5faf6" stroke="#6d9b79" stroke-width="1.5"/><path d="M1875 925 L1888 912 L1888 1022 L1875 1035 Z" fill="#a4c4aa" stroke="#6d9b79" stroke-width="1.5"/><rect x="1620" y="925" width="255" height="110" rx="5" fill="#e1eee4" stroke="#6d9b79" stroke-width="2"/></g>
+<text x="1747.5" y="977.0" text-anchor="middle" fill="#293d50" font-size="26" font-weight="700">Linear</text>
+<text x="1747.5" y="1005.0" text-anchor="middle" fill="#293d50" font-size="24" font-weight="550">+ reshape</text>
+<g filter="url(#shadow)"><path d="M1970 925 L1983 912 L2293 912 L2280 925 Z" fill="#f2f7fb" stroke="#6689a5" stroke-width="1.5"/><path d="M2280 925 L2293 912 L2293 1022 L2280 1035 Z" fill="#90acc3" stroke="#6689a5" stroke-width="1.5"/><rect x="1970" y="925" width="310" height="110" rx="5" fill="#dde8f0" stroke="#6689a5" stroke-width="2"/></g>
+<text x="2125.0" y="977.0" text-anchor="middle" fill="#293d50" font-size="27" font-weight="700">Output y</text>
+<text x="2125.0" y="1005.0" text-anchor="middle" fill="#293d50" font-size="25" font-weight="550">[B, 256, 768]</text>
+<path d="M365 980 H411" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M692 980 H756" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1247 980 H1306" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1557 980 H1611" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1892 980 H1961" fill="none" stroke="#345068" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="719" y="1081" text-anchor="middle" fill="#63758b" font-size="20" font-weight="650">[B, 256, 384]</text>
+<rect x="799" y="1094" width="395" height="62" rx="12" fill="#f7f3fa" stroke="#ddd4e8" stroke-width="1.5"/>
+<text x="997" y="1121" text-anchor="middle" fill="#77668b" font-size="19" font-weight="700">Attention after blocks 4 and 8</text>
+<text x="997" y="1147" text-anchor="middle" fill="#687b91" font-size="16" font-weight="500">same vector injected at each block</text>
+<text x="1203" y="1199" text-anchor="middle" fill="#3b536b" font-size="24" font-weight="600">Shared predictor Gψ maps source tokens to target-layer coordinates</text>
+</svg>
