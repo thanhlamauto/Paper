@@ -450,6 +450,8 @@ ViT & 13.1M & 36.34 \\
 \end{tabular}
 \end{table}
 
+\textbf{Capacity scaling.} \Cref{tab:main_predictor_size_ablation} further shows that performance improves with predictor capacity up to a moderate operating point rather than requiring an oversized auxiliary network. Increasing the predictor from 2.7M to 5.9M and 13.0M parameters improves FID-10K from 36.85 to 35.91 and 35.12, respectively. Expanding it further to 25.4M parameters yields 35.35 instead of an additional gain. The 13.0M Base predictor therefore achieves the best quality--capacity trade-off in this sweep, reaching the lowest FID with roughly half the parameters of the Large variant. Together, \Cref{tab:predictor_architecture_ablation,tab:main_predictor_size_ablation} show that LARA benefits from the transition-learning formulation across architectural choices and does not rely on brute-force predictor scaling.
+
 \begin{table}[!htbp]
 \centering
 \caption{\textbf{Predictor capacity on SiT-B/2.} Parameter counts refer to the auxiliary predictor. Lower FID-10K is better.}
@@ -468,10 +470,9 @@ Large & 25.4M & 35.35 \\
 \end{tabular}
 \end{table}
 
-\textbf{Capacity scaling.} \Cref{tab:main_predictor_size_ablation} further shows that performance improves with predictor capacity up to a moderate operating point rather than requiring an oversized auxiliary network. Increasing the predictor from 2.7M to 5.9M and 13.0M parameters improves FID-10K from 36.85 to 35.91 and 35.12, respectively. Expanding it further to 25.4M parameters yields 35.35 instead of an additional gain. The 13.0M Base predictor therefore achieves the best quality--capacity trade-off in this sweep, reaching the lowest FID with roughly half the parameters of the Large variant. Together, \Cref{tab:predictor_architecture_ablation,tab:main_predictor_size_ablation} show that LARA benefits from the transition-learning formulation across architectural choices and does not rely on brute-force predictor scaling.
-
 \subsection{Compatibility with External Alignment}
 
+\textbf{Compatibility with external alignment.} \Cref{tab:external_alignment_compatibility} tests whether internal transition learning remains useful when external representation guidance is also available. Adding REPA to LARA improves FID-10K from 35.12 to 31.48 under the matched ablation protocol, a gain of 3.64 points. This is consistent with the objectives providing different supervision: REPA anchors hidden states to external DINOv2 features, whereas LARA models relationships within the diffusion-transformer hierarchy. We interpret the result as evidence of compatibility, not as a comparison against REPA alone, because the table has no REPA-only row under the same ablation protocol. The direct REPA--LARA profiling comparison appears separately in \Cref{tab:repa_profile}.
 
 \begin{table}[!htbp]
     \centering
@@ -489,14 +490,12 @@ Large & 25.4M & 35.35 \\
     \end{tabular}
 \end{table}
 
-\textbf{Compatibility with external alignment.} \Cref{tab:external_alignment_compatibility} tests whether internal transition learning remains useful when external representation guidance is also available. Adding REPA to LARA improves FID-10K from 35.12 to 31.48 under the matched ablation protocol, a gain of 3.64 points. This is consistent with the objectives providing different supervision: REPA anchors hidden states to external DINOv2 features, whereas LARA models relationships within the diffusion-transformer hierarchy. We interpret the result as evidence of compatibility, not as a comparison against REPA alone, because the table has no REPA-only row under the same ablation protocol. The direct REPA--LARA profiling comparison appears separately in \Cref{tab:repa_profile}.
-
 The matched training-cost comparison with SRA and LayerSync appears in \Cref{tab:internal_alignment_profile}.
 
 \subsection{Functional Layer-Aware Transition Diagnostic}
 \label{sec:inference_transition_diagnostic}
 
-\textbf{Functional transition diagnostic.} We further test whether the learned predictor produces target-depth states that are functionally compatible with the downstream backbone. For the transition from block 3 to block 7, we bypass the intervening transformer blocks and resume computation either directly from the unchanged block-3 state or from the predictor-generated state for block 7. This intervention isolates the contribution of the learned cross-depth transition while keeping the skipped interval fixed.
+\textbf{Functional transition diagnostic.} We further test whether the learned predictor produces target-depth states that are functionally compatible with the downstream backbone. \Cref{tab:transition_diagnostic} reports the results. For the transition from block 3 to block 7, we bypass the intervening transformer blocks and resume computation either directly from the unchanged block-3 state or from the predictor-generated state for block 7. This intervention isolates the contribution of the learned cross-depth transition while keeping the skipped interval fixed.
 
 The difference is substantial. Naively bypassing the block-3-to-block-7 interval without the predictor degrades FID to 128.25. Replacing the same skipped computation with the predictor-generated target-depth state reduces FID to 54.17 while retaining the same relative block cost of $0.67\times$. Restricting the predictor transition to the first 125 of 250 denoising steps further improves FID to 45.84, approaching the full-backbone result of 35.12 while executing fewer transformer blocks overall.
 
@@ -519,3 +518,5 @@ The key comparison is therefore between bypassing the same depth interval with a
         \bottomrule
     \end{tabular}
 \end{table}
+
+\FloatBarrier

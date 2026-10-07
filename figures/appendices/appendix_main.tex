@@ -96,29 +96,7 @@ The cross-layer redundancy term is computed directly from the hidden-state cache
 \subsection{Compute Comparison with SRA and LayerSync}
 \label{app:sra_layersync_lara_compute}
 
-We additionally profile the internal alignment methods used in our speed analysis. The matched per-step comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, and batch size. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor. The FID values below are no-CFG checkpoint evaluations at the stated training iterations, separate from the timing profile.
-
-\begin{table}[!t]
-    \centering
-    \caption{\textbf{Comparison between SRA, LayerSync, and LARA.}
-    No-CFG FID at the stated training iterations and per-step profiling under the same
-    \texttt{SiT-XL/2} TPU v4-16 setting. The same LayerSync time per step applies to both checkpoint rows.}
-    \label{tab:appendix_sra_layersync_lara_compute}
-    \vspace{0.25em}
-    \scriptsize
-    \setlength{\tabcolsep}{4pt}
-    \renewcommand{\arraystretch}{0.9}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Method & Iter. & FID $\downarrow$ & Wall-clock time/step $\downarrow$ \\
-        \midrule
-        \texttt{SiT-XL/2}+SRA & 2M & 7.97 & 0.42 \\
-        \texttt{SiT-XL/2}+LayerSync & 2M & 6.81 & \textbf{0.25} \\
-        \texttt{SiT-XL/2}+LayerSync & 4M & 6.37 & \textbf{0.25} \\
-        \texttt{SiT-XL/2}+LARA (Ours) & 2M & \textbf{5.08} & 0.30 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+We additionally profile the internal alignment methods used in our speed analysis. The matched per-step comparison uses our \texttt{SiT-XL/2} setup on TPU v4-16 with the same input resolution, precision, and batch size. SRA uses an EMA self-representation target, LayerSync directly aligns a selected internal pair, and LARA uses the shared layer-aware transition predictor. Main \Cref{tab:internal_alignment_profile} reports no-CFG checkpoint evaluations at the stated training iterations alongside the separate timing profile.
 
 \subsection{LARA ImageNet Configuration}
 \label{app:realign_hyperparameters}
@@ -425,11 +403,6 @@ The main paper uses the standard full-backbone sampler. The transition interface
 \end{algorithm}
 
 Each diagnostic must report the skip rate, chosen layer jumps, and whether the same route is used at all timesteps or only at selected Euler steps. The comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
-
-\subsection{Magnitude-Calibrated Transition Diagnostic}
-\label{app:magnitude_layer_skip}
-
-This diagnostic compares two ways to bypass the same block range: feed the unchanged source-layer state directly to the downstream backbone, or feed a predicted target-layer state. Because the cosine transition loss mainly controls direction, the predictor route uses a small magnitude head $h_\omega$ that predicts the target token scale from $\operatorname{sg}(\widehat A_{a\to b}^{\,t})$. Its loss is fully detached, so it updates only $h_\omega$ and never backpropagates into $v_\theta$ or $G_\psi$. At evaluation, we normalize the predicted direction, apply the predicted scale, and feed the calibrated state to the suffix $F_{\theta,b:L}$. These routes are diagnostic only and are not used for the main generation results.
 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
