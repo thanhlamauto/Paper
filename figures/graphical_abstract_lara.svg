@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="590" viewBox="0 0 1320 590" font-family="Verdana,Arial,sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>
+<rect width="1320" height="590" fill="#f4f7f9"/>
+<rect x="16" y="16" width="317" height="391" rx="17" fill="white" stroke="#d8e2eb" stroke-width="1.8"/><path d="M33 16 H316 Q333 16 333 33 V75 H16 V33 Q16 16 33 16 Z" fill="#1c4965"/>
+<text x="174.5" y="55" text-anchor="middle" fill="white" font-size="35" font-weight="800">01  Layer pair</text>
+<rect x="347" y="16" width="558" height="391" rx="17" fill="white" stroke="#d8e2eb" stroke-width="1.8"/><path d="M364 16 H888 Q905 16 905 33 V75 H347 V33 Q347 16 364 16 Z" fill="#1c4965"/>
+<text x="626.0" y="55" text-anchor="middle" fill="white" font-size="35" font-weight="800">02  Shared predictor</text>
+<rect x="919" y="16" width="385" height="391" rx="17" fill="white" stroke="#d8e2eb" stroke-width="1.8"/><path d="M936 16 H1287 Q1304 16 1304 33 V75 H919 V33 Q919 16 936 16 Z" fill="#9a315e"/>
+<text x="1111.5" y="55" text-anchor="middle" fill="white" font-size="35" font-weight="800">03  Match target</text>
+<text x="174" y="111" text-anchor="middle" fill="#304762" font-size="30" font-weight="700">DiT backbone</text>
+<path d="M238 147 V344" fill="none" stroke="#c7d5e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<g filter="url(#shadow)"><path d="M181 135 L190 126 L300 126 L291 135 Z" fill="#f9fbfd" stroke="#8da5b9" stroke-width="1.5"/><path d="M291 135 L300 126 L300 169 L291 178 Z" fill="#afc1d1" stroke="#8da5b9" stroke-width="1.5"/><rect x="181" y="135" width="110" height="43" rx="4" fill="#eaf0f5" stroke="#8da5b9" stroke-width="2"/></g>
+<text x="236.0" y="166.5" text-anchor="middle" fill="#1a2940" font-size="30" font-weight="700">···</text>
+<g filter="url(#shadow)"><path d="M181 192 L190 183 L300 183 L291 192 Z" fill="#fff3f6" stroke="#bd5678" stroke-width="1.5"/><path d="M291 192 L300 183 L300 235 L291 244 Z" fill="#db809a" stroke="#bd5678" stroke-width="1.5"/><rect x="181" y="192" width="110" height="52" rx="4" fill="#fbe0e8" stroke="#bd5678" stroke-width="2"/></g>
+<text x="236.0" y="229.66666666666666" text-anchor="middle" fill="#1a2940" font-size="35" font-weight="700">A_b</text>
+<g filter="url(#shadow)"><path d="M181 263 L190 254 L300 254 L291 263 Z" fill="#f9fbfd" stroke="#8da5b9" stroke-width="1.5"/><path d="M291 263 L300 254 L300 297 L291 306 Z" fill="#afc1d1" stroke="#8da5b9" stroke-width="1.5"/><rect x="181" y="263" width="110" height="43" rx="4" fill="#eaf0f5" stroke="#8da5b9" stroke-width="2"/></g>
+<text x="236.0" y="294.5" text-anchor="middle" fill="#1a2940" font-size="30" font-weight="700">···</text>
+<g filter="url(#shadow)"><path d="M181 324 L190 315 L300 315 L291 324 Z" fill="#f0fbff" stroke="#287e9a" stroke-width="1.5"/><path d="M291 324 L300 315 L300 367 L291 376 Z" fill="#5ba8be" stroke="#287e9a" stroke-width="1.5"/><rect x="181" y="324" width="110" height="52" rx="4" fill="#d7ecf2" stroke="#287e9a" stroke-width="2"/></g>
+<text x="236.0" y="361.6666666666667" text-anchor="middle" fill="#1a2940" font-size="35" font-weight="700">A_a</text>
+<text x="158" y="226" text-anchor="end" fill="#96506b" font-size="27" font-weight="600">target</text>
+<text x="158" y="358" text-anchor="end" fill="#287e9a" font-size="27" font-weight="600">source</text>
+<g filter="url(#shadow)"><path d="M39 323 L48 314 L142 314 L133 323 Z" fill="#f9fbfd" stroke="#8da5b9" stroke-width="1.5"/><path d="M133 323 L142 314 L142 365 L133 374 Z" fill="#afc1d1" stroke="#8da5b9" stroke-width="1.5"/><rect x="39" y="323" width="94" height="51" rx="4" fill="#eaf0f5" stroke="#8da5b9" stroke-width="2"/></g>
+<text x="86.0" y="359.8333333333333" text-anchor="middle" fill="#1a2940" font-size="34" font-weight="700">x_t</text>
+<path d="M137 348 H172" fill="none" stroke="#253952" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M301 216 H929 V184 H947" fill="none" stroke="#bd5678" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)" stroke-dasharray="8 7"/>
+<text x="1027" y="147" text-anchor="middle" fill="#96506b" font-size="25" font-weight="600">stop-grad target</text>
+<g filter="url(#shadow)"><path d="M958 164 L967 155 L1105 155 L1096 164 Z" fill="#fff3f6" stroke="#bd5678" stroke-width="1.5"/><path d="M1096 164 L1105 155 L1105 216 L1096 225 Z" fill="#db809a" stroke="#bd5678" stroke-width="1.5"/><rect x="958" y="164" width="138" height="61" rx="4" fill="#fbe0e8" stroke="#bd5678" stroke-width="2"/></g>
+<text x="1027.0" y="206.16666666666666" text-anchor="middle" fill="#1a2940" font-size="35" font-weight="700">A_b</text>
+<path d="M301 350 H430 V286 H452" fill="none" stroke="#253952" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="626" y="115" text-anchor="middle" fill="#536782" font-size="29" font-weight="600">condition on timestep + layers</text>
+<g filter="url(#shadow)"><path d="M415 143 L424 134 L529 134 L520 143 Z" fill="#f9fbfd" stroke="#8da5b9" stroke-width="1.5"/><path d="M520 143 L529 134 L529 182 L520 191 Z" fill="#afc1d1" stroke="#8da5b9" stroke-width="1.5"/><rect x="415" y="143" width="105" height="48" rx="4" fill="#eaf0f5" stroke="#8da5b9" stroke-width="2"/></g>
+<text x="467.5" y="177.66666666666666" text-anchor="middle" fill="#1a2940" font-size="32" font-weight="700">e_t</text>
+<g filter="url(#shadow)"><path d="M572 143 L581 134 L686 134 L677 143 Z" fill="#f0fbff" stroke="#287e9a" stroke-width="1.5"/><path d="M677 143 L686 134 L686 182 L677 191 Z" fill="#5ba8be" stroke="#287e9a" stroke-width="1.5"/><rect x="572" y="143" width="105" height="48" rx="4" fill="#d7ecf2" stroke="#287e9a" stroke-width="2"/></g>
+<text x="624.5" y="177.66666666666666" text-anchor="middle" fill="#1a2940" font-size="32" font-weight="700">e_a</text>
+<g filter="url(#shadow)"><path d="M729 143 L738 134 L843 134 L834 143 Z" fill="#fff3f6" stroke="#bd5678" stroke-width="1.5"/><path d="M834 143 L843 134 L843 182 L834 191 Z" fill="#db809a" stroke="#bd5678" stroke-width="1.5"/><rect x="729" y="143" width="105" height="48" rx="4" fill="#fbe0e8" stroke="#bd5678" stroke-width="2"/></g>
+<text x="781.5" y="177.66666666666666" text-anchor="middle" fill="#1a2940" font-size="32" font-weight="700">e_b</text>
+<path d="M625 195 V224" fill="none" stroke="#8455ae" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g filter="url(#shadow)"><path d="M458 236 L467 227 L803 227 L794 236 Z" fill="#f9f1ff" stroke="#8455ae" stroke-width="1.5"/><path d="M794 236 L803 227 L803 327 L794 336 Z" fill="#ad84d4" stroke="#8455ae" stroke-width="1.5"/><rect x="458" y="236" width="336" height="100" rx="4" fill="#eadcf7" stroke="#8455ae" stroke-width="2"/></g>
+<text x="626" y="282" text-anchor="middle" fill="#1a2940" font-size="45" font-weight="700">Gψ</text>
+<text x="626" y="321" text-anchor="middle" fill="#4f3e69" font-size="27" font-weight="600">768 → 384 → 768</text>
+<text x="626" y="381" text-anchor="middle" fill="#536782" font-size="25" font-weight="600">10 spatial blocks · attention at 4, 8</text>
+<path d="M803 286 H870 V348 H946" fill="none" stroke="#253952" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1027" y="301" text-anchor="middle" fill="#96506b" font-size="25" font-weight="600">prediction</text>
+<g filter="url(#shadow)"><path d="M958 317 L967 308 L1105 308 L1096 317 Z" fill="#fff3f6" stroke="#bd5678" stroke-width="1.5"/><path d="M1096 317 L1105 308 L1105 369 L1096 378 Z" fill="#db809a" stroke="#bd5678" stroke-width="1.5"/><rect x="958" y="317" width="138" height="61" rx="4" fill="#fbe0e8" stroke="#bd5678" stroke-width="2"/></g>
+<text x="1027.0" y="359.1666666666667" text-anchor="middle" fill="#1a2940" font-size="35" font-weight="700">Â_b</text>
+<path d="M1105 195 H1145 V257 H1159" fill="none" stroke="#253952" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1105 348 H1145 V289 H1159" fill="none" stroke="#253952" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<g filter="url(#shadow)"><path d="M1164 253 L1173 244 L1280 244 L1271 253 Z" fill="#fff7ed" stroke="#c7803a" stroke-width="1.5"/><path d="M1271 253 L1280 244 L1280 298 L1271 307 Z" fill="#e9a666" stroke="#c7803a" stroke-width="1.5"/><rect x="1164" y="253" width="107" height="54" rx="4" fill="#ffe9d7" stroke="#c7803a" stroke-width="2"/></g>
+<text x="1217.5" y="289.0" text-anchor="middle" fill="#1a2940" font-size="27" font-weight="700">match</text>
+<text x="1218" y="354" text-anchor="middle" fill="#9a315e" font-size="28" font-weight="700">L_pred</text>
+<rect x="16" y="426" width="316" height="148" rx="15" fill="white" stroke="#d8e2eb" stroke-width="1.8"/>
+<rect x="34" y="449" width="7" height="96" rx="3" fill="#4e9457"/>
+<text x="57" y="490" text-anchor="start" fill="#263951" font-size="31" font-weight="700">Flow matching</text>
+<text x="57" y="540" text-anchor="start" fill="#536782" font-size="29" font-weight="600">velocity fit</text>
+<rect x="340" y="426" width="316" height="148" rx="15" fill="white" stroke="#d8e2eb" stroke-width="1.8"/>
+<rect x="358" y="449" width="7" height="96" rx="3" fill="#bd5678"/>
+<text x="381" y="490" text-anchor="start" fill="#263951" font-size="31" font-weight="700">Prediction</text>
+<text x="381" y="540" text-anchor="start" fill="#536782" font-size="29" font-weight="600">target match</text>
+<rect x="664" y="426" width="316" height="148" rx="15" fill="white" stroke="#d8e2eb" stroke-width="1.8"/>
+<rect x="682" y="449" width="7" height="96" rx="3" fill="#8455ae"/>
+<text x="705" y="490" text-anchor="start" fill="#263951" font-size="31" font-weight="700">Consistency</text>
+<text x="705" y="540" text-anchor="start" fill="#536782" font-size="29" font-weight="600">direct vs EMA</text>
+<rect x="988" y="426" width="316" height="148" rx="15" fill="white" stroke="#d8e2eb" stroke-width="1.8"/>
+<rect x="1006" y="449" width="7" height="96" rx="3" fill="#287e9a"/>
+<text x="1029" y="490" text-anchor="start" fill="#263951" font-size="31" font-weight="700">Redundancy</text>
+<text x="1029" y="540" text-anchor="start" fill="#536782" font-size="29" font-weight="600">layer diversity</text>
+</svg>

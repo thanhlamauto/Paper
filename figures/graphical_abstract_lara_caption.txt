@@ -1,0 +1,1 @@
+LARA learns depth-conditioned transitions between intermediate diffusion-transformer layers with a shared predictor. Training combines flow matching, prediction toward a stop-gradient target layer, EMA-based path consistency, and cross-layer redundancy regularization.
