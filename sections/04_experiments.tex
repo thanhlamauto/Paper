@@ -276,7 +276,7 @@ We report FID and R-Precision (top 3) using the standard HumanML3D evaluation pr
 
 The shape of the curves adds information beyond the averages. LayerSync has a relatively sharp layerwise profile near its selected alignment region, whereas LARA's higher probe scores extend across a wider portion of the network. This pattern is consistent with LARA's multi-pair transition objective, whose supervision is distributed across source--target relations rather than concentrated on one selected pair. The broader layerwise gains support the hypothesis that transition learning distributes useful supervision across depth. The matched prediction-only control in \Cref{tab:realign_ablation} separately evaluates generation quality under multi-pair training and the fixed pair.
 
-\begin{figure*}[!t]
+\begin{figure*}[t]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/predictor_output_behavior.pdf}
     \caption{\textbf{Predictor-output visualization.} PCA maps for the long-range transition from layer 1 to layer 11 at all five timesteps in the diagnostic grid, ordered from $t=0.1$ (noise side) to $t=0.9$ (image side).}
