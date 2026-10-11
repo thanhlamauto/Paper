@@ -1,0 +1,4 @@
+Comfortaa by Johan Aakerlund.
+Source: https://github.com/googlefonts/comfortaa
+Revision: 2a87ac6f6ea3495150bfa00d0c0fb53dd0a2f11b
+License: SIL Open Font License 1.1, see OFL.txt.

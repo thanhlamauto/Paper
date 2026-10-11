@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from pathlib import Path
 from xml.sax.saxutils import escape
+from figure_typography import embedded_font_css, font_weight, with_text_shadow
 
 
 HERE = Path(__file__).resolve().parent
@@ -22,11 +23,11 @@ svg: list[str] = []
 
 
 def add(s: str) -> None:
-    svg.append(s)
+    svg.append(with_text_shadow(s))
 
 
 def text(x, y, s, size=20, color="#1a2940", weight=500, anchor="middle", extra=""):
-    add(f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" font-size="{size}" font-weight="{weight}" {extra}>{escape(s)}</text>')
+    add(f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" font-size="{size}" font-weight="{font_weight(weight)}" {extra}>{escape(s)}</text>')
 
 
 def layer_text(x, y, sub, size=20, color="#1a2940", weight=700):
@@ -97,7 +98,8 @@ def panel(x, w, title, subtitle, accent, dark=False):
     text(x+w/2, 70, subtitle, 17, "#d8e7f0", 550)
 
 
-add('<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="830" viewBox="0 0 2200 830" font-family="Verdana,Arial,sans-serif">')
+add('<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="830" viewBox="0 0 2200 830" font-family="Nimbus Roman,Times New Roman,Times,serif">')
+add(embedded_font_css())
 add('<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>')
 add('<rect width="2200" height="830" fill="#f4f7f9"/>')
 
@@ -134,16 +136,16 @@ path("M1730 508 V477")
 layer_pair_text(1730, 589)
 
 # Sampled-pair inset
-add('<rect x="1843" y="200" width="310" height="319" rx="14" fill="#fdf8fa" stroke="#dfc3d0" stroke-width="1.5"/>')
+add('<rect x="1843" y="200" width="310" height="354" rx="14" fill="#fdf8fa" stroke="#dfc3d0" stroke-width="1.5"/>')
 text(1998, 231, "Random layer pairs", 21, "#7b2d50", 750)
 text(1998, 253, "examples across steps", 17, "#66798e", 500)
 for j, (src, dst) in enumerate(((2,7),(4,10),(6,9))):
-    y = 293 + 74*j
+    y = 315 + 74*j
     text(1998, y-24, f"Step {j+1}", 18, "#66798e", 650)
     prism(1869, y, 91, 25, "source", f"l_{src}", dashed=True, font=16)
     prism(2043, y, 91, 25, "target", f"l_{dst}", dashed=True, font=16)
     path(f"M1977 {y+12} H2034", width=2.1)
-text(1998, 505, "⋯", 24, "#66798e", 700)
+text(1998, 535, "…", 24, "#66798e", 700)
 
 # Equal-width legend cells keep each label clear of the preceding 3D block.
 add('<rect x="18" y="717" width="2164" height="95" rx="16" fill="#ffffff" stroke="#d8e2eb" stroke-width="1.7"/>')

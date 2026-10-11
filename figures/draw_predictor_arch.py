@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from xml.sax.saxutils import escape
+from figure_typography import embedded_font_css, font_weight, with_text_shadow
 
 
 HERE = Path(__file__).resolve().parent
@@ -12,13 +13,13 @@ items: list[str] = []
 
 
 def put(s: str) -> None:
-    items.append(s)
+    items.append(with_text_shadow(s))
 
 
 def label(x, y, s, size=24, color="#1a2940", weight=600, anchor="middle"):
     put(
         f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" '
-        f'font-size="{size}" font-weight="{weight}">{escape(s)}</text>'
+        f'font-size="{size}" font-weight="{font_weight(weight)}">{escape(s)}</text>'
     )
 
 
@@ -91,7 +92,8 @@ def panel(x, y, w, h, title, subtitle, accent, border):
         label(x+w/2, y+61, subtitle, 17, "#d8e7f0", 550)
 
 
-put('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1260" viewBox="0 0 2400 1260" font-family="Verdana,Arial,sans-serif">')
+put('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1260" viewBox="0 0 2400 1260" font-family="Nimbus Roman,Times New Roman,Times,serif">')
+put(embedded_font_css())
 put('<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><marker id="arrowWarm" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#c7803a"/></marker><marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8da5b9"/></marker><marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8455ae"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>')
 put('<rect width="2400" height="1260" fill="#f4f7f9"/>')
 
