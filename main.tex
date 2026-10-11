@@ -30,11 +30,10 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
 
 \begin{figure*}[!t]
     \centering
-    {\small\sffamily\bfseries (a) PCA across depth and denoising time\par}
-    \includegraphics[width=\textwidth]{figures/PCA.png}
+    \includegraphics[width=\textwidth]{figures/PCA.pdf}
     \par\smallskip
     \includegraphics[width=\textwidth]{figures/transition_difficulty.pdf}
-    \caption{\textbf{Shared structure and pair-dependent difficulty.} (a) SiT-XL/2 PCA maps show recurring spatial patterns across depth and denoising time. For LARA-B at 400K steps, direction error (b) rises with the gap from source layer 3 and (c) varies with source depth at a fixed two-layer gap. Panels (b,c) show mean $1-\cos$ on 49,920 validation latents; lower is better.}
+    \caption{\textbf{Shared structure and pair-dependent difficulty.} (a) Frozen SiT-XL/2 PCA maps for a fixed image and noise draw, with time increasing from noise to image. For LARA-B at 400K steps, direction error (b) rises with the gap from source layer 3 and (c) varies with source depth at a fixed two-layer gap. Panels (b,c) show mean $1-\cos$ on 49,920 validation latents; lower is better.}
     \label{fig:projection_layout_observation}
 \end{figure*}
 
