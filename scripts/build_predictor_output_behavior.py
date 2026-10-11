@@ -1,4 +1,4 @@
-"""Build Figure 7 from the supplied PCA comparison grid.
+"""Build Figure 9 from the supplied PCA comparison grid.
 
 The selected L1 -> L11 transition is the long-range pair (gap >= 8)
 with the largest mean displayed-image similarity gain over the source
@@ -9,24 +9,122 @@ they are not representation metrics reported in the paper.
 """
 
 from pathlib import Path
+import base64
+import io
+import os
 import subprocess
+import sys
 import tempfile
-
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+from xml.sax.saxutils import escape
 import numpy as np
 from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "figures"))
+from figure_typography import embedded_font_css, font_weight, with_text_shadow
 SOURCE = ROOT / "figures" / "pca_comparison_grid.pdf"
 OUTPUT = ROOT / "figures" / "predictor_output_behavior.pdf"
 PAIR = (1, 11)
 TIMESTEPS_DESCENDING = (0.9, 0.7, 0.5, 0.3, 0.1)
 ROW_STARTS = (452, 632, 811, 990, 1170)
 TILE_SIZE = 142
+
+
+def render_styled_figure(rows):
+    """Keep the extracted RGB pixels while changing diagram typography/layout."""
+    parts = []
+
+    def add(markup):
+        parts.append(with_text_shadow(markup))
+
+    def text(x, y, label, size=36, color="#1a2940", weight=700, anchor="middle", italic=False):
+        style = ' font-style="italic"' if italic else ''
+        add(f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" '
+            f'font-size="{size}" font-weight="{font_weight(weight)}"{style}>{escape(label)}</text>')
+
+    colors = {
+        "source": ("#d7ecf2", "#f0fbff", "#5ba8be", "#287e9a"),
+        "predict": ("#eadcf7", "#f9f1ff", "#ad84d4", "#8455ae"),
+        "target": ("#fbe0e8", "#fff3f6", "#db809a", "#bd5678"),
+        "neutral": ("#eaf0f5", "#f9fbfd", "#afc1d1", "#8da5b9"),
+    }
+
+    def prism(x, y, width, height, kind):
+        front, top, side, edge = colors[kind]
+        d = 12
+        add(f'<g filter="url(#shadow)"><path d="M{x} {y} l{d} -{d} h{width} l-{d} {d} Z" '
+            f'fill="{top}" stroke="{edge}" stroke-width="1.5"/>'
+            f'<path d="M{x+width} {y} l{d} -{d} v{height} l-{d} {d} Z" '
+            f'fill="{side}" stroke="{edge}" stroke-width="1.5"/>'
+            f'<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" '
+            f'fill="{front}" stroke="{edge}" stroke-width="2"/></g>')
+
+    def state_label(cx, y, index, predicted=False):
+        # Align superscript and subscript beside the same A glyph.
+        total_width = {"1": 53, "11": 68, "1→11": 111}[index]
+        left = cx - total_width / 2
+        text(left, y, 'Â' if predicted else 'A', 46, anchor="start", italic=True)
+        text(left+34, y+12, index, 30, anchor="start")
+        text(left+34, y-26, 't', 29, anchor="start", italic=True)
+
+    add('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1300" '
+        'viewBox="0 0 2400 1300" font-family="Nimbus Roman,Times New Roman,Times,serif">')
+    add(embedded_font_css())
+    add('<defs><marker id="arrow" markerWidth="14" markerHeight="14" refX="14" refY="7" '
+        'orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L14 7 L0 14 Z" fill="#253952"/>'
+        '</marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%">'
+        '<feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/>'
+        '</filter></defs>')
+    add('<rect width="2400" height="1300" fill="#f4f7f9"/>')
+    add('<rect x="24" y="24" width="2352" height="1252" rx="24" fill="white" '
+        'stroke="#d8e2eb" stroke-width="2"/>')
+    add('<path d="M48 24 H2352 Q2376 24 2376 48 V114 H24 V48 Q24 24 48 24 Z" fill="#9a315e"/>')
+    text(1200, 84, 'LARA: predictor-output visualization', 46, 'white')
+    text(315, 178, 'Layer 1 → layer 11', 35, '#536782')
+    text(1470, 162, 'Increasing denoising time t', 35, '#536782')
+    add('<path d="M680 190 H2260" fill="none" stroke="#253952" stroke-width="3.5" '
+        'stroke-linecap="round" marker-end="url(#arrow)"/>')
+    add('<rect x="658" y="281" width="1624" height="907" rx="18" '
+        'fill="#fcfdff" stroke="#d8e2eb" stroke-width="1.8"/>')
+    row_styles = [("Source", "source", "1"),
+                  ("Prediction", "predict", "1→11"),
+                  ("Target", "target", "11")]
+    for row, (label, kind, index) in enumerate(row_styles):
+        y = 300 + 304*row
+        prism(95, y+55, 440, 150, kind)
+        text(315, y+101, label, 42)
+        state_label(315, y+166, index, predicted=(kind == "predict"))
+    for col, t in enumerate(reversed(TIMESTEPS_DESCENDING)):
+        x = 680 + 330*col
+        prism(x, 222, 260, 42, "neutral")
+        text(x+130, 253, f't = {t:.1f}', 35)
+        for row, panel in enumerate(rows[col]):
+            y = 300 + 304*row
+            assert panel.shape == (TILE_SIZE, TILE_SIZE, 3)
+            buffer = io.BytesIO()
+            Image.fromarray(panel).save(buffer, format="PNG")
+            uri = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode()
+            add(f'<rect x="{x-5}" y="{y-5}" width="270" height="270" rx="5" '
+                'fill="white" stroke="#bdccda" stroke-width="1.8" filter="url(#shadow)"/>')
+            add(f'<image href="{uri}" x="{x}" y="{y}" width="260" height="260" '
+                'image-rendering="optimizeSpeed"/>')
+    text(1470, 1240, 'PCA maps at matched timesteps · source, prediction, and actual target',
+         30, '#536782', 400)
+    add('</svg>')
+    svg = OUTPUT.with_suffix('.svg')
+    svg.write_text('\n'.join(parts)+'\n')
+    env = os.environ.copy()
+    env.update(FONTCONFIG_FILE=str(ROOT/'figures/fonts/fonts.conf'), PANGOCAIRO_BACKEND="fc")
+    subprocess.run(['rsvg-convert', '-f', 'pdf', '-o', str(OUTPUT), str(svg)], check=True, env=env)
+    png = OUTPUT.with_suffix('.png')
+    subprocess.run(['rsvg-convert', '-f', 'png', '-w', '7200', '-h', '3900',
+                    '-o', str(png), str(svg)], check=True, env=env)
+    # Record 300 DPI without changing the rendered pixels.
+    with Image.open(png) as rendered:
+        rendered.save(png, dpi=(300, 300))
+    print(svg)
+    print(png)
 
 
 def extract_grid():
@@ -95,37 +193,7 @@ def main():
     print(f"Selected L{PAIR[0]} -> L{PAIR[1]} (visual selection score {max(eligible)[0]:.3f})")
 
     rows = list(reversed(panels(PAIR)))  # t increases from noise toward image.
-    fig = plt.figure(figsize=(9.6, 5.4), facecolor="white")
-    axes = fig.subplots(3, 5, gridspec_kw={
-        "left": 0.19, "right": 0.99, "bottom": 0.025, "top": 0.80,
-        "wspace": 0.065, "hspace": 0.065,
-    })
-    labels = (
-        rf"Source $A_{{{PAIR[0]}}}^{{t}}$",
-        rf"Prediction $\widehat{{A}}_{{{PAIR[0]}\to{PAIR[1]}}}^{{t}}$",
-        rf"Target $A_{{{PAIR[1]}}}^{{t}}$",
-    )
-    for row_index, label in enumerate(labels):
-        fig.text(0.173, 0.667 - row_index * 0.258, label,
-                 ha="right", va="center", fontsize=15, color="#262626")
-    for column_index, t in enumerate(reversed(TIMESTEPS_DESCENDING)):
-        center = (axes[0, column_index].get_position().x0
-                  + axes[0, column_index].get_position().x1) / 2
-        fig.text(center, 0.835, rf"$t={t:.1f}$", ha="center", va="center", fontsize=15)
-    fig.text(0.19, 0.95, rf"$L_{{{PAIR[0]}}}\rightarrow L_{{{PAIR[1]}}}$", fontsize=16,
-             ha="left", va="center", fontweight="bold")
-    fig.text(0.58, 0.95, "Increasing $t$: noise $\\rightarrow$ image",
-             fontsize=14, ha="center", va="center")
-    fig.add_artist(plt.annotate("", xy=(0.97, 0.95), xytext=(0.79, 0.95),
-                                xycoords="figure fraction", textcoords="figure fraction",
-                                arrowprops={"arrowstyle": "->", "lw": 1.6, "color": "#444444"}))
-    for column_index, triplet in enumerate(rows):
-        for row_index, panel in enumerate(triplet):
-            axis = axes[row_index, column_index]
-            axis.imshow(panel, interpolation="nearest")
-            axis.set_axis_off()
-    fig.savefig(OUTPUT, dpi=300, bbox_inches="tight", pad_inches=0.04)
-    plt.close(fig)
+    render_styled_figure(rows)
     print(OUTPUT)
 
 

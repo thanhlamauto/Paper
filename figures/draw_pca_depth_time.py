@@ -76,8 +76,8 @@ add(f'<image href="{uri}" x="78" y="307" width="228" height="228"/>')
 text(192, 595, 'Goose', 32, '#63758b', 400)
 text(462, 260, 'Timestep', 34, '#536782')
 line(355, 335, 355, 1300)
-text(303, 905, 'Noise → image', 36, '#536782', 700,
-     'transform="rotate(-90 303 905)"')
+text(303, 905, 'Denoising time t', 36, '#536782', 700,
+     'transform="rotate(90 303 905)"')
 add('<rect x="593" y="289" width="1725" height="1038" rx="18" '
     'fill="#fcfdff" stroke="#d8e2eb" stroke-width="1.8"/>')
 
