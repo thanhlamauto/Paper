@@ -91,11 +91,12 @@ def tower(x, title, highlights, *, dashed=False, bottom_key="student", bottom_la
     photo(x+47, 584, bottom_key, label=bottom_label)
 
 
-def panel(x, w, title, subtitle, accent, dark=False):
-    add(f'<rect x="{x}" y="16" width="{w}" height="686" rx="20" fill="#ffffff"/>')
-    add(f'<path d="M{x+20} 16 H{x+w-20} Q{x+w} 16 {x+w} 36 V78 H{x} V36 Q{x} 16 {x+20} 16 Z" fill="{accent}"/>')
-    text(x+w/2, 48, title, 31, "#ffffff", 800)
-    text(x+w/2, 70, subtitle, 17, "#d8e7f0", 550)
+def panel(x, w, title, subtitle):
+    add(f'<rect x="{x}" y="16" width="{w}" height="686" rx="20" '
+        'fill="#fafafa" stroke="#505050" stroke-width="4"/>')
+    text(x+28, 50, title, 36, "#111111", 700, anchor="start")
+    text(x+28, 75, subtitle, 17, "#454545", 400, anchor="start")
+    add(f'<path d="M{x+28} 87 H{x+w-28}" stroke="#606060" stroke-width="1.8"/>')
 
 
 add('<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="830" viewBox="0 0 2200 830" font-family="Nimbus Roman,Times New Roman,Times,serif">')
@@ -103,9 +104,9 @@ add(embedded_font_css())
 add('<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>')
 add('<rect width="2200" height="830" fill="#ffffff"/>')
 
-panel(18, 744, "01  SRA", "EMA teacher across timesteps", "#1c4965")
-panel(780, 572, "02  LayerSync", "One selected internal pair", "#1c4965")
-panel(1370, 812, "03  LARA (ours)", "Shared predictor across sampled pairs", "#9a315e")
+panel(18, 744, "01  SRA", "EMA teacher across timesteps")
+panel(780, 572, "02  LayerSync", "One selected internal pair")
+panel(1370, 812, "03  LARA (ours)", "Shared predictor across sampled pairs")
 
 # SRA
 tower(82, "Student (online)", {3:"source"}, bottom_label="t")
@@ -148,7 +149,8 @@ for j, (src, dst) in enumerate(((2,7),(4,10),(6,9))):
 text(1998, 535, "…", 24, "#66798e", 700)
 
 # Equal-width legend cells keep each label clear of the preceding 3D block.
-add('<rect x="18" y="717" width="2164" height="95" rx="16" fill="#ffffff"/>')
+add('<rect x="18" y="717" width="2164" height="95" rx="16" '
+    'fill="#fafafa" stroke="#505050" stroke-width="4"/>')
 legend = [("neutral","Transformer block"),("source","Source layer"),("target","Target layer"),("source","Sampled pair"),("predict","Projection / Predictor"),("align","Alignment"),("lock","EMA teacher")]
 cell_width = 2164 / len(legend)
 for index, (kind, label) in enumerate(legend):

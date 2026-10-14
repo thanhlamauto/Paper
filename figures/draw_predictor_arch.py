@@ -78,18 +78,17 @@ def sum_node(cx, cy, r=25, color="#253952"):
     route(f"M{cx} {cy-r+10} V{cy+r-10}", color, 3, arrow=False)
 
 
-def panel(x, y, w, h, title, subtitle, accent):
+def panel(x, y, w, h, title, subtitle):
     put(
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="20" '
-        f'fill="#ffffff"/>'
+        'fill="#fafafa" stroke="#505050" stroke-width="4.4"/>'
     )
     put(
-        f'<path d="M{x+20} {y} H{x+w-20} Q{x+w} {y} {x+w} {y+20} '
-        f'V{y+70} H{x} V{y+20} Q{x} {y} {x+20} {y} Z" fill="{accent}"/>'
+        f'<path d="M{x+28} {y+75} H{x+w-28}" stroke="#606060" stroke-width="2"/>'
     )
-    label(x+w/2, y+38, title, 30, "#ffffff", 800)
+    label(x+28, y+38, title, 36, "#111111", 700, anchor="start")
     if subtitle:
-        label(x+w/2, y+61, subtitle, 17, "#d8e7f0", 550)
+        label(x+28, y+62, subtitle, 17, "#454545", 400, anchor="start")
 
 
 put('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1260" viewBox="0 0 2400 1260" font-family="Nimbus Roman,Times New Roman,Times,serif">')
@@ -97,11 +96,10 @@ put(embedded_font_css())
 put('<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><marker id="arrowWarm" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#c7803a"/></marker><marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8da5b9"/></marker><marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8455ae"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>')
 put('<rect width="2400" height="1260" fill="#ffffff"/>')
 
-# Match the overview figure: navy process headers, a magenta LARA header,
-# and the same semantic colors for source, target, predictor and embeddings.
-panel(28, 28, 930, 710, "01  Layer-aware conditioning", "timestep + source + target", "#1c4965")
-panel(978, 28, 1394, 710, "02  Conditioned spatial block", "ConvNeXt + periodic attention", "#1c4965")
-panel(28, 758, 2344, 474, "03  LARA predictor data path", "SiT-B/2 · 16 × 16 tokens", "#9a315e")
+# Neutral framed sections match the overview and PCA figures.
+panel(28, 28, 930, 710, "01  Layer-aware conditioning", "timestep + source + target")
+panel(978, 28, 1394, 710, "02  Conditioned spatial block", "ConvNeXt + periodic attention")
+panel(28, 758, 2344, 474, "03  LARA predictor data path", "SiT-B/2 · 16 × 16 tokens")
 
 # Layer-aware conditioning.
 prism(86, 176, 275, 85, "neutral", "Timestep t", "backbone embed e_t", size=23)

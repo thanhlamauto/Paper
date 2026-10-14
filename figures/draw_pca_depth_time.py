@@ -18,8 +18,8 @@ def add(markup):
     parts.append(with_text_shadow(markup))
 
 
-def text(x, y, label, size=34, color="#1a2940", weight=700, extra=""):
-    add(f'<text x="{x}" y="{y}" text-anchor="middle" fill="{color}" '
+def text(x, y, label, size=34, color="#1a2940", weight=700, extra="", anchor="middle"):
+    add(f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" '
         f'font-size="{size}" font-weight="{font_weight(weight)}" {extra}>{escape(label)}</text>')
 
 
@@ -61,11 +61,11 @@ add('<defs><marker id="arrow" markerWidth="14" markerHeight="14" refX="14" refY=
     '</marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%">'
     '<feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/>'
     '</filter></defs>')
-add('<rect width="2400" height="1420" fill="#f4f7f9"/>')
-add('<rect x="24" y="24" width="2352" height="1372" rx="24" fill="white" '
-    'stroke="#d8e2eb" stroke-width="2"/>')
-add('<path d="M48 24 H2352 Q2376 24 2376 48 V114 H24 V48 Q24 24 48 24 Z" fill="#1c4965"/>')
-text(1200, 84, '(a) PCA across depth and denoising time', 46, 'white')
+add('<rect width="2400" height="1420" fill="white"/>')
+add('<rect x="24" y="24" width="2352" height="1372" rx="24" '
+    'fill="#fafafa" stroke="#505050" stroke-width="4.4"/>')
+text(90, 88, '(a) PCA across depth and denoising time', 54, '#111111', anchor="start")
+add('<path d="M90 114 H2310" stroke="#606060" stroke-width="2"/>')
 text(1445, 162, 'Increasing block depth', 35, '#536782')
 line(620, 190, 2280, 190)
 text(192, 270, 'Input image', 34, '#536782')

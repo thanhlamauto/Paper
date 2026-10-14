@@ -77,8 +77,10 @@ def render_styled_figure(rows):
         '<feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/>'
         '</filter></defs>')
     add('<rect width="2400" height="1300" fill="white"/>')
-    add('<path d="M48 24 H2352 Q2376 24 2376 48 V114 H24 V48 Q24 24 48 24 Z" fill="#9a315e"/>')
-    text(1200, 84, 'LARA: predictor-output visualization', 46, 'white')
+    add('<rect x="24" y="24" width="2352" height="1252" rx="24" '
+        'fill="#fafafa" stroke="#505050" stroke-width="4.4"/>')
+    text(90, 88, 'LARA: predictor-output visualization', 54, '#111111', anchor="start")
+    add('<path d="M90 114 H2310" stroke="#606060" stroke-width="2"/>')
     text(315, 178, 'Layer 1 → layer 11', 35, '#536782')
     text(1470, 162, 'Increasing denoising time t', 35, '#536782')
     add('<path d="M680 190 H2260" fill="none" stroke="#253952" stroke-width="3.5" '

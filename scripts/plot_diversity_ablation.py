@@ -19,17 +19,16 @@ from matplotlib.colors import Normalize
 ROOT = Path(__file__).resolve().parents[1]
 with (ROOT / "figures/diversity_ablation_metrics.csv").open() as f:
     rows = list(csv.DictReader(f))
-colors = ["#687686", "#237E74", "#C08235", "#99506C"]
 plt.rcParams.update({
     "font.family": "DejaVu Sans", "font.size": 8,
-    "axes.titlesize": 9, "axes.labelsize": 8,
+    "axes.titlesize": 9.5, "axes.titleweight": "bold", "axes.labelsize": 8,
     "xtick.labelsize": 7.5, "ytick.labelsize": 7.5,
     "pdf.fonttype": 42, "ps.fonttype": 42,
 })
 fig = plt.figure(figsize=(7.15, 2.4), layout="constrained")
 gs = fig.add_gridspec(1, 3, wspace=0.05)
 heatmap_axes = []
-for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best FID / sFID", ""])):
+for i, row in enumerate(rows[:3]):
     ax = fig.add_subplot(gs[0, i])
     heatmap_axes.append(ax)
     lambda_div = float(row["lambda_div"])
@@ -42,8 +41,8 @@ for i, (row, descriptor) in enumerate(zip(rows[:3], ["No diversity loss", "Best 
     ticks = [0.5, 3.5, 7.5, 11.5]
     ax.set_xticks(ticks, [1, 4, 8, 12])
     ax.set_yticks(ticks, [1, 4, 8, 12])
-    ax.set_title(f"({chr(97+i)}) $\\lambda_{{\\mathrm{{div}}}}={lambda_div:g}$\n{descriptor}",
-                 fontweight="bold", color=colors[i], pad=7)
+    ax.set_title(f"({chr(97+i)}) $\\mathbf{{\\lambda}}_{{\\mathbf{{div}}}} = \\mathbf{{{lambda_div:g}}}$",
+                 fontweight="bold", color="black", pad=8)
     ax.tick_params(length=0)
     for spine in ax.spines.values():
         spine.set_color("#CFD5DA")
