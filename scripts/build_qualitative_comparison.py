@@ -83,7 +83,7 @@ for i, method in enumerate(METHODS):
                   interpolation="none")
         ax.set_axis_off()
         if i == 0:
-            ax.set_title(name+f"\nseed {seed}", fontsize=7, pad=5)
+            ax.set_title(name, fontsize=7, pad=5)
 fig.text(left, 0.982, "Selected ImageNet comparisons", fontsize=10,
          fontweight="bold", va="top", color="#25313C")
 fig.text(left, 0.026,

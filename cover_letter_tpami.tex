@@ -1,0 +1,45 @@
+% Build: pdflatex -output-directory=tmp/pdfs/cover_letter cover_letter_tpami.tex
+% Draft declarations require author confirmation before submission.
+% Author affiliations are transcribed from the user-provided reference letter.
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage[left=25mm,right=25mm,top=24mm,bottom=23mm]{geometry}
+\usepackage{microtype}
+\usepackage{xcolor}
+\definecolor{letterpurple}{HTML}{8034B0}
+\newcommand{\highlight}[1]{\textcolor{letterpurple}{#1}}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Cover Letter -- LARA -- IEEE TPAMI},pdfauthor={Cuong Pham},pdfsubject={Manuscript submission cover letter}}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+\linespread{1.03}
+
+\begin{document}
+
+\begin{center}
+COVER LETTER
+\end{center}
+\vspace{2pt}
+
+Dear editors and reviewers,
+
+We are submitting the manuscript entitled ``\highlight{LARA: Layer-Aware Representation Alignment for Diffusion Transformers}'' (named LARA). In this investigation, we present Layer-Aware Representation Alignment, a novel approach to improve the training of diffusion transformers by learning transitions between representations at different network depths, without requiring external pretrained representation encoders or manually selected layer pairs.
+
+In this approach, the inputs to the transition predictor are the representations from a source layer, together with embeddings of the source layer, target layer, and denoising timestep. The desired output is a prediction of the representations at the target layer. The same predictor is shared across randomly sampled layer pairs, allowing the model to learn from supervision throughout the network. In addition, we introduce a compositional consistency objective that encourages direct long-range predictions to agree with predictions composed through an intermediate layer, together with a redundancy regularizer that preserves layer-specific information. Our goal is to develop an internal representation alignment method that makes effective use of the network's own hierarchy and can be applied across different diffusion-transformer architectures. We evaluate our approach on ImageNet image generation using SiT at three model scales, as well as DiT and pixel-space JiT, and on text-conditioned human motion generation using MDM on HumanML3D. Our empirical experiments demonstrate that LARA consistently improves generation quality, and \highlight{it outperforms the tested internal-alignment baselines across the evaluated SiT model scales and training budgets}. For example, at 400K training iterations without classifier-free guidance, LARA reduces SiT-XL/2 FID from 11.06 with LayerSync to 8.56 on ImageNet at $256\times256$ resolution. Furthermore, through controlled ablation studies and analyses of intermediate representations, we examine the contributions of depth conditioning, multi-pair supervision, and the additional training objectives. These results demonstrate the effectiveness of our approach in both image and motion generation.
+
+We, therefore, believe that this paper will be of broad interest to the readership of \highlight{IEEE Transactions on Pattern Analysis and Machine Intelligence}, particularly researchers working on representation learning and generative modeling.
+
+% Confirm author approval, publication/submission status, and competing interests.
+% If a related conference version exists, disclose it and explain the additions.
+All authors have agreed to the submission. This manuscript presents original work and is not under consideration for publication elsewhere. We declare that there are no conflicts of interest.
+
+With kind regards,
+
+Cuong Pham\textsuperscript{1,2}, corresponding author, on behalf of the authors,\\
+\textsuperscript{1}Posts \& Telecommunications Institute of Technology, km 10, Nguyen Trai Street, Hanoi, Vietnam.\\
+\textsuperscript{2}VinAI Research, Technopark, Ocean Park, Gialam, Hanoi, Vietnam.
+
+\end{document}
