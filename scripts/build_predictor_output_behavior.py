@@ -76,9 +76,7 @@ def render_styled_figure(rows):
         '</marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%">'
         '<feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/>'
         '</filter></defs>')
-    add('<rect width="2400" height="1300" fill="#f4f7f9"/>')
-    add('<rect x="24" y="24" width="2352" height="1252" rx="24" fill="white" '
-        'stroke="#d8e2eb" stroke-width="2"/>')
+    add('<rect width="2400" height="1300" fill="white"/>')
     add('<path d="M48 24 H2352 Q2376 24 2376 48 V114 H24 V48 Q24 24 48 24 Z" fill="#9a315e"/>')
     text(1200, 84, 'LARA: predictor-output visualization', 46, 'white')
     text(315, 178, 'Layer 1 → layer 11', 35, '#536782')

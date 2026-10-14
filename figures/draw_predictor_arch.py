@@ -78,10 +78,10 @@ def sum_node(cx, cy, r=25, color="#253952"):
     route(f"M{cx} {cy-r+10} V{cy+r-10}", color, 3, arrow=False)
 
 
-def panel(x, y, w, h, title, subtitle, accent, border):
+def panel(x, y, w, h, title, subtitle, accent):
     put(
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="20" '
-        f'fill="#ffffff" stroke="{border}" stroke-width="2"/>'
+        f'fill="#ffffff"/>'
     )
     put(
         f'<path d="M{x+20} {y} H{x+w-20} Q{x+w} {y} {x+w} {y+20} '
@@ -95,13 +95,13 @@ def panel(x, y, w, h, title, subtitle, accent, border):
 put('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1260" viewBox="0 0 2400 1260" font-family="Nimbus Roman,Times New Roman,Times,serif">')
 put(embedded_font_css())
 put('<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#253952"/></marker><marker id="arrowWarm" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#c7803a"/></marker><marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8da5b9"/></marker><marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#8455ae"/></marker><filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" flood-opacity="0.16"/></filter></defs>')
-put('<rect width="2400" height="1260" fill="#f4f7f9"/>')
+put('<rect width="2400" height="1260" fill="#ffffff"/>')
 
 # Match the overview figure: navy process headers, a magenta LARA header,
 # and the same semantic colors for source, target, predictor and embeddings.
-panel(28, 28, 930, 710, "01  Layer-aware conditioning", "timestep + source + target", "#1c4965", "#d8e2eb")
-panel(978, 28, 1394, 710, "02  Conditioned spatial block", "ConvNeXt + periodic attention", "#1c4965", "#d8e2eb")
-panel(28, 758, 2344, 474, "03  LARA predictor data path", "SiT-B/2 · 16 × 16 tokens", "#9a315e", "#d8e2eb")
+panel(28, 28, 930, 710, "01  Layer-aware conditioning", "timestep + source + target", "#1c4965")
+panel(978, 28, 1394, 710, "02  Conditioned spatial block", "ConvNeXt + periodic attention", "#1c4965")
+panel(28, 758, 2344, 474, "03  LARA predictor data path", "SiT-B/2 · 16 × 16 tokens", "#9a315e")
 
 # Layer-aware conditioning.
 prism(86, 176, 275, 85, "neutral", "Timestep t", "backbone embed e_t", size=23)
