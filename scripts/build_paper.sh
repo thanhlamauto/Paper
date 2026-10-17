@@ -6,7 +6,7 @@ cd "$project_dir"
 
 tectonic --synctex --keep-logs --keep-intermediates main.tex
 
-if grep -Eq 'Reference .+ undefined|There were undefined references' main.log; then
-    echo 'Unresolved LaTeX references remain in main.log.' >&2
+if grep -Eq 'Reference .+ undefined|Citation .+ undefined|There were undefined (references|citations)' main.log; then
+    echo 'Unresolved LaTeX references or citations remain in main.log.' >&2
     exit 1
 fi

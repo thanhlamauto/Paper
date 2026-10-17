@@ -108,7 +108,7 @@ Unless otherwise stated, we follow the class-conditional ImageNet training setup
 \end{table*}
 
 \noindent\textbf{Evaluation.}
-We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS)~\citep{salimans2016improved,szegedy2016rethinking}, precision, and recall~\citep{kynkaanniemi2019precision} using $50\mathrm{K}$ generated samples. For the SiT, LayerSync, and LARA rows of \Cref{tab:imagenet_no_cfg}, we re-evaluate a fixed trained checkpoint with five independent sampling seeds, generating 50K images per seed. The checkpoint, sampler, sampling steps, CFG setting, class-label schedule, evaluator, and reference statistics remain fixed; we report the FID mean and sample standard deviation across those seeds. Dispersive and SRA also report FID means and sample standard deviations from sampling re-evaluations. Metric definitions are in Supplementary Sec.~\ref{app:metric_definitions}.
+We report Frechet Inception Distance (FID)~\citep{heusel2017gans}, Inception Score (IS), precision, and recall using $50\mathrm{K}$ generated samples under the SiT evaluation protocol~\citep{ma2024sit}. A recent evaluation study reviews the definitions and limitations of these metrics~\citep{stein2023exposing}. For the SiT, LayerSync, and LARA rows of \Cref{tab:imagenet_no_cfg}, we re-evaluate a fixed trained checkpoint with five independent sampling seeds, generating 50K images per seed. The checkpoint, sampler, sampling steps, CFG setting, class-label schedule, evaluator, and reference statistics remain fixed; we report the FID mean and sample standard deviation across those seeds. Dispersive and SRA also report FID means and sample standard deviations from sampling re-evaluations. Metric definitions are in Supplementary Sec.~\ref{app:metric_definitions}.
 
 \noindent\textbf{Comparison methods.}
 Our controlled comparisons use the same SiT backbone and training budget as the base model, and compare against the self-contained internal baselines reported in \Cref{tab:imagenet_no_cfg}: Dispersive Loss~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}.
@@ -161,10 +161,6 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
 \end{tabular}
 \end{table}
 
-\noindent\textbf{Scaling across SiT model sizes.} LARA enhances the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage remains at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling seed. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
-
-\Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{app:qualitative_examples}.
-
 \begin{figure*}[!t]
     \centering
     \def\larathumb#1{\includegraphics[width=0.121\textwidth,trim=539bp 365bp 7bp 7bp,clip]{figures/qualitative/lara_400k_cfg4/sample_#1.png}}
@@ -175,6 +171,10 @@ LARA (Ours) & 2M & \textbf{5.08} & 0.30~s \\
 \end{figure*}
 
 \input{figures/qualitative_comparison/figure}
+
+\noindent\textbf{Scaling across SiT model sizes.} LARA enhances the SiT baseline and LayerSync across the model scales and training budgets in \Cref{tab:imagenet_no_cfg}. At 400K iterations, it reduces FID relative to LayerSync by 3.57, 1.97, and 2.50 points on SiT-B/2, SiT-L/2, and SiT-XL/2, respectively. The advantage remains at longer budgets, with improvements of 1.59 FID at 1M and 1.73 FID at 2M on SiT-XL/2. These gaps exceed the observed fixed-checkpoint sampling variability: across the re-evaluated settings, the sampling-seed standard deviation ranges from 0.02 to 0.13. Thus, the gains are not explained by a favorable sampling seed. In the separate CFG system comparison of \Cref{tab:imagenet_cfg}, LARA records 1.80 FID versus 1.93 for LayerSync.
+
+\Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{app:qualitative_examples}.
 
 \noindent\textbf{Qualitative comparison.}
 \Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details and all four methods receive the same initial noise latent within each column. These curated examples complement the quantitative results.
@@ -204,7 +204,7 @@ JiT-B & Yes & \textbf{33.71} \\
 \subsection{Text-Conditional Human Motion Generation}
 \label{sec:human_motion_generation}
 
-To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D~\citep{guo2020action2motion,guo2022generating}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
+To test whether LARA transfers beyond image generation, we additionally evaluate text-conditioned human motion generation on HumanML3D using the MDM framework~\citep{guo2022generating,tevet2022mdm}. Given a text description, the model generates a sequence of human poses represented as 3D joint trajectories.
 
 \noindent\textbf{Implementation details.}
 We follow the MDM setup~\citep{tevet2022mdm} and use the same motion-transformer backbone for all rows. MDM and LayerSync are trained for $600\mathrm{K}$ iterations, while LARA is evaluated at the $300\mathrm{K}$ checkpoint reported in \Cref{tab:humanml3d_results}; the motion setup is described in Supplementary Sec.~\ref{app:humanml3d_details}.
@@ -360,8 +360,6 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
 
 \textbf{Redundancy-strength trade-off.} \Cref{fig:cosine_squared_heatmap} tests whether better generation simply follows lower cross-layer correlation in a separate 100K-step SiT-B diagnostic. Without redundancy regularization, mean off-diagonal correlation is 0.82353 and FID-10K is 78.63. Increasing $\lambda_{\mathrm{div}}$ to $0.4$ lowers correlation to 0.66316 and improves FID to 66.68, whereas $0.8$ further reduces correlation to 0.62781 but worsens FID to 76.76. Thus, the lowest measured correlation does not coincide with the best generation quality. Together with the objective decomposition in \Cref{tab:realign_ablation}, where prediction plus redundancy outperforms redundancy alone, this indicates that the regularizer is most useful as a counterbalance to broad cross-depth predictability rather than as an objective for maximizing representation separation.
 
-\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most sampler, prediction-weight, and consistency-weight alternatives remain close to 35.12 FID. Within the diversity-weight sweep, removing the penalty raises FID to 38.57, while increasing $\lambda_{\mathrm{div}}$ to $0.60$ and $0.80$ yields 36.36 and 37.74, respectively.
-
 \begin{table*}[!t]
     \centering
     \caption{\textbf{Hyperparameter sensitivity on SiT-B/2.} Each panel varies one factor around the selected recipe under the matched ablation setting. Gray cells mark the selected settings; lower FID-10K is better.}
@@ -433,6 +431,8 @@ The shape of the curves adds information beyond the averages. LayerSync has a re
         \end{tabular*}
     \end{minipage}
 \end{table*}
+
+\textbf{Loss-weight and timestep sensitivity.} \Cref{tab:main_sensitivity_summary} reports the matched SiT-B/2 FID-10K sweep, varying one factor at a time around the selected recipe. The selected setting yields the lowest FID among the tested values. Most sampler, prediction-weight, and consistency-weight alternatives remain close to 35.12 FID. Within the diversity-weight sweep, removing the penalty raises FID to 38.57, while increasing $\lambda_{\mathrm{div}}$ to $0.60$ and $0.80$ yields 36.36 and 37.74, respectively.
 
 \subsection{Predictor Design and Capacity}
 \label{sec:predictor_ablation}

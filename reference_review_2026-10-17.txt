@@ -1,0 +1,207 @@
+RÀ SOÁT REFERENCE LARA - 17/10/2026
+Nguồn: main.tex, sections/*.tex, figures/appendices/appendix_main.tex và refs.bib.
+Khuyến nghị là đánh giá biên tập theo vai trò thực tế của từng nguồn trong manuscript.
+
+Tổng số mục trong refs.bib: 92.
+Mục có năm <= 2022: 33; đang được cite: 22; chưa dùng: 11.
+11 mục chưa dùng không xuất hiện trong bibliography PDF; xoá chúng chỉ dọn file .bib.
+Các mục cũ còn lại được liệt kê để tác giả quyết định; đợt này không tự động xoá thêm.
+
+1. NÊN GIỮ - 14 MỤC
+01. [2009] ImageNet: A Large-Scale Hierarchical Image Database
+    Key: deng2009imagenet
+    Gợi ý: Nguồn gốc dataset thực sự dùng trong training và đánh giá.
+    Vị trí: sections/04_experiments.tex:11; figures/appendices/appendix_main.tex:147; figures/appendices/appendix_main.tex:155; figures/appendices/appendix_main.tex:344
+
+02. [2010] The PASCAL Visual Object Classes (VOC) Challenge
+    Key: everingham2010pascal
+    Gợi ý: Nguồn gốc PASCAL VOC dùng cho segmentation probe.
+    Vị trí: figures/appendices/appendix_main.tex:147; figures/appendices/appendix_main.tex:158; figures/appendices/appendix_main.tex:344
+
+03. [2017] GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium
+    Key: heusel2017gans
+    Gợi ý: Nguồn định nghĩa FID, metric chính của bài.
+    Vị trí: sections/04_experiments.tex:111; figures/appendices/appendix_main.tex:336; figures/appendices/appendix_main.tex:339; figures/appendices/appendix_main.tex:340
+
+04. [2017] Attention Is All You Need
+    Key: vaswani2017attention
+    Gợi ý: Nguồn transformer/attention; một citation nền tảng hợp lý để giữ.
+    Vị trí: sections/02_related_works.tex:4
+
+05. [2020] Denoising Diffusion Probabilistic Models
+    Key: ho2020ddpm
+    Gợi ý: Nền tảng DDPM; cần cho bối cảnh diffusion.
+    Vị trí: sections/01_introduction.tex:4; sections/02_related_works.tex:4
+
+06. [2021] Diffusion Models Beat GANs on Image Synthesis
+    Key: dhariwal2021diffusion
+    Gợi ý: ADM là baseline và nguồn preprocessing/evaluator trong protocol.
+    Vị trí: sections/01_introduction.tex:4; sections/04_experiments.tex:11; sections/04_experiments.tex:116; figures/appendices/appendix_main.tex:249
+
+07. [2021] Score-Based Generative Modeling through Stochastic Differential Equations
+    Key: song2021sde
+    Gợi ý: Nền tảng SDE và đường liên tục giữa dữ liệu và nhiễu.
+    Vị trí: sections/01_introduction.tex:4; sections/02_related_works.tex:4
+
+08. [2021] Barlow Twins: Self-Supervised Learning via Redundancy Reduction
+    Key: zbontar2021barlow
+    Gợi ý: Nguồn trực tiếp của hướng redundancy reduction; gần động cơ loss của LARA.
+    Vị trí: sections/02_related_works.tex:12; sections/03_method.tex:111
+
+09. [2022] VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning
+    Key: bardes2022vicreg
+    Gợi ý: Nguồn variance/covariance regularization; nên giữ cùng hoặc thay cho các citation decorrelation cũ hơn.
+    Vị trí: sections/02_related_works.tex:12; sections/03_method.tex:111
+
+10. [2022] Generating Diverse and Natural 3D Human Motions from Text
+    Key: guo2022generating
+    Gợi ý: Nguồn gốc HumanML3D và text-to-motion evaluation; không thay bằng dataset khác.
+    Vị trí: sections/04_experiments.tex:207; figures/appendices/appendix_main.tex:147; figures/appendices/appendix_main.tex:296; figures/appendices/appendix_main.tex:338; figures/appendices/appendix_main.tex:360
+
+11. [2022] Cascaded Diffusion Models for High Fidelity Image Generation
+    Key: ho2022cascaded
+    Gợi ý: Nguồn CDM còn được báo cáo trong bảng baseline; giữ khi hàng CDM còn tồn tại.
+    Vị trí: sections/04_experiments.tex:116; figures/appendices/appendix_main.tex:252
+
+12. [2022] Classifier-Free Diffusion Guidance
+    Key: ho2022classifier
+    Gợi ý: Nguồn classifier-free guidance, đang dùng trong sampling và các bảng kết quả.
+    Vị trí: sections/04_experiments.tex:69
+
+13. [2022] A ConvNet for the 2020s
+    Key: liu2022convnext
+    Gợi ý: Kiến trúc ConvNeXt được dùng trong predictor; citation trực tiếp cho implementation.
+    Vị trí: figures/appendices/appendix_main.tex:133
+
+14. [2022] High-Resolution Image Synthesis with Latent Diffusion Models
+    Key: rombach2022ldm
+    Gợi ý: Nguồn LDM/Stable Diffusion VAE thực sự dùng và một baseline trong bảng.
+    Vị trí: sections/04_experiments.tex:11; sections/04_experiments.tex:116; figures/appendices/appendix_main.tex:147; figures/appendices/appendix_main.tex:253
+
+
+2. CÓ THỂ CÂN NHẮC BỎ HOẶC TINH GIẢN - 8 MỤC
+01. [2008] Extracting and Composing Robust Features with Denoising Autoencoders
+    Key: vincent2008extracting
+    Gợi ý: Denoising autoencoder là bối cảnh xa; có thể bỏ hoặc viết lại câu theo nghiên cứu representation hiện đại.
+    Vị trí: sections/02_related_works.tex:7
+
+02. [2015] U-Net: Convolutional Networks for Biomedical Image Segmentation
+    Key: ronneberger2015unet
+    Gợi ý: Nguồn U-Net gốc; có thể bỏ ở câu so sánh DiT/SiT nếu dùng trực tiếp bài DiT/SiT.
+    Vị trí: sections/02_related_works.tex:4
+
+03. [2016] Reducing Overfitting in Deep Networks by Decorrelating Representations
+    Key: cogswell2016decov
+    Gợi ý: Có thể tinh giản vì Barlow Twins, VICReg và các paper diffusion diversity mới đã hỗ trợ động cơ loss.
+    Vị trí: sections/02_related_works.tex:12; sections/03_method.tex:111
+
+04. [2017] Mean Teachers Are Better Role Models: Weight-Averaged Consistency Targets Improve Semi-Supervised Deep Learning Results
+    Key: tarvainen2017meanteacher
+    Gợi ý: Có thể giữ để ghi nguồn EMA teacher; có thể bỏ nếu câu chỉ mô tả thiết kế SRA đã được trích trực tiếp.
+    Vị trí: sections/02_related_works.tex:12
+
+05. [2018] Representation Learning with Contrastive Predictive Coding
+    Key: oord2018cpc
+    Gợi ý: CPC chỉ làm bối cảnh predictive representation learning; LARA không dùng contrastive objective này.
+    Vị trí: sections/02_related_works.tex:7
+
+06. [2019] Generative Modeling by Estimating Gradients of the Data Distribution
+    Key: song2019score
+    Gợi ý: Nguồn score matching nền tảng, nhưng Song 2021 SDE đã bao quát phần bối cảnh hiện tại.
+    Vị trí: sections/02_related_works.tex:4
+
+07. [2020] Denoising Diffusion Implicit Models
+    Key: song2020ddim
+    Gợi ý: Chỉ dùng cho bối cảnh; sampler báo cáo của LARA là Euler ODE, nên DDIM không phải nguồn protocol bắt buộc.
+    Vị trí: sections/02_related_works.tex:4
+
+08. [2021] Do Vision Transformers See Like Convolutional Neural Networks?
+    Key: raghu2021visiontransformers
+    Gợi ý: Phân tích ViT tổng quát; câu này đã có nhiều phân tích diffusion 2024-2025 phù hợp hơn.
+    Vị trí: sections/01_introduction.tex:8; figures/appendices/appendix_main.tex:343
+
+
+3. CÓ THỂ DỌN KHỎI FILE .BIB VÌ CHƯA DÙNG - 11 MỤC
+01. [2010] Understanding the Difficulty of Training Deep Feedforward Neural Networks
+    Key: glorot2010understanding
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+02. [2015] Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification
+    Key: he2015delving
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+03. [2015] Deep Learning
+    Key: lecun2015deep
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+04. [2016] Rethinking the Inception Architecture for Computer Vision
+    Key: szegedy2016rethinking
+    Gợi ý: Sau khi sửa đoạn metric, không còn cite trực tiếp; evaluator/metric được mô tả qua SiT và Stein 2023.
+    Vị trí: Chưa được cite/nocite.
+
+05. [2017] Deep Information Propagation
+    Key: schoenholz2017deep
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+06. [2020] Batch Normalization Provably Avoids Rank Collapse for Randomly Initialised Deep Networks
+    Key: daneshmand2020batchnormrankcollapse
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+07. [2020] Understanding the Difficulty of Training Transformers
+    Key: liu2020understandingtransformers
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+08. [2020] Stable Rank Normalization for Improved Generalization in Neural Networks and GANs
+    Key: sanyal2020stable
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+09. [2020] Score-based generative modeling through stochastic differential equations
+    Key: song2020score
+    Gợi ý: Bản preprint của cùng paper SDE; đã có song2021sde.
+    Vị trí: Chưa được cite/nocite.
+
+10. [2021] Score-Based Generative Modeling through Stochastic Differential Equations
+    Key: song2021score
+    Gợi ý: Trùng cùng paper với song2021sde; key song2021sde đang được dùng.
+    Vị trí: Chưa được cite/nocite.
+
+11. [2022] Rank Diminishing in Deep Neural Networks
+    Key: feng2022rankdiminishing
+    Gợi ý: Không được cite hoặc nocite trong bản main/supplementary hiện tại.
+    Vị trí: Chưa được cite/nocite.
+
+4. CÁC CITATION ĐÃ ĐƯỢC SỬA SAU COMMIT change ref
+- huang2018decorrelated, huang2019iterative: sửa câu về whitening/decorrelation thành redundancy reduction và diffusion representation diversity; dùng các nguồn còn phù hợp cùng Dispersive Loss (2025), DiverseDiT++ (2026).
+- romero2015fitnets, lee2015deeply, zagoruyko2017attention, sun2019patient, park2019relational, furlanello2018born: viết lại câu theo feature distillation với learned projectors; trích Chen et al., Understanding the Effects of Projectors in Knowledge Distillation (entry TPAMI 2026 đã có trong refs.bib; bản arXiv 2023 kiểm tra được).
+- guo2020action2motion: thay bối cảnh action-to-motion bằng HumanML3D và MDM đúng thiết lập text-to-motion đang dùng.
+- salimans2016improved, kynkaanniemi2019precision: trích Stein et al. (NeurIPS 2023) cho phần mô tả/đánh giá metric và SiT (ECCV 2024) cho protocol. Không thay metric, evaluator, k hay số mẫu đo.
+- kornblith2019similarity: trích survey Klabunde et al. (ACM Computing Surveys 2025) để mô tả CKA/representational similarity; không đổi phép đo.
+- mahmood2019amass, loper2015smpl: mô tả assets ở mức HumanML3D/MDM pipeline mà bài đang dùng, với citation dataset/model tương ứng.
+
+5. NGUỒN GỐC ĐÃ XOÁ NHƯNG NÊN CÂN NHẮC GIỮ LẠI
+- Kornblith et al. (2019), Similarity of Neural Network Representations Revisited: nguồn gốc CKA.
+- Kynkaanniemi et al. (2019), Improved Precision and Recall Metric for Assessing Generative Models: nguồn gốc precision/recall kiểu k-nearest-neighbor đang dùng.
+- Salimans et al. (2016), Improved Techniques for Training GANs: nguồn gốc Inception Score.
+- Mahmood et al. (2019), AMASS và Loper et al. (2015), SMPL: nên cite nếu muốn ghi đầy đủ nguồn upstream của dữ liệu/body model, nhất là khi mô tả hoặc sử dụng trực tiếp.
+Stein 2023 và Klabunde 2025 là nguồn mô tả/phân tích lại các metric, không phải nguồn phát minh. Giảm tuổi bibliography không tự nó làm tăng chất lượng trích dẫn.
+
+6. NĂM PREPRINT VÀ NĂM HỘI NGHỊ
+- lipman2022flow: arXiv 2022, bản hội nghị ICLR 2023; đã cập nhật venue/year, giữ nguyên key để không phá citation.
+- tevet2022mdm: arXiv 2022, bản hội nghị ICLR 2023; đã cập nhật venue/year, giữ nguyên key.
+- song2020ddim: năm trong file vẫn là preprint 2020; bản ICLR là 2021 (vẫn thuộc nhóm <= 2022).
+
+7. NGUỒN ĐÃ ĐỐI CHIẾU
+Klabunde 2025: https://doi.org/10.1145/3728458 ; https://arxiv.org/html/2305.06329
+Stein 2023: https://proceedings.neurips.cc/paper_files/paper/2023/hash/0bc795afae289ed465a65a3b4b1f4eb7-Abstract-Conference.html ; https://arxiv.org/html/2306.04675
+Chen/projectors: https://arxiv.org/abs/2310.17183
+DiverseDiT++: https://arxiv.org/abs/2608.03082
+MDM, BibTeX tác giả: https://guytevet.github.io/mdm-page/
+Flow Matching: https://openreview.net/forum?id=PqvMRDCJT9t
+SiT/evaluator: https://github.com/willisma/SiT

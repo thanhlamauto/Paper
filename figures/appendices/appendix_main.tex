@@ -144,7 +144,7 @@ We first specify how the transition predictor is attached to the SiT backbones, 
 We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_realign_hparams,tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
 \paragraph{Existing assets}
-We use public research assets only for evaluation and baselines, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D, AMASS/SMPL, the Stable Diffusion VAE, DINOv2, SiT, and MDM~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,mahmood2019amass,loper2015smpl,rombach2022ldm,oquab2023dinov2,ma2024sit,tevet2022mdm}. We cite the original sources and do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
+Our experiments use public research assets, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D and its MDM motion-processing pipeline, the Stable Diffusion VAE, DINOv2, and SiT~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,tevet2022mdm,rombach2022ldm,oquab2023dinov2,ma2024sit}. The cited dataset and model papers document their sources and processing pipelines. We do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
 
 \subsubsection{Baseline Reporting Protocol}
 \label{app:baseline_protocol}
@@ -158,7 +158,7 @@ We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images t
 For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and train linear heads for 25 epochs.
 
 \paragraph{CKA}
-For CKA evaluations~\citep{kornblith2019similarity}, we use 4,000 samples from ImageNet $256\times256$.
+We use CKA to compare intermediate representations, following the definitions reviewed by \citet{klabunde2025similarity}. Evaluations use 4,000 samples from ImageNet $256\times256$.
 
 \begin{table*}[!t]
     \centering
@@ -333,15 +333,15 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \toprule
         Main artifact & Quantity & Protocol & Citation \\
         \midrule
-        Main \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
+        Main \Cref{tab:imagenet_no_cfg,tab:imagenet_cfg} & FID, IS, precision, recall & Generate the stated number of samples with matched sampler, VAE, reference statistics, and CFG setting; use the same evaluator for all rows. & \citep{heusel2017gans,ma2024sit,stein2023exposing} \\
         Main \Cref{tab:internal_alignment_profile} & FID, time/step & Report no-CFG FID at the stated checkpoint iteration; profile time per step separately with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware. & \citep{jiang2025sra,haghighi2026layersync} \\
         Main \Cref{tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         Main \Cref{tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         Main \Cref{tab:ema_consistency_target,tab:main_sensitivity_summary,tab:predictor_architecture_ablation,tab:main_predictor_size_ablation,tab:external_alignment_compatibility} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         Main \Cref{fig:projection_layout_observation}(b,c) & Pairwise direction error & Evaluate eight prespecified layer pairs with EMA LARA-B at 400K steps on all 49,920 held-out validation latents; average tokenwise $1-\cos$ over images. & This work \\
-        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{kornblith2019similarity,raghu2021visiontransformers} \\
-        Main \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
+        Main \Cref{fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{klabunde2025similarity,raghu2021visiontransformers} \\
+        Main \Cref{fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,klabunde2025similarity} \\
         \bottomrule
     \end{tabular*}
 \end{table*}
@@ -357,7 +357,7 @@ Standard generation metrics follow the cited benchmark protocols. FID compares G
 -2(\Sigma_r\Sigma_g)^{1/2}
 \right),
 \end{equation}
-where lower is better. IS is computed using the Inception classifier convention of \citet{salimans2016improved}. Precision and recall follow the improved generative-model support estimate of \citet{kynkaanniemi2019precision}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
+where lower is better. IS uses the Inception classifier's conditional and marginal label distributions; precision and recall use nearest-neighbor support estimates. These definitions are reviewed by \citet{stein2023exposing}; our evaluator and settings follow the matched SiT protocol~\citep{ma2024sit}. For HumanML3D, FID uses motion-evaluator embeddings and R-Precision reports whether the matching text appears in the top retrieved candidates under the standard HumanML3D/MDM evaluation protocol~\citep{guo2022generating,tevet2022mdm}.
 
 For Main \Cref{fig:projection_layout_observation}(a), we use the official pretrained SiT-XL/2 checkpoint and the baseline feature-extraction and PCA code released with SRA~\citep{ma2024sit,jiang2025sra}. The same goose image, one sampled VAE latent, and one Gaussian noise tensor are reused across all rows (seed 20261011). We follow the SiT linear path $x_t=t x_0+(1-t)\epsilon$, with $t\in\{0.3,0.5,0.7,0.9\}$ increasing from noise to image, and inspect outputs after blocks 1, 3, 8, 13, 18, 23, and 28. Following the released SRA implementation, each channel is min--max normalized across spatial tokens before PCA. Each cell independently fits its first three principal components and scales them into RGB; colors across different cells need not represent the same feature direction. This visualization shows spatial patterns across depth and time under a fixed input perturbation.
 
