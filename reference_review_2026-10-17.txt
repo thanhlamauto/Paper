@@ -1,3 +1,24 @@
+CẬP NHẬT SAU PHÊ DUYỆT CỦA TÁC GIẢ - 17/10/2026
+
+Đã thực hiện toàn bộ đề xuất tinh giản:
+- Xoá 8 mục trong nhóm 2 và 11 mục chưa dùng trong nhóm 3, tổng cộng 19 mục.
+- Theo phê duyệt tiếp theo của tác giả, xoá thêm 3 mục trong nhóm 1:
+  * vaswani2017attention (2017): Attention Is All You Need.
+  * song2021sde (2021): Score-Based Generative Modeling through Stochastic Differential Equations.
+  * bardes2022vicreg (2022): VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning.
+- Sửa các citation và câu văn liên quan trong main và supplementary.
+- Thêm lại và trích dẫn nguồn gốc của 3 metric:
+  * kornblith2019similarity (2019): Similarity of Neural Network Representations Revisited - CKA.
+  * salimans2016improved (2016): Improved Techniques for Training GANs - Inception Score.
+  * kynkaanniemi2019precision (2019): Improved Precision and Recall Metric for Assessing Generative Models.
+
+Trạng thái hiện tại: 73 mục trong refs.bib, 65 key được cite/nocite.
+Còn 14 tài liệu có năm <= 2022, tất cả đều được trích dẫn: 11 mục còn lại
+trong nhóm 1 dưới đây cùng 3 nguồn metric vừa thêm lại.
+
+PHẦN DƯỚI LÀ BẢN RÀ SOÁT TRƯỚC KHI TINH GIẢN, GIỮ ĐỂ ĐỐI CHIẾU.
+Số lượng và vị trí dòng ở phần lịch sử này mô tả bản trước khi thực hiện xoá.
+
 RÀ SOÁT REFERENCE LARA - 17/10/2026
 Nguồn: main.tex, sections/*.tex, figures/appendices/appendix_main.tex và refs.bib.
 Khuyến nghị là đánh giá biên tập theo vai trò thực tế của từng nguồn trong manuscript.
