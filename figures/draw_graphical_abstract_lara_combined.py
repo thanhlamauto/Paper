@@ -1,183 +1,213 @@
-"""Combine Fig. 1's LARA branch and Fig. 3's predictor with training diagrams."""
+"""Extend Fig. 1's LARA overview with its training losses, without predictor detail."""
+from __future__ import annotations
+
+import base64
 from pathlib import Path
 from xml.sax.saxutils import escape
-import base64
+
 from figure_typography import embedded_font_css, font_weight, with_text_shadow
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / 'graphical_abstract_lara_combined.svg'
-parts = []
-def add(s): parts.append(with_text_shadow(s))
-def text(x,y,s,size=34,color='#1a2940',weight=600,anchor='middle'):
-    add(f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" font-size="{size}" font-weight="{font_weight(weight)}">{escape(s)}</text>')
-def math(x,y,base,sub,size=38,color='#1a2940',hat=False):
-    if hat and base == 'A': base = 'Â'
-    add(f'<text x="{x}" y="{y}" text-anchor="middle" fill="{color}" font-size="{size}" font-weight="700"><tspan font-style="italic">{escape(base)}</tspan><tspan baseline-shift="sub" font-size="70%">{escape(sub)}</tspan></text>')
-C={
- 'neutral':('#eaf0f5','#f9fbfd','#afc1d1','#8da5b9'),
- 'source':('#d7ecf2','#f0fbff','#5ba8be','#287e9a'),
- 'target':('#fbe0e8','#fff3f6','#db809a','#bd5678'),
- 'predict':('#eadcf7','#f9f1ff','#ad84d4','#8455ae'),
- 'align':('#ffe9d7','#fff7ed','#e9a666','#c7803a'),
- 'embed':('#dff1dd','#f5fcf2','#83bb85','#4e9457')}
-def box(x,y,w,h,kind,label='',sub='',size=34,dashed=False):
-    f,t,s,e=C[kind];d=14;dash=' stroke-dasharray="12 8"' if dashed else ''
-    add(f'<g filter="url(#shadow)"><path d="M{x} {y} l{d} -{d} h{w} l-{d} {d} Z" fill="{t}" stroke="{e}" stroke-width="1.5"/><path d="M{x+w} {y} l{d} -{d} v{h} l-{d} {d} Z" fill="{s}" stroke="{e}" stroke-width="1.5"/><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="5" fill="{f}" stroke="{e}" stroke-width="2"{dash}/></g>')
+OUT = HERE / "graphical_abstract_lara_combined.svg"
+WIDTH, HEIGHT = 3400, 1640
+INK = "#253952"
+MUTED = "#536782"
+COLORS = {
+    "neutral": ("#eaf0f5", "#f9fbfd", "#afc1d1", "#8da5b9"),
+    "source": ("#d7ecf2", "#f0fbff", "#5ba8be", "#287e9a"),
+    "target": ("#fbe0e8", "#fff3f6", "#db809a", "#bd5678"),
+    "predict": ("#eadcf7", "#f9f1ff", "#ad84d4", "#8455ae"),
+    "align": ("#ffe9d7", "#fff7ed", "#e9a666", "#c7803a"),
+    "embed": ("#dff1dd", "#f5fcf2", "#83bb85", "#4e9457"),
+}
+parts: list[str] = []
+
+
+def add(markup: str) -> None:
+    parts.append(with_text_shadow(markup))
+
+
+def text(x, y, value, size=34, color=INK, weight=400, anchor="middle"):
+    add(
+        f'<text x="{x}" y="{y}" text-anchor="{anchor}" fill="{color}" '
+        f'font-size="{size}" font-weight="{font_weight(weight)}">{escape(value)}</text>'
+    )
+
+
+def math(x, y, base, sub="", size=50, *, hat=False, stopped=False):
+    if hat and base == "A":
+        base = "Â"
+    prefix, suffix = ("sg(", ")") if stopped else ("", "")
+    add(
+        f'<text x="{x}" y="{y}" text-anchor="middle" fill="{INK}" '
+        f'font-size="{size}" font-weight="700">{prefix}'
+        f'<tspan font-style="italic">{escape(base)}</tspan>'
+        f'<tspan baseline-shift="sub" font-size="70%">{escape(sub)}</tspan>'
+        f'<tspan baseline-shift="baseline">{suffix}</tspan></text>'
+    )
+
+
+def prism(x, y, width, height, kind="neutral", label="", *, size=36,
+          selected=False, dashed=False):
+    """The same faces, dots, edge colors and shadows as Fig. 1."""
+    front, top, side, edge = COLORS[kind]
+    depth = 14
+    dash = ' stroke-dasharray="10 7"' if dashed else ""
+    add(
+        f'<g filter="url(#block-shadow)">'
+        f'<path d="M{x} {y} l{depth} -{depth} h{width} l-{depth} {depth} Z" '
+        f'fill="{top}" stroke="{edge}" stroke-width="1.6"/>'
+        f'<path d="M{x+width} {y} l{depth} -{depth} v{height} l-{depth} {depth} Z" '
+        f'fill="{side}" stroke="{edge}" stroke-width="1.6"/>'
+        f'<rect x="{x}" y="{y}" width="{width}" height="{height}" rx="5" '
+        f'fill="{front}" stroke="{edge}" stroke-width="2.2"{dash}/></g>'
+    )
+    if selected:
+        dot = "#1685a8" if kind == "source" else "#cf476e"
+        add(f'<circle cx="{x+35}" cy="{y+height/2}" r="11" '
+            f'fill="{dot}" stroke="white" stroke-width="2.2"/>')
     if label:
-        text(x+w/2,y+h/2-12 if sub else y+h/2+size/3,label,size)
-    if sub: text(x+w/2,y+h/2+35,sub,size-7,'#536782',600)
-def line(d,color='#253952',arrow=True,dash=False,width=3.5):
-    marker={'#8455ae':'purple','#bd5678':'pink','#8da5b9':'blue','#c7803a':'orange'}.get(color,'dark')
-    add(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round"'+(f' marker-end="url(#{marker})"' if arrow else '')+(' stroke-dasharray="9 7"' if dash else '')+'/>')
-def panel(x,y,w,h,title,accent='#1c4965',size=42):
-    add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="24" fill="white" stroke="#d8e2eb" stroke-width="2"/><path d="M{x+24} {y} H{x+w-24} Q{x+w} {y} {x+w} {y+24} V{y+92} H{x} V{y+24} Q{x} {y} {x+24} {y} Z" fill="{accent}"/>')
-    text(x+w/2,y+63,title,size,'white',800)
-def plus(x,y,r=24):
-    add(f'<circle cx="{x}" cy="{y}" r="{r}" fill="white" stroke="#253952" stroke-width="3"/>')
-    line(f'M{x-r+8} {y} H{x+r-8}',arrow=False);line(f'M{x} {y-r+8} V{y+r-8}',arrow=False)
+        text(x+width/2, y+height/2+size/3, label, size, weight=700)
 
-add('<svg xmlns="http://www.w3.org/2000/svg" width="4920" height="2240" viewBox="0 0 4920 2240" font-family="Nimbus Roman,Times New Roman,Times,serif">')
+
+def line(path, *, color=INK, arrow=True, dashed=False, width=3.6):
+    marker = ' marker-end="url(#arrow)"' if arrow else ""
+    dash = ' stroke-dasharray="9 7"' if dashed else ""
+    add(f'<path d="{path}" fill="none" stroke="{color}" stroke-width="{width}" '
+        f'stroke-linecap="round" stroke-linejoin="round"{marker}{dash}/>')
+
+
+def photo(x, y, filename, width=130, height=115):
+    uri = "data:image/png;base64," + base64.b64encode((HERE/filename).read_bytes()).decode()
+    add(f'<rect x="{x-4}" y="{y-4}" width="{width+8}" height="{height+8}" '
+        'rx="10" fill="white" stroke="#bdccda" stroke-width="1.6"/>')
+    add(f'<svg x="{x}" y="{y}" width="{width}" height="{height}" '
+        'viewBox="0 0 192 192" preserveAspectRatio="xMidYMid slice">'
+        f'<image href="{uri}" width="192" height="192"/></svg>')
+
+
+add(f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
+    f'viewBox="0 0 {WIDTH} {HEIGHT}" font-family="Nimbus Roman,Times New Roman,Times,serif">')
 add(embedded_font_css())
-add('<defs>')
-for name,color in [('dark','#253952'),('purple','#8455ae'),('pink','#bd5678'),('blue','#8da5b9'),('orange','#c7803a')]:
-    add(f'<marker id="{name}" markerWidth="16" markerHeight="16" refX="16" refY="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L16 8 L0 16 Z" fill="{color}"/></marker>')
-add('<filter id="shadow" x="-15%" y="-35%" width="140%" height="180%"><feDropShadow dx="4" dy="6" stdDeviation="3" flood-color="#273b56" flood-opacity="0.14"/></filter></defs><rect width="4920" height="2240" fill="#f4f7f9"/>')
-panel(40,40,3000,2060,'LARA: overall training architecture','#9a315e',56)
-panel(3080,40,1800,2060,'Shared transition predictor Gψ',size=50)
+add('<defs><marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" '
+    'orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L14 7 L0 14 Z" '
+    f'fill="{INK}"/></marker>'
+    '<filter id="block-shadow" x="-15%" y="-35%" width="140%" height="180%">'
+    '<feDropShadow dx="3" dy="5" stdDeviation="3" flood-color="#273b56" '
+    'flood-opacity="0.16"/></filter></defs>')
+add(f'<rect width="{WIDTH}" height="{HEIGHT}" fill="white"/>')
+add(f'<rect x="24" y="24" width="3352" height="{HEIGHT-48}" rx="26" '
+    'fill="#fafafa" stroke="#505050" stroke-width="4"/>')
+text(75, 102, "LARA: Layer-Aware Representation Alignment", 61, "#111111", 700, "start")
+text(77, 151, "One shared predictor across randomly sampled layer pairs", 32, "#454545", 400, "start")
+line("M75 181 H3325", color="#606060", arrow=False, width=1.8)
 
-# A single LARA boundary encloses only objectives 02--04.
-add('<rect x="750" y="535" width="2250" height="1545" rx="24" fill="#fffafd" stroke="#9a315e" stroke-width="4"/>')
-add('<rect x="2420" y="510" width="535" height="64" rx="16" fill="#9a315e"/>')
-text(2687,555,'LARA objectives',40,'white',800)
+# Raise the LARA overview to sit directly beneath the main heading.
+add('<g transform="translate(0 -220)">')
 
-# Four aligned objective lanes: inputs -> transition/comparison -> loss.
-text(310,245,'DiT backbone',42,'#536782')
-text(1770,245,'Sample layers → predict / compare → loss',42,'#536782')
-for y in (1080,1600):
-    line(f'M770 {y} H2950','#d8e2eb',False,False,2)
-for y in (330,650,970,1290,1610):
-    box(120,y,380,110,'neutral')
-math(310,403,'v','θ',62)
-for lower,upper in ((650,458),(970,778),(1290,1098),(1610,1418)):
-    line(f'M310 {lower-32} V{upper}', '#8da5b9',True,True,3.5)
-uri='data:image/png;base64,'+base64.b64encode((HERE/'example_dog_noisy_student.png').read_bytes()).decode()
-add(f'<rect x="240" y="1880" width="140" height="110" rx="10" fill="white" stroke="#bdccda" stroke-width="2"/><image href="{uri}" x="245" y="1885" width="130" height="100" preserveAspectRatio="xMidYMid slice"/>')
-math(425,1950,'x','t',48)
-line('M310 1848 V1738',width=4.5)
+# The three LARA objectives share one boundary.
+add('<rect x="650" y="510" width="2650" height="1230" rx="24" '
+    'fill="#fffcfd" stroke="#505050" stroke-width="3"/>')
+add('<rect x="2730" y="480" width="510" height="60" rx="10" fill="#fafafa"/>')
+text(2985, 526, "LARA objectives", 42, "#111111", 700)
+line("M1870 552 V1694", color="#d4ccd1", arrow=False, width=1.8)
+line("M1910 1130 H3260", color="#d4ccd1", arrow=False, width=1.8)
 
-# Shared hidden-layer bus feeds sampling and the consistency source.
-line('M600 705 V1870','#8da5b9',False,True,3.5)
-for y in (705,1025,1345,1665):
-    line(f'M532 {y} H600','#8da5b9',False,True,3.5)
-text(650,625,'Hidden',30,'#63758b')
-text(650,667,'layers',30,'#63758b')
-for y in (800,1310,1870):
-    line(f'M600 {y} H782','#8da5b9',True,True,3.5)
+# Fig. 1's online backbone and sampled source/target retain their visual identity.
+text(350, 585, "Diffusion Transformer", 37, weight=700)
+line("M155 640 H135 V1430 H155", color="#8da5b9", arrow=False, width=2.4)
+add(f'<text x="95" y="1035" text-anchor="middle" fill="{MUTED}" '
+    'font-size="29" font-weight="400" transform="rotate(-90 95 1035)">'
+    'Transformer blocks</text>')
+line("M350 633 V1430", color="#b5c6d4", arrow=False, dashed=True, width=2.8)
+for y, kind, sub in ((640, "neutral", ""), (815, "target", "b"),
+                     (990, "neutral", ""), (1165, "source", "a"),
+                     (1340, "neutral", "")):
+    prism(180, y, 340, 90, kind, selected=bool(sub), dashed=bool(sub))
+    if sub:
+        math(363, y+63, "A", sub, 55)
+text(350, 791, "Target layer b", 29, "#96506b")
+text(350, 1141, "Source layer a", 29, "#287e9a")
+photo(285, 1535, "example_dog_noisy_student.png")
+add(f'<text x="350" y="1705" text-anchor="middle" fill="{INK}" '
+    'font-size="34" font-weight="400">Noisy input'
+    '<tspan dx="10" font-style="italic">x</tspan>'
+    '<tspan baseline-shift="sub" font-size="70%">t</tspan></text>')
+line("M350 1515 V1450")
 
-text(800,300,'01  Flow matching',42,'#536782',700,'start')
-box(2050,410,350,90,'target');math(2225,472,'u','t',54)
-text(1750,472,'Velocity target',35,'#536782')
-box(2670,330,270,110,'align');math(2805,403,'L','FM',60)
-line('M532 385 H2530 V365 H2652',width=4.5)
-line('M2432 455 H2590 V405 H2652',width=4.5)
+# Prediction is the original source -> predictor -> alignment branch of Fig. 1.
+text(710, 585, "01  Prediction", 43, "#111111", 700, "start")
+text(710, 635, "1 random pair (a, b) per training iteration", 33, "#7b2d50", 700, "start")
+text(1110, 785, "Match the target", 32, MUTED)
+prism(900, 815, 420, 90, "align")
+math(1110, 879, "L", "pred", 56)
+prism(900, 1165, 420, 90, "predict", "Shared predictor Gψ", size=40)
+prism(950, 1340, 320, 80, "embed", "Time + layer emb.", size=33)
+line("M548 860 H882")
+text(710, 830, "sg", 31, "#96506b", 700)
+line("M548 1210 H882")
+line("M1110 1135 V925")
+math(1218, 1053, "A", "a→b", 39, hat=True)
+line("M1110 1310 V1275")
+text(1110, 1465, "Condition on timestep and layer depths", 29, MUTED)
 
-text(800,590,'02  Prediction',42,'#536782',700,'start')
-text(1000,650,'Random pair (a, b)',34,'#536782')
-add('<rect x="800" y="670" width="400" height="360" rx="18" fill="#fcfdff" stroke="#8da5b9" stroke-width="2" stroke-dasharray="10 8"/>')
-box(850,705,260,100,'source',dashed=True);math(980,772,'A','a',58)
-box(850,885,260,100,'target',dashed=True);math(980,952,'A','b',58)
-box(1390,705,400,100,'predict','Gψ',size=60)
-box(2100,705,310,100,'target');math(2255,772,'A','a→b',52,hat=True)
-line('M1142 755 H1372',width=4.5)
-line('M1822 755 H2082',width=4.5)
-box(1390,890,400,100,'embed')
-math(1470,954,'e','t',42);text(1522,952,'+',38)
-math(1580,954,'e','a',42);text(1632,952,'+',38)
-math(1690,954,'e','b',42)
-line('M1590 858 V823','#8455ae',width=4.5)
-box(2670,780,270,110,'align');math(2805,853,'L','pred',60)
-text(2805,690,'1 random pair',33,'#9a315e',800)
-text(2805,735,'per training iteration',28,'#9a315e',700)
-line('M2442 755 H2530 V815 H2652',width=4.5)
-line('M1142 935 H1270 V1025 H2590 V855 H2652',width=4.5)
-text(2225,989,'sg',38,'#96506b')
+# Keep Fig. 1's random-pair inset: each row is a different training iteration.
+add('<rect x="1455" y="790" width="355" height="650" rx="18" '
+    'fill="#fdf8fa" stroke="#dfc3d0" stroke-width="1.8"/>')
+text(1632, 845, "Random layer pairs", 31, "#7b2d50", 700)
+text(1632, 885, "examples across iterations", 25, MUTED)
+for iteration, source, target in ((1, 2, 7), (2, 4, 10), (3, 6, 9)):
+    y = 970 + (iteration-1)*155
+    text(1632, y-29, f"Iteration {iteration}", 28, MUTED, 700)
+    prism(1495, y, 100, 47, "source", dashed=True)
+    prism(1680, y, 100, 47, "target", dashed=True)
+    math(1545, y+33, "A", str(source), 30)
+    math(1730, y+33, "A", str(target), 30)
+    line(f"M1624 {y+23.5} H1662", width=3)
+text(1632, 1409, "…", 38, MUTED, 700)
 
-text(800,1145,'03  Transition consistency · a < b < c',42,'#536782',700,'start')
-box(800,1260,350,100,'source')
-add('<text x="975" y="1326" text-anchor="middle" fill="#1a2940" font-size="48" font-weight="600">sg(<tspan font-style="italic">A</tspan><tspan baseline-shift="sub" font-size="70%">a</tspan><tspan baseline-shift="baseline">)</tspan></text>')
-box(1410,1200,470,100,'predict','Gψ : a → c',size=48)
-line('M1182 1310 H1290 V1250 H1392',width=4.5)
-box(1410,1420,470,100,'target');math(1645,1487,'A','a→b',52,hat=True)
-text(1645,1368,'cached prediction',35,'#63758b')
-box(2070,1420,380,100,'predict','EMA : b → c',size=44)
-line('M1912 1470 H2052',width=4.5)
-text(1982,1434,'sg',38,'#745097')
-box(2670,1330,270,110,'align');math(2805,1403,'L','cons',60)
-line('M1912 1250 H2530 V1365 H2652',width=4.5)
-line('M2482 1470 H2590 V1405 H2652',width=4.5)
-text(2536,1434,'sg',38,'#745097')
+# Direct prediction agrees with an EMA continuation of the cached a -> b state.
+text(1920, 585, "02  Transition consistency", 43, "#111111", 700, "start")
+text(3250, 585, "a < b < c", 34, MUTED, 400, "end")
+text(1920, 635, "Predictor-only update", 31, MUTED, 400, "start")
+text(2062, 680, "Detached source", 29, MUTED)
+prism(1945, 720, 235, 90, "source")
+math(2062, 783, "A", "a", 43, stopped=True)
+text(2512, 680, "Online prediction", 29, MUTED)
+prism(2290, 720, 445, 90, "predict", "Online: a → c", size=39)
+line("M2210 765 H2272")
+prism(1945, 930, 235, 90, "target")
+math(2062, 993, "A", "a→b", 45, hat=True)
+text(2062, 900, "Cached prediction", 29, MUTED)
+prism(2290, 930, 445, 90, "predict", "EMA: b → c", size=39)
+line("M2512 830 V898", dashed=True, width=2.6)
+text(2548, 872, "EMA update", 28, MUTED, 400, "start")
+line("M2210 975 H2272")
+text(2240, 945, "sg", 29, "#8455ae", 700)
+prism(2950, 825, 280, 105, "align")
+math(3090, 895, "L", "cons", 56)
+line("M2765 765 H2835 V860 H2932")
+line("M2765 975 H2870 V900 H2932")
+text(2850, 1030, "Target (sg)", 29, "#8455ae", 700)
 
-text(800,1665,'04  Redundancy',42,'#536782',700,'start')
-text(1000,1730,'Random pair (i, j)',34,'#536782')
-add('<rect x="800" y="1755" width="400" height="290" rx="18" fill="#fcfdff" stroke="#8da5b9" stroke-width="2" stroke-dasharray="10 8"/>')
-box(850,1790,260,90,'source',dashed=True);math(980,1853,'A','i',56)
-box(850,1920,260,90,'target',dashed=True);math(980,1983,'A','j',56)
-text(1690,1730,'Sampled independently of (a, b)',34,'#536782')
-line('M1142 1835 H2530 V1875 H2652',width=4.5)
-line('M1142 1965 H2590 V1915 H2652',width=4.5)
-box(2670,1840,270,110,'align');math(2805,1913,'L','div',60)
-text(2805,1750,'1 random pair',33,'#9a315e',800)
-text(2805,1795,'per training iteration',28,'#9a315e',700)
+# Redundancy uses an independently sampled layer pair, once per iteration.
+text(1920, 1205, "03  Redundancy", 43, "#111111", 700, "start")
+text(1920, 1256, "1 random pair (i, j) per training iteration", 33, "#7b2d50", 700, "start")
+text(1920, 1300, "Sampled independently of (a, b)", 30, MUTED, 400, "start")
+add('<rect x="1980" y="1340" width="430" height="300" rx="18" fill="#fcfdff" '
+    'stroke="#9eafbf" stroke-width="1.8" stroke-dasharray="10 8"/>')
+prism(2050, 1380, 270, 85, "source", dashed=True)
+math(2185, 1440, "A", "i", 52)
+prism(2050, 1530, 270, 85, "target", dashed=True)
+math(2185, 1590, "A", "j", 52)
+prism(2950, 1435, 280, 105, "align")
+math(3090, 1505, "L", "div", 56)
+line("M2350 1422.5 H2800 V1470 H2932")
+line("M2350 1572.5 H2870 V1510 H2932")
 
-# Predictor expands to the right, with a compact embedding legend beside it.
-add('<g transform="translate(720 0)">')
-text(3695,222,'Embeddings',34,'#536782',700,'start')
-for y,sub,meaning in [(290,'t','timestep'),(370,'a','source layer'),(450,'b','target layer')]:
-    math(3630,y,'e',sub,42)
-    text(3695,y,meaning,32,'#536782',600,'start')
-
-# Predictor detail: short labels and original dimensional path.
-for x,k,sub in [(2660,'neutral','t'),(2960,'source','a'),(3260,'target','b')]:
-    box(x,230,220,100,k);math(x+110,295,'e',sub,54)
-text(2920,295,'+',46);text(3220,295,'+',46)
-line('M3070 348 V403',width=4.5)
-box(2620,435,900,110,'predict','AdaLN / FiLM',size=48)
-text(3070,605,'Condition on timestep + source / target depths',36,'#536782')
-line('M2602 490 H2410 V1240 H2462','#8455ae',width=4.5)
-
-# Whole predictor, read from top to bottom.
-box(2480,750,340,100,'source');math(2650,817,'A','a',60)
-box(2480,950,340,110,'embed','Linear','768 → 384',44)
-box(2480,1170,340,140,'predict','Spatial blocks','× 10',40)
-box(2480,1440,340,90,'neutral','Layer norm',size=44)
-box(2480,1620,340,110,'embed','Linear','384 → 768',44)
-box(2480,1840,340,100,'target');math(2650,1907,'A','a→b',54,hat=True)
-for a,b in [(868,918),(1078,1138),(1328,1408),(1548,1588),(1748,1808)]:
-    line(f'M2650 {a} V{b}',width=4.5)
-text(2650,2005,'16 × 16 tokens',36,'#536782')
-line('M2852 1240 H3012','#8455ae',False,True,3.5)
-
-# Expand a spatial block beside the path without mixing the training losses here.
-add('<rect x="3030" y="690" width="1060" height="1360" rx="18" fill="#faf8fd" stroke="#c9b5df" stroke-width="2" stroke-dasharray="11 8"/>')
-text(3560,760,'Conditioned spatial block',44,'#745097')
-box(3210,840,610,100,'neutral','Layer norm',size=46)
-box(3210,1040,610,100,'predict','Scale + shift',size=46)
-box(3210,1240,610,110,'neutral','ConvNeXt',size=48)
-plus(3515,1450,34)
-box(3210,1570,610,180,'align')
-text(3515,1630,'LN · FiLM · MHSA',42)
-text(3515,1680,'+ projection + residual',35,'#536782',600)
-text(3515,1727,'after blocks 4 and 8',32,'#c7803a')
-box(3210,1890,610,100,'neutral','Block output',size=46)
-for a,b in [(958,1008),(1158,1208),(1368,1398),(1502,1538),(1768,1858)]:
-    line(f'M3515 {a} V{b}',width=4.5)
-line('M3192 890 H3090 V1450 H3463','#8da5b9',True,True,3.5)
-text(3205,1400,'residual',30,'#63758b')
-line('M3552 490 H3990 V1090 H3852','#8455ae',True,True,3.5)
-text(3930,1040,'γ, β',36,'#8455ae')
-add('</g>')
-
-add('<text x="2460" y="2200" text-anchor="middle" fill="#263951" font-size="50" font-weight="700">L = L<tspan baseline-shift="sub" font-size="70%">FM</tspan><tspan baseline-shift="baseline"> + L</tspan><tspan baseline-shift="sub" font-size="70%">LARA</tspan></text>')
-add('</svg>')
-OUT.write_text(chr(10).join(parts),encoding='utf-8')
+add("</g>")
+text(77, 1585, "sg: stop-gradient", 29, MUTED, 400, "start")
+text(3325, 1585, "EMA: moving-average predictor", 29, MUTED, 400, "end")
+add("</svg>")
+OUT.write_text("\n".join(parts), encoding="utf-8")
 print(OUT)

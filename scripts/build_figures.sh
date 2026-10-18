@@ -25,4 +25,4 @@ render_figure() {
 
 render_figure fig1_v2 figures/fig1_v2.pdf 6600 2490
 render_figure predictor_arch_redrawn figures/predictor_arch_redrawn.pdf 7200 3780
-render_figure graphical_abstract_lara_combined output/pdf/graphical_abstract_lara_combined.pdf 9840 4480
+render_figure graphical_abstract_lara_combined output/pdf/graphical_abstract_lara_combined.pdf 10200 4920
