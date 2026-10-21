@@ -2,6 +2,6 @@
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth,trim=0bp 32bp 0bp 17bp,clip]{figures/qualitative_comparison/selected_comparison.pdf}
-    \caption{\textbf{Qualitative comparisons on ImageNet $256\times256$.} All four SiT-XL/2 checkpoints are trained for $2\mathrm{M}$ iterations. Each column uses the same class and initial noise latent across methods. All samples use the same VAE, 250-step Euler ODE, CFG 1.8, and full-interval guidance on all four latent channels. Examples are selected to illustrate subject detail, object structure, and texture.}
+    \caption{\textbf{LARA improves image quality without external representation guidance.} We compare vanilla SiT-XL/2 with its SRA, LayerSync, and LARA variants, all trained for $2\mathrm{M}$ iterations. All models share the same initial noise within each column, sampler, and number of sampling steps, with classifier-free guidance scale 1.8.}
     \label{fig:qualitative_method_comparison}
 \end{figure*}

@@ -1,0 +1,416 @@
+{
+  "original_trim_bp": [
+    539.0,
+    365.0,
+    7.0,
+    7.0
+  ],
+  "residual_trim_bp": [
+    0.43892288,
+    0.67927136,
+    0.51998704,
+    0.51998704
+  ],
+  "images": [
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_01.png",
+      "output": "figures/qualitative/main_gallery/sample_01.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1298688,
+      "output_bytes": 101962,
+      "rgba_pixel_sha256": "a0f41cd3f1589f9a069d54cafee9771e6b0b8ed2b52c5758bb161d20439a9f83"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_02.png",
+      "output": "figures/qualitative/main_gallery/sample_02.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1672612,
+      "output_bytes": 124910,
+      "rgba_pixel_sha256": "c35a9f0ef6a7df9f6e5ae0f33be7515485e009dc7f2112af82ba555d38b5f9ec"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_03.png",
+      "output": "figures/qualitative/main_gallery/sample_03.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1479581,
+      "output_bytes": 111236,
+      "rgba_pixel_sha256": "3e545df992bacc6439ea3cea7957e6c8b69ef5704a8800d7a8ab17ee41e3f744"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_04.png",
+      "output": "figures/qualitative/main_gallery/sample_04.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1449893,
+      "output_bytes": 109134,
+      "rgba_pixel_sha256": "0278db514f174ed75346711c5c3915258a0995633cc9304c489b77009cee2c1a"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_05.png",
+      "output": "figures/qualitative/main_gallery/sample_05.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1688557,
+      "output_bytes": 100243,
+      "rgba_pixel_sha256": "1ee4d87c8bf794a145df81de0e2d8755cecc01efa860ae03081b5a9df5171525"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_06.png",
+      "output": "figures/qualitative/main_gallery/sample_06.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1463774,
+      "output_bytes": 84369,
+      "rgba_pixel_sha256": "808832e7b06b8460ec26001526245e763a1ea250fec21d2dce22f33d346fec92"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_07.png",
+      "output": "figures/qualitative/main_gallery/sample_07.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1453667,
+      "output_bytes": 97023,
+      "rgba_pixel_sha256": "f8f04ba43ebedc67279537b7a4a9a81fbe8ffc1ba0ee24e3d009b4394d626c08"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_08.png",
+      "output": "figures/qualitative/main_gallery/sample_08.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1503656,
+      "output_bytes": 111337,
+      "rgba_pixel_sha256": "51f06b408e433d1e9ace6e3f2a05135935396f7bd021727bd16f4e3b757d55c3"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_09.png",
+      "output": "figures/qualitative/main_gallery/sample_09.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1457977,
+      "output_bytes": 98526,
+      "rgba_pixel_sha256": "34b554a56a527460ffd4de538fc754dfc1e7007a539c2214ea9858785cc98880"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_10.png",
+      "output": "figures/qualitative/main_gallery/sample_10.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1232217,
+      "output_bytes": 102245,
+      "rgba_pixel_sha256": "63f5aa3bd578aea734e65c1fcfa5f08426bb5cb889a998867b4bdf6ea4c50842"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_11.png",
+      "output": "figures/qualitative/main_gallery/sample_11.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1317288,
+      "output_bytes": 93382,
+      "rgba_pixel_sha256": "6ae7d324566a57acb78b30671c75c36cad31dd6e6e009be5bc381ea0a924286c"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_12.png",
+      "output": "figures/qualitative/main_gallery/sample_12.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1448293,
+      "output_bytes": 93394,
+      "rgba_pixel_sha256": "a0356ad603af35343276c7d961518c035344a522a33579dc7e3152629acfd1fc"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_13.png",
+      "output": "figures/qualitative/main_gallery/sample_13.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1622830,
+      "output_bytes": 140814,
+      "rgba_pixel_sha256": "7d4be783afca560f4711cd9c6c2f7a8a9195afebf1bdae2bbe102b6cc0701014"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_14.png",
+      "output": "figures/qualitative/main_gallery/sample_14.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1575804,
+      "output_bytes": 135966,
+      "rgba_pixel_sha256": "e54f57f461bf4088f9afcb65c0b3e0e8e5324fc856cba8e5807470f8e22a9d0f"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_15.png",
+      "output": "figures/qualitative/main_gallery/sample_15.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1236678,
+      "output_bytes": 133644,
+      "rgba_pixel_sha256": "9564beb2e0029548e3a86e835073ee7b237abffebc90986466e6da25e9413902"
+    },
+    {
+      "source": "figures/qualitative/lara_400k_cfg4/sample_16.png",
+      "output": "figures/qualitative/main_gallery/sample_16.png",
+      "source_size": [
+        1004,
+        758
+      ],
+      "crop_box_px": [
+        748,
+        9,
+        995,
+        252
+      ],
+      "crop_size": [
+        247,
+        243
+      ],
+      "dpi": [
+        99.9998,
+        99.9998
+      ],
+      "source_bytes": 1164084,
+      "output_bytes": 94116,
+      "rgba_pixel_sha256": "98c0d30f64f453f8b6188b11bf2786864262f52d094af3a0372d357bbd4f284a"
+    }
+  ]
+}

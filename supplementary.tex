@@ -1,0 +1,30 @@
+% !TEX root = supplementary.tex
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\input{ieee_preamble}
+% The two documents have separate reference lists; import only object labels.
+\externaldocument[main-][nocite]{main}[main.pdf]
+
+\hypersetup{pdftitle={LARA -- Supplementary Material}}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thealgorithm}{S\arabic{algorithm}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\def\theHsection{supp.\arabic{section}}
+\def\theHsubsection{supp.\arabic{section}.\arabic{subsection}}
+\def\theHsubsubsection{supp.\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+\def\theHtable{supp.\arabic{table}}
+\def\theHfigure{supp.\arabic{figure}}
+\def\theHalgorithm{supp.\arabic{algorithm}}
+\def\theHequation{supp.\arabic{equation}}
+
+\begin{document}
+\twocolumn[{\centering\LARGE\bfseries Supplementary Material\par\vspace{0.5em}
+\large LARA: Layer-Aware Representation Alignment for Diffusion Transformers\par\vspace{1em}}]
+\input{figures/appendices/appendix_main}
+
+% Flush the qualitative figures before the supplementary reference list.
+\clearpage
+\bibliographystyle{IEEEtranN}
+\bibliography{refs}
+\end{document}

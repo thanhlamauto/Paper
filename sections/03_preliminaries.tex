@@ -1,0 +1,22 @@
+\section{Preliminaries}
+\label{sec:preliminaries}
+
+We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
+\begin{equation}
+x_t=\alpha_t x_0+\sigma_t\epsilon ,
+\label{eq:stochastic_interpolant}
+\end{equation}
+with the target velocity
+\[
+u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon .
+\]
+A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by minimizing
+\begin{equation}
+\mathcal{L}_{\mathrm{FM}}(\theta)
+=
+\mathbb{E}_{x_0,\epsilon,t,c}
+\left[
+\left\|v_\theta(x_t,t,c)-u_t\right\|_2^2
+\right].
+\label{eq:flow_matching_loss}
+\end{equation}

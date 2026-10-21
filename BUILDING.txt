@@ -1,0 +1,63 @@
+LARA main paper and supplementary material
+=========================================
+
+Build both documents from the repository root:
+
+    bash scripts/build_paper.sh
+
+Requires Tectonic and Python 3. The script bootstraps the two auxiliary files,
+rebuilds until their references stabilize, rejects unresolved citations or labels,
+and copies the final PDFs to:
+
+    output/pdf/main.pdf
+    output/pdf/supplementary.pdf
+
+main.tex contains the main paper and its reference list. supplementary.tex contains
+the supplementary material and its own reference list. It numbers sections, tables,
+figures, algorithms and equations with S prefixes. Existing main-paper figures and
+tables remain in main.tex and the sections it includes.
+
+References between documents
+----------------------------
+The shared preamble loads xr-hyper before hyperref and cleveref. main.tex imports
+supplementary.aux using the supp- label prefix; supplementary.tex imports main.aux
+using main-. The nocite option prevents one document's bibliography numbers from
+overriding the other document's citations. Each PDF contains its own bibliography.
+
+Examples in main:
+
+    Supplementary \Cref{supp-tab:appendix_transition_difficulty}
+    Supplementary Sec.~\ref{supp-app:experimental_details}
+
+Example in supplementary:
+
+    Main \Cref{main-tab:imagenet_no_cfg}
+
+Keep main.pdf and supplementary.pdf in the same directory for links between files.
+Compiling only one root from a clean checkout is insufficient: the other root's
+.aux file must first be generated. The build script handles this automatically.
+With another LaTeX toolchain, build main, supplementary, main, supplementary,
+repeating if any labels change; run BibTeX for both roots as needed.
+
+Figure preparation
+------------------
+The main ImageNet gallery uses native-pixel crops rather than embedding and hiding
+almost all of each full grid with a large LaTeX trim. The full grids remain in the
+supplementary material. Regenerate the 16 gallery tiles after changing those grids:
+
+    uv run --python 3.12 --with pillow python scripts/prepare_main_gallery.py
+
+The generator verifies saved RGBA pixels against the original crop, uses lossless
+PNG, preserves image resolution, and records the crop geometry and pixel hashes in
+figures/qualitative/main_gallery/manifest.json. Its small residual LaTeX trim keeps
+the original visible crop and aspect ratio.
+
+Regenerate the measured PCA panel (Fig. 2a) with:
+
+    uv run --python 3.12 --with numpy --with pillow --with pymupdf bash scripts/build_pca_figure.sh
+
+The final PDF step crops transparent padding from Cairo's raster shadow images.
+It preserves the vector text, vector PCA cells, colors, shadows and page geometry;
+the SVG and high-resolution PNG retain their original rendering pipeline.
+This avoids decoding 54 full-page image/mask pairs whenever a PDF viewer redraws
+the panel. The ordinary paper build uses the checked-in optimized PDF directly.
