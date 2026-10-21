@@ -297,7 +297,22 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
     \label{fig:cosine_squared_heatmap}
 \end{figure*}
 
-\textbf{Loss weights.} We use a simple set of loss weights without extensive tuning. Nearby settings yield similar FID in Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}, showing that LARA does not require precise weight selection to perform well. In a separate 100K-step diagnostic, \Cref{fig:cosine_squared_heatmap} shows that moderate redundancy reduction improves generation, while stronger decorrelation does not.
+\textbf{Loss weights.} We use simple loss weights without extensive tuning. The redundancy regularizer counteracts the homogenizing pressure of the prediction objective, preserving distinct representations across layers. These objectives must remain balanced: excessive redundancy regularization prioritizes decorrelation over learning useful cross-layer transitions. \Cref{tab:redundancy_weight_sensitivity} shows similar FID for nearby moderate weights, followed by degradation as the redundancy weight increases beyond this range. The separate 100K-step diagnostic in \Cref{fig:cosine_squared_heatmap} shows the same trade-off: stronger regularization further lowers cross-layer correlation but worsens generation quality. We therefore use a moderate redundancy weight to prevent homogenization while retaining useful shared structure. Prediction- and consistency-weight sweeps are reported in Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\textbf{Redundancy-weight sensitivity on SiT-B/2.} Other loss weights are fixed. Lower FID-10K is better.}
+    \label{tab:redundancy_weight_sensitivity}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+        \toprule
+        $\lambda_{\mathrm{div}}$ & 0 & 0.20 & 0.40 & 0.60 & 0.80 \\
+        \midrule
+        FID-10K $\downarrow$ & 38.57 & 35.31 & \textbf{35.12} & 36.36 & 37.74 \\
+        \bottomrule
+    \end{tabular*}
+\end{table}
 
 \subsection{Predictor Design and Capacity}
 \label{sec:predictor_ablation}

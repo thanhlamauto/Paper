@@ -256,7 +256,7 @@ We use CKA~\citep{kornblith2019similarity} to compare intermediate representatio
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{main-tab:realign_ablation,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility} and \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity}; each ablation changes only the factor shown in its own table.}
+    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{main-tab:realign_ablation,main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility} and \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
     \label{tab:appendix_common_ablation_setting}
     \scriptsize
@@ -393,7 +393,7 @@ We follow the common appendix convention of recent internal-alignment work: the 
         Main \Cref{main-tab:internal_alignment_profile} & Time/step & Profile training time per step with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware. & \citep{jiang2025sra,haghighi2026layersync} \\
         Main \Cref{main-tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         Main \Cref{main-tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
-        Main \Cref{main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility}; \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
+        Main \Cref{main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility}; \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{main-fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         Main \Cref{main-fig:projection_layout_observation}(b,c) & Pairwise direction error & Evaluate eight prespecified layer pairs with EMA LARA-B at 400K steps on all 49,920 held-out validation latents; average tokenwise $1-\cos$ over images. & This work \\
         Main \Cref{main-fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{klabunde2025similarity,li2026diverseditpp} \\
@@ -447,16 +447,16 @@ The main ablation tables isolate the components needed for LARA. The depth-condi
 \subsection{Loss-Weight Sensitivity}
 \label{app:loss_weight_sensitivity}
 
-\Cref{tab:appendix_loss_weight_sensitivity} varies one weight at a time around the default configuration $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ under the common setting in \Cref{tab:appendix_common_ablation_setting}. Prediction and consistency weights yield similar FID across the tested values. Removing redundancy regularization increases FID from 35.12 to 38.57, while larger weights of 0.60 and 0.80 yield 36.36 and 37.74, respectively. These results support the use of a moderate redundancy weight.
+\Cref{tab:appendix_loss_weight_sensitivity} varies the prediction and consistency weights one at a time around the default configuration $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ under the common setting in \Cref{tab:appendix_common_ablation_setting}. Both sweeps yield similar FID across the tested values. The redundancy-weight sweep is reported in Main \Cref{main-tab:redundancy_weight_sensitivity} and supports the use of a moderate redundancy weight.
 
 \begin{table*}[!t]
     \centering
-    \caption{\textbf{Loss-weight sensitivity on SiT-B/2.} Each panel varies one weight around the default configuration under the matched FID-10K ablation setting. Gray cells mark the default weights; lower is better.}
+    \caption{\textbf{Prediction- and consistency-weight sensitivity on SiT-B/2.} Each panel varies one weight around the default configuration under the matched FID-10K ablation setting. Gray cells mark the default weights; lower is better. The redundancy-weight sweep appears in Main \Cref{main-tab:redundancy_weight_sensitivity}.}
     \label{tab:appendix_loss_weight_sensitivity}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
     \renewcommand{\arraystretch}{1.0}
-    \begin{minipage}[t]{0.31\linewidth}
+    \begin{minipage}[t]{0.46\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{pred}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -472,7 +472,7 @@ The main ablation tables isolate the components needed for LARA. The depth-condi
         \end{tabular*}
     \end{minipage}
     \hfill
-    \begin{minipage}[t]{0.31\linewidth}
+    \begin{minipage}[t]{0.46\linewidth}
         \centering
         \textbf{$\lambda_{\mathrm{cons}}$}\\[0.20em]
         \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
@@ -484,22 +484,6 @@ The main ablation tables isolate the components needed for LARA. The depth-condi
             0.50 & 35.29 \\
             0.75 & 35.61 \\
             1.00 & 35.88 \\
-            \bottomrule
-        \end{tabular*}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.31\linewidth}
-        \centering
-        \textbf{$\lambda_{\mathrm{div}}$}\\[0.20em]
-        \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
-            \toprule
-            Value & FID-10K $\downarrow$ \\
-            \midrule
-            0 & 38.57 \\
-            0.20 & 35.31 \\
-            \cellcolor{gray!20}0.40 & \cellcolor{gray!20}\textbf{35.12} \\
-            0.60 & 36.36 \\
-            0.80 & 37.74 \\
             \bottomrule
         \end{tabular*}
     \end{minipage}

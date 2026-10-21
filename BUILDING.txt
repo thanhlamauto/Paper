@@ -34,10 +34,24 @@ Example in supplementary:
     Main \Cref{main-tab:imagenet_no_cfg}
 
 Keep main.pdf and supplementary.pdf in the same directory for links between files.
-Compiling only one root from a clean checkout is insufficient: the other root's
-.aux file must first be generated. The build script handles this automatically.
-With another LaTeX toolchain, build main, supplementary, main, supplementary,
-repeating if any labels change; run BibTeX for both roots as needed.
+
+Overleaf / latexmk
+-----------------
+Keep the root-level latexmkrc file in the Overleaf project. It automatically builds
+the other document and imports its labels, including after edits to included files.
+It handles Overleaf's output job name and prevents recursive main/supplementary
+builds. No generated .aux files need to be uploaded.
+
+Choose main.tex as the Main document and use pdfLaTeX. After adding latexmkrc to an
+existing project, choose Recompile from scratch once to remove stale cached labels.
+To download the supplementary PDF, select supplementary.tex as the Main document
+and compile again. References work with either root selected; restore main.tex
+afterwards. Local equivalents are latexmk -pdf main.tex and
+latexmk -pdf supplementary.tex.
+
+The Tectonic build script above also handles both documents automatically. With a
+toolchain that does not read latexmkrc, build main, supplementary, main,
+supplementary, repeating if labels change; run BibTeX for both roots as needed.
 
 Figure preparation
 ------------------
