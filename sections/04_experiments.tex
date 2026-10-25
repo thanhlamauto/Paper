@@ -393,6 +393,7 @@ LARA (Large) & 25.4M & 35.35 \\
 \end{table}
 
 \subsection{Compatibility with External Alignment}
+\label{sec:external_alignment_compatibility}
 
 \textbf{Is LARA's insight tied to internal targets?} LARA makes two design choices: it supervises the backbone through a shared, layer-aware predictor applied across depth, and it uses the backbone's own deeper layers as targets. REPA instead projects the hidden state at a single layer onto external DINOv2-B features~\citep{yu2024repa}; following its setting, we align layer 4. All DINOv2 targets in this section use DINOv2-B. We separate these choices with two combinations (\Cref{tab:external_alignment_compatibility}). \emph{REPA + LARA} adds the REPA objective to the full LARA objective. \emph{LARA predictor $\to$ DINOv2} keeps only LARA's predictor and maps source states from every layer to DINOv2 features; because layers are no longer aligned with one another, the consistency and redundancy terms are dropped, leaving the prediction loss as the only auxiliary objective.
 
