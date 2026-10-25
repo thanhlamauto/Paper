@@ -271,12 +271,12 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
         \midrule
         Vanilla & -- & -- & -- & 47.51 \\
         LayerSync & -- & -- & -- & 41.89 \\
-        Diversity only & -- & -- & \checkmark & 43.02 \\
+        Diversity loss only & -- & -- & \checkmark & 43.02 \\
         Pred. only, w/o depth cond. & \checkmark & -- & -- & 42.40 \\
-        Pred. only, fixed (4,7) & \checkmark & -- & -- & 41.55 \\
-        Prediction only & \checkmark & -- & -- & \textbf{39.48} \\
-        Pred. + consistency & \checkmark & \checkmark & -- & 38.07 \\
-        Pred. + diversity & \checkmark & -- & \checkmark & 36.14 \\
+        Pred. only, fixed pairs  & \checkmark & -- & -- & 41.55 \\
+        Pred. only & \checkmark & -- & -- & \textbf{39.48} \\
+        Pred. + consistency loss & \checkmark & \checkmark & -- & 38.07 \\
+        Pred. + diversity loss & \checkmark & -- & \checkmark & 36.14 \\
         Full LARA & \checkmark & \checkmark & \checkmark & \textbf{34.43} \\
         \bottomrule
     \end{tabular}
