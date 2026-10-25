@@ -109,14 +109,15 @@ panel(780, 572, "02  LayerSync", "One selected internal pair")
 panel(1370, 812, "03  LARA (ours)", "Shared predictor across sampled pairs")
 
 # SRA
-tower(82, "Student (online)", {3:"source"}, bottom_label="t")
-tower(565, "EMA teacher", {1:"target"}, bottom_key="ema", bottom_label="t′")
+# SRA's EMA teacher sees the less noisy input; t = 1 is data under the LARA convention.
+tower(82, "Student (online)", {3:"source"}, bottom_key="ema", bottom_label="t")
+tower(565, "EMA teacher", {1:"target"}, bottom_key="student", bottom_label="t′")
 prism(337, 424, 162, 47, "predict", "Projection", font=22)
 prism(337, 276, 162, 47, "align", "Align", font=22)
 path("M262 447 H330")
 path("M418 410 V329")
 path("M558 299 H517")
-text(410, 665, "t > t′", 17, "#63758b", 600)
+text(410, 665, "t′ > t", 17, "#63758b", 600)
 add('<g transform="translate(699 125)"><path d="M4 17 v-8 a7 7 0 0 1 14 0 v8" fill="none" stroke="#4a667d" stroke-width="4"/><rect y="16" width="22" height="19" rx="3" fill="#4a667d"/><circle cx="11" cy="25" r="2" fill="white"/></g>')
 
 # LayerSync

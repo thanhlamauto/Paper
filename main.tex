@@ -28,7 +28,7 @@ Diffusion Transformers, Representation Alignment, Representation Learning, Gener
   \textbf{(a) SRA} aligns through an EMA/projection branch.
   \textbf{(b) LayerSync} aligns selected internal layer pairs.
   \textbf{(c) Layer-aware transition (LARA)} uses a shared predictor across source--target depths.
-  The illustrative input thumbnails show Gaussian corruption of the same image, with more noise at $t'<t$.}
+  Input thumbnails show Gaussian corruption of the same image under our convention, where $t=1$ is data: in SRA, the EMA teacher receives the less noisy input ($t'>t$).}
   \label{fig:projection_as_transition}
 \end{figure*}
 

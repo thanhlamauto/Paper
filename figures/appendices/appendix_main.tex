@@ -114,7 +114,7 @@ Our experiments use public research assets, including ImageNet, Tiny ImageNet, P
 The ImageNet comparisons include the controlled SiT results in Main \Cref{main-tab:imagenet_no_cfg}, and the comparison with existing image generators in Main \Cref{main-tab:imagenet_cfg}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. Baselines in Main \Cref{main-tab:imagenet_cfg} use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
 
 \paragraph{Classification}
-We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
+We use the Tiny ImageNet dataset~\citep{le2015tiny}, a subset of ImageNet~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
 
 \paragraph{Segmentation}
 For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and train linear heads for 25 epochs.

@@ -243,7 +243,7 @@ As shown in \Cref{tab:humanml3d_results}, LARA outperforms vanilla MDM and Layer
 \label{sec:representation_analysis}
 
 \noindent\textbf{Evaluation.}
-We evaluate frozen \texttt{SiT-XL/2} features using linear probes for Tiny ImageNet classification and PASCAL VOC segmentation, and CKA~\citep{kornblith2019similarity} similarity to DINOv2-g. Following LayerSync~\citep{haghighi2026layersync}, we compare checkpoints of similar generation quality rather than equal iteration counts, so that differences reflect the learned representations rather than sample quality: LARA at $500\mathrm{K}$ iterations reaches an FID similar to LayerSync at $800\mathrm{K}$ (\Cref{fig:training_curve}), and SiT at $2\mathrm{M}$ serves as a much longer-trained reference.
+We evaluate frozen \texttt{SiT-XL/2} features using linear probes for Tiny ImageNet~\citep{le2015tiny} classification and PASCAL VOC~\citep{everingham2010pascal} segmentation, and CKA~\citep{kornblith2019similarity} similarity to DINOv2-g. Following LayerSync~\citep{haghighi2026layersync}, we compare checkpoints of similar generation quality rather than equal iteration counts, so that differences reflect the learned representations rather than sample quality: LARA at $500\mathrm{K}$ iterations reaches an FID similar to LayerSync at $800\mathrm{K}$ (\Cref{fig:training_curve}), and SiT at $2\mathrm{M}$ serves as a much longer-trained reference.
 
 
 \noindent\textbf{Results.}
