@@ -41,7 +41,7 @@ for i, row in enumerate(rows[:3]):
     ticks = [0.5, 3.5, 7.5, 11.5]
     ax.set_xticks(ticks, [1, 4, 8, 12])
     ax.set_yticks(ticks, [1, 4, 8, 12])
-    ax.set_title(f"({chr(97+i)}) $\\mathbf{{\\lambda}}_{{\\mathbf{{div}}}} = \\mathbf{{{lambda_div:g}}}$",
+    ax.set_title(f"({chr(97+i)}) $\\mathbf{{\\lambda}}_{{\\mathbf{{red}}}} = \\mathbf{{{lambda_div:g}}}$",
                  fontweight="bold", color="black", pad=8)
     ax.tick_params(length=0)
     for spine in ax.spines.values():

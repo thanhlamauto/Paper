@@ -88,13 +88,13 @@ Only the online predictor is updated by this term. The source activation and com
 \subsection{Cross-Layer Redundancy Regularization}
 LARA further introduces a cross-layer redundancy regularizer, motivated by redundancy-reduction objectives in representation learning~\citep{zbontar2021barlow} and recent regularization of diffusion representations~\citep{wang2025dispersive,li2026diverseditpp}. While compositional consistency coordinates transition mappings, multi-pair prediction also encourages information to remain recoverable across many layer pairs. This broad predictability may favor overly similar hidden states, motivating a separate constraint on representation redundancy. We therefore penalize squared cosine similarity between randomly sampled layer pairs to encourage layer-specific directions while retaining the shared structure required for cross-layer prediction. For layer pairs $(i,j)$ sampled independently of the transition pair above, we define
 \begin{equation}
-\mathcal{L}_{\mathrm{div}}(\theta)
+\mathcal{L}_{\mathrm{red}}(\theta)
 =
 \mathbb{E}_{i<j,t}
 \left[
 \operatorname{cos}^2(A_i^t,A_j^t)
 \right].
-\label{eq:diversity_loss}
+\label{eq:redundancy_loss}
 \end{equation}
 Minimizing this term discourages representation homogenization across depth. It does not enforce statistical independence between layers; it penalizes excessive directional similarity as a simple, inexpensive decorrelation signal. The ablation in \Cref{fig:cosine_squared_heatmap} examines how the strength of this penalty affects cross-layer correlation and generation quality.
 
@@ -110,7 +110,7 @@ The LARA regularizer assigns a separate weight to each component:
 \\
 \lambda_{\mathrm{cons}}\mathcal{L}_{\mathrm{cons}}(\psi;\bar\psi)
 +
-\lambda_{\mathrm{div}}\mathcal{L}_{\mathrm{div}}(\theta).
+\lambda_{\mathrm{red}}\mathcal{L}_{\mathrm{red}}(\theta).
 \end{aligned}
 \label{eq:realign_loss}
 \end{equation}
@@ -123,4 +123,4 @@ The final training objective:
 \mathcal{L}_{\mathrm{LARA}}(\theta,\psi).
 \label{eq:total_loss}
 \end{equation}
-The update paths are explicit: $\mathcal{L}_{\mathrm{pred}}$ updates the predictor and source-side backbone, $\mathcal{L}_{\mathrm{cons}}$ updates only the predictor, and $\mathcal{L}_{\mathrm{div}}$ updates only the DiT. The training procedure and documented predictor configuration appear in Supplementary Secs.~\ref{supp-app:realign_algorithm_compute} and \ref{supp-app:realign_hyperparameters}; loss-weight sensitivity is evaluated in \Cref{sec:objective_decomposition} and Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.
+The update paths are explicit: $\mathcal{L}_{\mathrm{pred}}$ updates the predictor and source-side backbone, $\mathcal{L}_{\mathrm{cons}}$ updates only the predictor, and $\mathcal{L}_{\mathrm{red}}$ updates only the DiT. The training procedure and documented predictor configuration appear in Supplementary Secs.~\ref{supp-app:realign_algorithm_compute} and \ref{supp-app:predictor_architecture_capacity}; loss-weight sensitivity is evaluated in \Cref{sec:objective_decomposition} and Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.

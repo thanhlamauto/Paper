@@ -7,28 +7,12 @@ We evaluate our method on image generation and 3D human motion generation, and a
 \label{sec:image_generation}
 \label{sec:experimental_setup}
 
-\noindent\textbf{Implementation details.}
-Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. We sample source--target layer pairs uniformly from all valid pairs $(a,b)$ with $a<b$. Additional details on architecture, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in Supplementary Sec.~\ref{supp-app:experimental_details}.
-
-\begin{figure}[!t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/imagenet256_fid_lara_sit7m_compressed.png}
-    \caption{\textbf{Training dynamics.} ImageNet $256^2$ no-CFG FID.}
-    \label{fig:training_curve}
-\end{figure}
-
-\noindent\textbf{Evaluation.}
-For each method in \Cref{tab:imagenet_no_cfg}, we report mean FID~\citep{heusel2017gans} over five sampling seeds (50K images per seed), following the SiT protocol~\citep{ma2024sit}. Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} are included in Supplementary \Cref{supp-tab:imagenet_cfg_full}; metric definitions and limitations are discussed in Supplementary Sec.~\ref{supp-app:metric_definitions}~\citep{stein2023exposing}.
-
-\noindent\textbf{Comparison methods.}
-Our controlled comparisons use the same SiT backbone and training budget as the base model, and compare against the self-contained internal baselines reported in \Cref{tab:imagenet_no_cfg}: Dispersive~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}.
-
-In \Cref{tab:imagenet_cfg}, we compare latent diffusion transformers, including DiT, SiT, and REPA~\citep{peebles2023scalable,ma2024sit,yu2024repa}, alongside the internal baselines above under CFG, which affects the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}. The full comparison with pixel diffusion, autoregressive, latent U-Net, and hybrid models is reported in Supplementary \Cref{supp-tab:imagenet_cfg_full}. Detailed baseline descriptions and the reporting protocol are in Supplementary Secs.~\ref{supp-app:baseline_descriptions} and \ref{supp-app:baseline_protocol}.
-
-% Separate one-column floats let body text fill below each table group.
-\begin{table}[t]
+% Tables 1 and 2 share one full-width float so they sit side by side.
+\begin{table*}[!t]
 \centering
-\caption{\textbf{Class-conditional generation on ImageNet $256\times256$ without CFG.} Entries report mean FID across sampling seeds of a fixed checkpoint. Best FID within each backbone and training budget is bold. Parameter counts include only the generative backbone, excluding training-time auxiliary modules and external encoders.}
+\begin{minipage}[t]{0.485\textwidth}
+\centering
+\caption{\textbf{FID comparisons of class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used. The sampler is the ODE-based Heun method. Entries report mean FID across sampling seeds of a fixed checkpoint. Parameter counts include only the generative backbone.}
 \label{tab:imagenet_no_cfg}
 \begingroup
 \footnotesize
@@ -71,69 +55,83 @@ In \Cref{tab:imagenet_cfg}, we compare latent diffusion transformers, including 
         \end{tabular*}
 \par
 \endgroup
-
-\end{table}
-
-\noindent\textbf{Results.}
-As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M. This reduction more than offsets LARA's modest per-step overhead (\Cref{tab:internal_alignment_profile}). With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance.
-
-\Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{supp-app:qualitative_examples}.
-
-\noindent\textbf{Qualitative comparison.}
-\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details and all four methods receive the same initial noise latent within each column.
-
-\subsection{Cross-Architecture Transfer}
-\label{sec:cross_architecture}
-
-LayerSync is the strongest internal-alignment baseline in our controlled SiT comparisons (\Cref{tab:imagenet_no_cfg}), achieving the lowest FID among the existing internal objectives at every reported backbone size and training budget. We therefore select it as the main alignment baseline for the architecture-transfer and motion-generation comparisons in \Cref{tab:cross_architecture,tab:humanml3d_results}.
-
-To test whether transition learning transfers beyond SiT, we apply LARA to DiT-B and JiT-B on ImageNet $256\times256$. Both experiments use batch size 128, 300K training iterations, and AdamW at learning rate $10^{-4}$, with FID-10K as the evaluation metric.
-
-\noindent\textbf{Results.}
-As shown in \Cref{tab:cross_architecture}, LARA improves generation on both DiT-B and JiT-B, reducing FID-10K by 26.7\% and 30.3\%, respectively, over their vanilla counterparts under the same training budget. These gains across latent-space DiT and pixel-space JiT show that LARA's benefits extend beyond the SiT backbone.
-
-\begin{table}[t]
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\textwidth}
 \centering
-\caption{\textbf{Latent diffusion transformers on ImageNet $256\times256$ with CFG~\citep{ho2022classifier}.} Training budgets vary across methods; parameter counts cover only the generative backbone. Best FID is bold. Additional model families and metrics appear in Supplementary \Cref{supp-tab:imagenet_cfg_full}.}
+\caption{\textbf{System-level comparison on ImageNet $256\times256$ with CFG.} LARA uses SiT-XL/2 with the SDE Euler--Maruyama sampler, 250 sampling steps, and guidance scale 1.37; other entries are taken from the original papers. Parameter counts refer to the generative backbone. Best results for each metric are bold.}
 \label{tab:imagenet_cfg}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
+\scriptsize
+\setlength{\tabcolsep}{1.5pt}
 \renewcommand{\arraystretch}{0.95}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
-    \toprule
-    Model & \#Params & Iter. & FID$\downarrow$ \\
-    \midrule
-    DiT-XL/2 & 675M & 7.00M & 2.58 \\
-    SiT-XL/2 & 675M & 7.00M & 2.26 \\
-    \quad + REPA & 675M & 2.00M & 1.86 \\
-    \midrule
-    \quad + SRA & 675M & 2.00M & 2.01 \\
-    \quad + Dispersive & 675M & 2.00M & 2.04 \\
-    \quad + LayerSync & 675M & 2.00M & 1.93 \\
-    \quad + LARA (Ours) & 675M & 2.00M & \textbf{1.80} \\
-    \bottomrule
-\end{tabular*}
-\par
-\vspace{12pt}
-\caption{\textbf{Training time per step on SiT-XL/2.} Matched TPU v4-16 profile with the same resolution, batch size, and precision.}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
+            \toprule
+            Model & Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
+            \midrule
+            \multicolumn{7}{@{}l}{\textit{Pixel diffusion}} \\
+            ADM-U & 554M & 2.00M & 3.94 & 186.7 & 0.82 & 0.52 \\
+            VDM++ & 2.0B & 2.80M & 2.40 & 225.3 & -- & -- \\
+            Simple diffusion & 2.0B & 4.00M & 2.77 & 211.8 & -- & -- \\
+            CDM & -- & 10.80M & 4.88 & 158.7 & -- & -- \\
+            \midrule
+            \multicolumn{7}{@{}l}{\textit{Autoregressive}} \\
+            VAR-d20 & 600M & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
+            D-JEPA-L & 687M & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
+            \midrule
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, U-Net}} \\
+            LDM-4 & 400M & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
+            \midrule
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer--U-Net hybrid}} \\
+            U-ViT-H/2 & 501M & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
+            DiffiT & 561M & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
+            MDTv2-XL/2 & 676M & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
+            \midrule
+            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
+            DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
+            \quad + REPA & 675M & 2.00M & 1.86 & 284.0 & 0.81 & 0.61 \\
+            \midrule
+            \quad + SRA & 675M & 2.00M & 2.01 & 311.4 & 0.80 & 0.63 \\
+            \quad + Dispersive & 675M & 2.00M & 2.04 & -- & -- & -- \\
+            \quad + LayerSync & 675M & 2.00M & 1.93 & 265.34 & 0.81 & 0.60 \\
+            \quad + LARA (Ours) & 675M & 2.00M & 1.80 & 276.48 & 0.81 & 0.61 \\
+            \bottomrule
+        \end{tabular*}
+\end{minipage}
+\end{table*}
+
+\begin{table}[!t]
+\centering
+\caption{\textbf{Training cost on SiT-XL/2.} All methods are profiled on the same TPU v4-16 setup with the same resolution, batch size, and precision. The first 100K iterations are treated as warmup and excluded, and time per step is averaged over subsequent iterations.}
 \label{tab:internal_alignment_profile}
 \begingroup
 \footnotesize
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{0.95}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lc@{}}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
 \toprule
-Method & Time/step $\downarrow$ \\
+Method & \begin{tabular}[b]{@{}c@{}}Time/\\step $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}Peak\\memory $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}External\\frozen\end{tabular} & \begin{tabular}[b]{@{}c@{}}Trainable\\auxiliary\end{tabular} \\
 \midrule
-SRA & 0.42~s \\
-LayerSync & 0.25~s \\
-LARA (Ours) & 0.30~s \\
+REPA & 0.47~s & 21.97~GiB & 86.1M & 8.1M \\
+\midrule
+SRA & 0.42~s & 17.29~GiB & 0M & 5.1M \\
+LayerSync & 0.25~s & 16.21~GiB & 0M & 0M \\
+LARA (Ours) & 0.30~s & 16.68~GiB & 0M & 31.43M \\
 \bottomrule
 \end{tabular*}
 \par
 \endgroup
 \par\kern0pt
 \end{table}
+
+\noindent\textbf{Implementation details.}
+Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. We sample source--target layer pairs uniformly from all valid pairs $(a,b)$ with $a<b$. Additional details on architecture, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in Supplementary Sec.~\ref{supp-app:experimental_details}.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/imagenet256_fid_lara_sit7m_compressed.png}
+    \caption{\textbf{Training dynamics on SiT-XL/2.} FID-50K on ImageNet $256\times256$ without CFG over training iterations.}
+    \label{fig:training_curve}
+\end{figure}
 
 \begin{figure*}[!t]
     \centering
@@ -146,12 +144,53 @@ LARA (Ours) & 0.30~s \\
 
 \input{figures/qualitative_comparison/figure}
 
+\noindent\textbf{Evaluation.}
+All evaluations use the EMA weights of the backbone. For each method in \Cref{tab:imagenet_no_cfg}, we report mean FID~\citep{heusel2017gans} over five sampling seeds (50K images per seed), following the SiT protocol~\citep{ma2024sit}. Inception Score (IS)~\citep{salimans2016improved}, precision, and recall~\citep{kynkaanniemi2019precision} are included in \Cref{tab:imagenet_cfg}; metric definitions and limitations are discussed in Supplementary Sec.~\ref{supp-app:metric_definitions}~\citep{stein2023exposing}.
+
+\noindent\textbf{Baselines.}
+For the controlled comparisons in \Cref{tab:imagenet_no_cfg}, we train all baselines ourselves with the same SiT backbone, training budget, and evaluation protocol as LARA. These are the self-contained internal baselines: Dispersive~\citep{wang2025dispersive}, SRA~\citep{jiang2025sra}, and LayerSync~\citep{haghighi2026layersync}.
+
+For completeness, \Cref{tab:imagenet_cfg} also compares LARA with recent image generators under CFG, which affects the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}. These include pixel diffusion models (ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, simple diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}), autoregressive models (VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}), and latent diffusion models (LDM~\citep{rombach2022ldm}, U-ViT~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2~\citep{gao2023mdtv2}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}). We also include REPA~\citep{yu2024repa}, which aligns hidden states with an external pretrained encoder. Baseline descriptions and the reporting protocol are in Supplementary Secs.~\ref{supp-app:baseline_descriptions} and \ref{supp-app:baseline_protocol}.
+
+\noindent\textbf{Results.}
+As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M. This reduction more than offsets LARA's modest per-step overhead over LayerSync (\Cref{tab:internal_alignment_profile}). Relative to REPA, which runs an external encoder at every step, LARA lowers time per step by 35.8\% and peak training-memory overhead by 24.1\%. With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance.
+
+\Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{supp-app:qualitative_examples}.
+
+\noindent\textbf{Qualitative comparison.}
+\Cref{fig:qualitative_method_comparison} compares six selected class--seed groups using checkpoints trained for $2\mathrm{M}$ iterations under a common sampling configuration. The examples highlight LARA's visible subject details and all four methods receive the same initial noise latent within each column.
+
+\subsection{Cross-Architecture Transfer}
+\label{sec:cross_architecture}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/mdm_three_actions_horizontal.pdf}
+    \caption{\textbf{Text-conditioned HumanML3D motions generated by MDM + LARA.} Selected motion sequences for prompts describing jogging, skipping, and crawling (left to right). Quantitative comparisons appear in \Cref{tab:humanml3d_results}.}
+    \label{fig:humanml3d_qualitative}
+\end{figure*}
+
+
+LayerSync is the strongest internal-alignment baseline in our controlled SiT comparisons (\Cref{tab:imagenet_no_cfg}), achieving the lowest FID among the existing internal objectives at every reported backbone size and training budget. We therefore select it as the main alignment baseline for the architecture-transfer and motion-generation comparisons in \Cref{tab:cross_architecture,tab:humanml3d_results}.
+
+To test whether transition learning transfers beyond SiT, we apply LARA to two further backbones on ImageNet $256\times256$: DiT-B~\citep{peebles2023scalable} in latent space and JiT-B~\citep{li2025jit} in pixel space.
+
+\noindent\textbf{Why pixel space.} SiT and DiT both operate in the latent space of a pretrained VAE, where each token summarizes a compressed image patch and part of the representation is inherited from the autoencoder. Pixel-space generation removes this tokenizer and models raw pixels directly. The model no longer depends on a pretrained autoencoder, but each token is now a high-dimensional raw patch, and the network must build its representation hierarchy from scratch. JiT is a plain Vision Transformer that operates on large raw-pixel patches and predicts the clean image rather than the noise or velocity, making it a simple and representative pixel-space backbone. Pixel space is also where external alignment transfers poorly: direct regression onto external features can degrade JiT training~\citep{shin2026pixelrepa}. Because LARA's targets come from the backbone's own layers, they live in whatever representation space the generator uses, so JiT tests whether internal transition learning remains useful when no latent space is available.
+
+\noindent\textbf{Setup.} Both experiments use batch size 128, 300K training iterations, and AdamW at learning rate $10^{-4}$, with FID-10K without CFG as the evaluation metric.
+
+\noindent\textbf{Results.}
+As shown in \Cref{tab:cross_architecture}, LARA gives the best FID on both backbones, reducing FID by more than a quarter relative to the vanilla model under the same training budget. LayerSync also helps, but achieves only about half of LARA's improvement on either backbone, and LARA's margin over it is similar to that observed on SiT in \Cref{tab:imagenet_no_cfg}. LARA's advantage over the strongest internal baseline is therefore not tied to a particular architecture. Its relative gain is largest on pixel-space JiT, where the representation hierarchy must be learned without a pretrained autoencoder and external alignment is least reliable, supporting internal transition learning as a backbone-agnostic training signal.
+
+
+
+
+
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Cross-architecture ImageNet results.} Vanilla backbones, LayerSync, and LARA at 300K iterations; one training and one sampling seed per reported setting.}
+\caption{\textbf{Cross-architecture ImageNet results.} Vanilla backbones, LayerSync, and LARA at 300K iterations without CFG; one training and one sampling seed per reported setting.}
 \label{tab:cross_architecture}
 \small
-% LayerSync FID-10K entries are intentionally blank for the authors to fill.
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Backbone & Method & FID-10K $\downarrow$ \\
@@ -204,18 +243,11 @@ As shown in \Cref{tab:humanml3d_results}, LARA outperforms vanilla MDM and Layer
 \label{sec:representation_analysis}
 
 \noindent\textbf{Evaluation.}
-We evaluate frozen \texttt{SiT-XL/2} features using linear probes for Tiny ImageNet classification and PASCAL VOC segmentation, and CKA~\citep{kornblith2019similarity} similarity to DINOv2-g.
+We evaluate frozen \texttt{SiT-XL/2} features using linear probes for Tiny ImageNet classification and PASCAL VOC segmentation, and CKA~\citep{kornblith2019similarity} similarity to DINOv2-g. Following LayerSync~\citep{haghighi2026layersync}, we compare checkpoints of similar generation quality rather than equal iteration counts, so that differences reflect the learned representations rather than sample quality: LARA at $500\mathrm{K}$ iterations reaches an FID similar to LayerSync at $800\mathrm{K}$ (\Cref{fig:training_curve}), and SiT at $2\mathrm{M}$ serves as a much longer-trained reference.
 
 
 \noindent\textbf{Results.}
-As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iterations outperforms SiT at $2\mathrm{M}$ and LayerSync at $800\mathrm{K}$ on all three layer-averaged measures. Relative to LayerSync, classification accuracy, segmentation mIoU, and DINOv2-g CKA improve by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The gains extend across many intermediate layers, consistent with LARA's supervision over multiple layer pairs. These results demonstrate that LARA learns stronger semantic and spatial representations across depth with less training.
-
-\begin{figure*}[!t]
-    \centering
-    \includegraphics[width=\textwidth]{figures/mdm_three_actions_horizontal.pdf}
-    \caption{\textbf{Text-conditioned HumanML3D motions generated by MDM + LARA.} Selected motion sequences for prompts describing jogging, skipping, and crawling (left to right). Quantitative comparisons appear in \Cref{tab:humanml3d_results}.}
-    \label{fig:humanml3d_qualitative}
-\end{figure*}
+As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iterations outperforms SiT at $2\mathrm{M}$ and LayerSync at $800\mathrm{K}$ on all three layer-averaged measures. Relative to LayerSync, classification accuracy, segmentation mIoU, and DINOv2-g CKA improve by $20.9\%$, $21.6\%$, and $9.5\%$, respectively. The gains extend across many intermediate layers, consistent with LARA's supervision over multiple layer pairs. Because LARA is evaluated at the earliest of the three checkpoints, these results show that its representation advantage emerges early in training: LARA learns stronger semantic and spatial representations across depth with substantially less training.
 
 \begin{figure*}[!t]
     \centering
@@ -243,7 +275,7 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/predictor_output_behavior.pdf}
-    \caption{\textbf{Predictor-output visualization.} PCA maps for the long-range transition from layer 1 to layer 11 at all five timesteps in the diagnostic grid, ordered from $t=0.1$ (noise side) to $t=0.9$ (image side).}
+    \caption{\textbf{Predictor-output visualization.} SiT-B/2 + LARA at 400K iterations. PCA maps for the long-range transition from layer 1 to layer 11 at all five timesteps in the diagnostic grid, ordered from $t=0.1$ (noise side) to $t=0.9$ (image side).}
     \label{fig:predictor_output_behavior}
 \end{figure*}
 
@@ -253,30 +285,30 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
 \section{Ablation Study}
 \label{sec:ablation_study}
 
-\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, or require an oversized predictor. Each control changes one factor while keeping the backbone, training budget, and evaluation protocol fixed whenever possible. Further details of the matched controls appear in Supplementary Sec.~\ref{supp-app:realign_ablation_protocols}.
+\textbf{Ablation overview.} We design the ablations around the main alternative explanations for LARA's gains. The objective could work only as generic regularization, depend on delicate loss weights, or require an oversized predictor. Unless otherwise specified, all experiments in this section follow the common SiT-B/2 setting in Supplementary \Cref{supp-tab:appendix_common_ablation_setting}, and each control changes only the factor shown in its table. Further details of the matched controls appear in Supplementary Sec.~\ref{supp-app:realign_ablation_protocols}.
 
 \subsection{Effect of LARA Components}
 \label{sec:objective_decomposition}
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{LARA component ablations on SiT-B/2.} FID-50K; lower is better. Common training settings are in Supplementary \Cref{supp-tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{LARA component ablations.} Unlike the other ablations, which report FID-10K, this table reports FID-50K.}
     \label{tab:realign_ablation}
     \footnotesize
     \setlength{\tabcolsep}{2pt}
     \renewcommand{\arraystretch}{0.88}
     \begin{tabular}{@{}lcccc@{}}
         \toprule
-        Variant & $\mathcal{L}_{\mathrm{pred}}$ & $\mathcal{L}_{\mathrm{cons}}$ & $\mathcal{L}_{\mathrm{div}}$ & FID-50K $\downarrow$ \\
+        Variant & $\mathcal{L}_{\mathrm{pred}}$ & $\mathcal{L}_{\mathrm{cons}}$ & $\mathcal{L}_{\mathrm{red}}$ & FID-50K $\downarrow$ \\
         \midrule
         Vanilla & -- & -- & -- & 47.51 \\
         LayerSync & -- & -- & -- & 41.89 \\
-        Diversity loss only & -- & -- & \checkmark & 43.02 \\
+        Redundancy loss only & -- & -- & \checkmark & 43.02 \\
         Pred. only, w/o depth cond. & \checkmark & -- & -- & 42.40 \\
         Pred. only, fixed pairs  & \checkmark & -- & -- & 41.55 \\
         Pred. only & \checkmark & -- & -- & \textbf{39.48} \\
         Pred. + consistency loss & \checkmark & \checkmark & -- & 38.07 \\
-        Pred. + diversity loss & \checkmark & -- & \checkmark & 36.14 \\
+        Pred. + redundancy loss & \checkmark & -- & \checkmark & 36.14 \\
         Full LARA & \checkmark & \checkmark & \checkmark & \textbf{34.43} \\
         \bottomrule
     \end{tabular}
@@ -288,26 +320,26 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
     \centering
     \includegraphics[width=\textwidth]{figures/diversity_ablation.pdf}
 
-    \caption{\textbf{Diversity regularization balances cross-layer correlation and generation quality.}
-    SiT-B at 100K iterations, batch size 128. Layerwise correlation heatmaps are shown for
-    $\lambda_{\mathrm{div}}=0$, $0.4$, and $0.8$.
+    \caption{\textbf{Redundancy regularization balances cross-layer correlation and generation quality.}
+    Trained for 100K iterations. Layerwise correlation heatmaps are shown for
+    $\lambda_{\mathrm{red}}=0$, $0.4$, and $0.8$.
     The $0.4$ setting gives the best FID among these weights, whereas $0.8$ gives the lowest
     cross-layer correlation. This diagnostic uses a different training budget from the
     objective decomposition in \Cref{tab:realign_ablation}.}
     \label{fig:cosine_squared_heatmap}
 \end{figure*}
 
-\textbf{Loss weights.} We use simple loss weights without extensive tuning. The redundancy regularizer counteracts the homogenizing pressure of the prediction objective, preserving distinct representations across layers. These objectives must remain balanced: excessive redundancy regularization prioritizes decorrelation over learning useful cross-layer transitions. \Cref{tab:redundancy_weight_sensitivity} shows similar FID for nearby moderate weights, followed by degradation as the redundancy weight increases beyond this range. The separate 100K-step diagnostic in \Cref{fig:cosine_squared_heatmap} shows the same trade-off: stronger regularization further lowers cross-layer correlation but worsens generation quality. We therefore use a moderate redundancy weight to prevent homogenization while retaining useful shared structure. Prediction- and consistency-weight sweeps are reported in Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.
+\textbf{Loss weights.} We use simple loss weights without extensive tuning; default values are listed in Supplementary \Cref{supp-tab:appendix_common_ablation_setting}. The redundancy regularizer counteracts the homogenizing pressure of the prediction objective, preserving distinct representations across layers. These objectives must remain balanced: excessive redundancy regularization prioritizes decorrelation over learning useful cross-layer transitions. \Cref{tab:redundancy_weight_sensitivity} shows similar FID for nearby moderate weights, followed by degradation as the redundancy weight increases beyond this range. The separate 100K-step diagnostic in \Cref{fig:cosine_squared_heatmap} shows the same trade-off: stronger regularization further lowers cross-layer correlation but worsens generation quality. We therefore use a moderate redundancy weight to prevent homogenization while retaining useful shared structure. Prediction- and consistency-weight sweeps are reported in Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Redundancy-weight sensitivity on SiT-B/2.} Other loss weights are fixed. Lower FID-10K is better.}
+    \caption{\textbf{Redundancy-weight sensitivity.} Other loss weights are fixed.}
     \label{tab:redundancy_weight_sensitivity}
     \small
     \setlength{\tabcolsep}{3pt}
     \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
         \toprule
-        $\lambda_{\mathrm{div}}$ & 0 & 0.20 & 0.40 & 0.60 & 0.80 \\
+        $\lambda_{\mathrm{red}}$ & 0 & 0.20 & 0.40 & 0.60 & 0.80 \\
         \midrule
         FID-10K $\downarrow$ & 38.57 & 35.31 & \textbf{35.12} & 36.36 & 37.74 \\
         \bottomrule
@@ -321,7 +353,7 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
 
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Predictor architecture on SiT-B/2.} Only the predictor backbone changes; conditioning and the FID-10K ablation protocol are identical.}
+\caption{\textbf{Predictor architecture.} Only the predictor backbone changes; conditioning is identical.}
 \label{tab:predictor_architecture_ablation}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -341,7 +373,7 @@ ViT & 13.1M & 36.34 \\
 
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Predictor capacity on SiT-B/2.} Parameter counts refer to LARA's auxiliary predictor. Lower FID-10K is better.}
+\caption{\textbf{Predictor capacity.} Parameter counts refer to LARA's auxiliary predictor.}
 \label{tab:main_predictor_size_ablation}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -362,49 +394,69 @@ LARA (Large) & 25.4M & 35.35 \\
 
 \subsection{Compatibility with External Alignment}
 
-\textbf{Compatibility with external alignment.} \Cref{tab:external_alignment_compatibility} tests whether internal transition learning remains useful when external representation guidance is also available. Adding REPA to LARA improves FID-10K from 35.12 to 31.48 under the matched ablation protocol, a gain of 3.64 points. This is consistent with the objectives providing different supervision: REPA anchors hidden states to external DINOv2 features, whereas LARA models relationships within the diffusion-transformer hierarchy. We interpret the result as evidence of compatibility, not as a comparison against REPA alone, because the table has no REPA-only row under the same ablation protocol.
+\textbf{Is LARA's insight tied to internal targets?} LARA makes two design choices: it supervises the backbone through a shared, layer-aware predictor applied across depth, and it uses the backbone's own deeper layers as targets. REPA instead projects the hidden state at a single layer onto external DINOv2-B features~\citep{yu2024repa}; following its setting, we align layer 4. All DINOv2 targets in this section use DINOv2-B. We separate these choices with two combinations (\Cref{tab:external_alignment_compatibility}). \emph{REPA + LARA} adds the REPA objective to the full LARA objective. \emph{LARA predictor $\to$ DINOv2} keeps only LARA's predictor and maps source states from every layer to DINOv2 features; because layers are no longer aligned with one another, the consistency and redundancy terms are dropped, leaving the prediction loss as the only auxiliary objective.
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Compatibility with external representation alignment.} All rows use the same backbone, data pipeline, optimizer, training length, and sampler; only the auxiliary representation objective changes. Common ablation settings are in Supplementary \Cref{supp-tab:appendix_common_ablation_setting}.}
+    \caption{\textbf{Compatibility with external representation alignment.} REPA + LARA optimizes both objectives jointly. LARA predictor $\to$ DINOv2 uses LARA's layer-aware predictor to map every source layer to DINOv2 features and keeps only the prediction loss.}
     \label{tab:external_alignment_compatibility}
-    \small
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{@{}lccc@{}}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
         \toprule
-        Variant & External target & LARA & FID $\downarrow$ \\
+        Variant & Source layers & Target & FID $\downarrow$ \\
         \midrule
-        LARA (Ours) & -- & \checkmark & 35.12 \\
-        REPA + LARA (Ours) & DINOv2 & \checkmark & \textbf{31.48} \\
+        REPA & Layer 4 & DINOv2 & 33.75 \\
+        LARA (Ours) & All & Backbone & 35.12 \\
+        \midrule
+        REPA + LARA (Ours) & All + layer 4 & Both & 32.09 \\
+        LARA predictor $\to$ DINOv2 (Ours) & All & DINOv2 & \textbf{31.43} \\
         \bottomrule
-    \end{tabular}
+    \end{tabular*}
 \end{table}
 
-\subsection{Functional Layer-Aware Transition Diagnostic}
+\textbf{Internal and external supervision are complementary.} With an external teacher, REPA outperforms LARA alone, yet simply adding the two objectives improves on both. Internal transitions therefore supply a training signal that alignment to DINOv2 does not already provide.
+
+\textbf{LARA's predictor strengthens external alignment itself.} The strongest result comes from the second combination. Routing DINOv2 alignment through LARA's layer-aware predictor gives the best FID in the table, ahead of REPA with the same target and ahead of the joint objective despite using a single auxiliary loss. Relative to REPA, the change lies mainly in how hidden states reach the target: one shared, depth-conditioned predictor applied at every layer rather than a projector at a fixed layer. The joint objective falls short of this simpler variant because consistency and redundancy are designed for alignment between layers: they stabilize training when every target is itself a moving backbone state. With a fixed external target, these terms no longer serve that purpose and instead add competing constraints. LARA's layer-aware formulation is thus an orthogonal contribution that can improve existing alignment methods, not only an alternative to them.
+
+\subsection{Robustness to Skipped Depth}
 \label{sec:inference_transition_diagnostic}
 
-\textbf{Functional transition diagnostic.} We further test whether the learned predictor produces target-depth states that are functionally compatible with the downstream backbone. \Cref{tab:transition_diagnostic} reports the results. For the transition from block 3 to block 7, we bypass the intervening transformer blocks and resume computation either directly from the unchanged block-3 state or from the predictor-generated state for block 7. This intervention isolates the contribution of the learned cross-depth transition while keeping the skipped interval fixed.
+\textbf{Do learned transitions carry usable information?} LARA rests on the premise that its predictor learns how representations transform across depth, and that this signal is what shapes the backbone. If so, a predicted target-depth state should be more than a regression target: the downstream blocks should be able to use it in place of the state they normally receive. We test this directly at inference with jumps $(a,b)$: the computation from layer $a$ to layer $b$ is skipped entirely, and the network resumes after layer $b$ from either the unchanged layer-$a$ state (naive skip) or a single predictor call that maps the layer-$a$ state to layer $b$. Naive skips are evaluated for LARA as well as the vanilla and LayerSync models. We vary the gap at a fixed source and the source depth at a fixed gap (\Cref{tab:transition_diagnostic}).
 
-The difference is substantial. Naively bypassing the block-3-to-block-7 interval without the predictor degrades FID to 128.25. Replacing the same skipped computation with the predictor-generated target-depth state reduces FID to 54.17 while retaining the same relative block cost of $0.67\times$. Restricting the predictor transition to the first 125 of 250 denoising steps further improves FID to 45.84, approaching the full-backbone result of 35.12 while executing fewer transformer blocks overall.
-
-The key comparison is therefore between bypassing the same depth interval with and without the learned transition. The reduction from 128.25 to 54.17 FID shows that the predictor supplies substantial information needed by the downstream layers, rather than merely benefiting from a different inference schedule. This provides functional evidence that LARA learns a target-depth representation that can be consumed by the remaining backbone. The standard generation results nevertheless use the full backbone; this intervention is intended as a diagnostic of the learned transition interface.
-
-\begin{table}[t]
+\begin{table}[!htbp]
     \centering
-    \caption{\textbf{Functional transition diagnostic.} Bypassing blocks 3–7 with and without the learned transition. All routes use the same checkpoint and 250-step sampler; relative cost counts executed transformer blocks.}
+    \caption{\textbf{Robustness to skipped depth.} Each row bypasses the blocks between the source and target layer, either directly (naive skip) or through LARA's learned transition. The first row runs the full backbone. Vanilla and LayerSync have no predictor, so they can only skip directly; all LARA entries use the same checkpoint. Best naive-skip FID in each row is bold.}
     \label{tab:transition_diagnostic}
     \footnotesize
-    \setlength{\tabcolsep}{2pt}
-    \begin{tabular}{@{}lccc@{}}
+    \setlength{\tabcolsep}{2.5pt}
+    \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
         \toprule
-        Route & Jump & FID $\downarrow$ & Rel. block cost \\
+        & \multicolumn{3}{c}{Naive skip} & LARA \\
+        \cmidrule(lr){2-4}
+        Jump & Vanilla & LayerSync & LARA & predictor \\
         \midrule
-        Full backbone & -- & \textbf{35.12} & 1.00$\times$ \\
-        Naive skip, no predictor & $(3,7)$ & 128.25 & 0.67$\times$ \\
-        Predictor transition, all steps & $(3,7)$ & 54.17 & 0.67$\times$ \\
-        Predictor transition, first 125 steps & $(3,7)$ & 45.84 & 0.83$\times$ \\
+        Full backbone & 49.36 & 43.26 & \textbf{35.12} & -- \\
+        \midrule
+        \multicolumn{5}{@{}l}{\textit{Fixed source, increasing gap}} \\
+        $(3,5)$ & 143.84 & 96.31 & \textbf{89.42} & 49.58 \\
+        $(3,7)$ & 228.66 & 151.75 & \textbf{128.25} & 54.17 \\
+        $(3,9)$ & 332.91 & 234.56 & \textbf{185.38} & 70.94 \\
+        \midrule
+        \multicolumn{5}{@{}l}{\textit{Fixed gap, increasing depth}} \\
+        $(1,5)$ & 271.83 & 164.92 & \textbf{154.11} & 56.43 \\
+        $(3,7)$ & 228.66 & 151.75 & \textbf{128.25} & 54.17 \\
+        $(6,10)$ & 194.76 & 140.87 & \textbf{110.62} & 52.58 \\
         \bottomrule
-    \end{tabular}
+    \end{tabular*}
 \end{table}
+
+\textbf{Skipping depth breaks every backbone.} Removing blocks outright collapses generation in every model and at every interval, so the skipped blocks perform work the rest of the network cannot do without. LARA's backbone is nonetheless the most tolerant, giving the lowest naive-skip FID for every interval tested, consistent with training that ties representations across depth. Without a predictor, however, no model approaches its full-backbone quality. This matches the observation in \Cref{fig:projection_layout_observation}(a): layers share structure, but they are not interchangeable.
+
+\textbf{The predictor recovers most of the skipped computation.} With the learned transition, the picture changes qualitatively. Bypassing the shortest interval through the predictor already matches the full vanilla backbone, and even the longest predicted jump outperforms every naive skip in the table, including the shortest. Because both routes skip exactly the same blocks, this gap can only come from what the predictor contributes. This is notable because the downstream blocks never receive predictor outputs during training: the predictor is supervised only to match backbone states, yet its outputs are already in a form the backbone can consume.
+
+\textbf{Learned transitions are robust across depth.} Naive skipping is strongly position-dependent: removing the same number of blocks is far more damaging near the input than deeper in the network. The predictor largely removes this sensitivity, keeping FID nearly constant across source depths. A single depth-conditioned predictor thus serves every interval, supporting a shared family of transitions over supervision tied to one fixed layer pair. Its FID also grows much more slowly with the gap than naive skipping does, mirroring the gap-dependent transition difficulty in \Cref{fig:projection_layout_observation}(b); that the longest jumps remain usable is consistent with compositional consistency, which supervises long-range transitions through shorter ones.
+
+We interpret these results as functional evidence that the predictor learns useful depth-aware transitions rather than a shortcut that merely lowers the auxiliary loss. This transition signal, which encodes how a shallow representation should evolve into a deeper one, is what LARA feeds back to the backbone during training, consistent with the stronger layerwise representations in \Cref{fig:representation_analysis}. The intervention serves only as a diagnostic; all generation results use the full backbone.
 
 \FloatBarrier

@@ -5,7 +5,7 @@ This supplementary material keeps the main paper compact while making the implem
 
 \subsection{Training Algorithm and Compute}
 
-LARA adds a lightweight training-time predictor to the diffusion transformer. The backbone forward pass exposes source and target activations, and the shared predictor maps the source state into target-layer coordinates. The auxiliary regularizer combines transition prediction, path consistency, and cross-layer redundancy reduction.
+LARA adds a lightweight training-time predictor to the diffusion transformer. The backbone forward pass exposes source and target activations, and the shared predictor maps the source state into target-layer coordinates. The auxiliary regularizer combines transition prediction, path consistency, and cross-layer redundancy regularization.
 
 \begin{algorithm}[!htbp]
 \caption{\textbf{LARA training.} Flow matching with layer-aware transition regularization.}
@@ -13,7 +13,7 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
 \small
 \begin{algorithmic}[1]
 \Require backbone $v_\theta$; online predictor $G_\psi$ and EMA predictor $G_{\bar\psi}$.
-\Require timestep law $p_t$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}}$.
+\Require timestep law $p_t$; weights $\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{red}}$.
 \Repeat
     \State Sample $x_0\sim p_{\mathrm{data}}$, condition $y\sim p(y\mid x_0)$, noise $\epsilon\sim\mathcal{N}(0,I)$, timestep $t\sim p_t$.
     \State Form $x_t=\alpha_t x_0+\sigma_t\epsilon$ and $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$.
@@ -45,7 +45,7 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
     &=
     \lambda_{\mathrm{pred}}d(\hat A_{a\to b}^t,\mathrm{sg}(A_b^t))\\
     &\quad+\lambda_{\mathrm{cons}}d(\hat A_{a\to c}^t,\mathrm{sg}(\tilde A_{a\to b\to c}^t))\\
-    &\quad+\lambda_{\mathrm{div}}\mathbb{E}_{i<j}
+    &\quad+\lambda_{\mathrm{red}}\mathbb{E}_{i<j}
     \operatorname{cos}^2(A_i^t,A_j^t),
     \qquad A_i^t,A_j^t\in\mathcal{H}.
     \end{aligned}
@@ -55,8 +55,6 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
 \Until{training budget is reached}
 \end{algorithmic}
 \end{algorithm}
-
-The timestep law $p_t$ is a protocol choice rather than part of the transition objective. Main LARA runs use the default training sampler reported in \Cref{tab:appendix_imagenet_protocol}.
 
 \paragraph{Predictor-induced transition distance}
 The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
@@ -91,36 +89,7 @@ d(\widehat A_{a\to b}^{\,t},\operatorname{sg}(A_b^t))
 \end{aligned}
 \label{eq:appendix_token_cosine_distance}
 \end{equation}
-The cross-layer redundancy term is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
-
-\subsection{LARA ImageNet Configuration}
-\label{app:realign_hyperparameters}
-
-\Cref{tab:appendix_realign_hparams} summarizes the main-run training budgets and the predictor interface specified in Main \Cref{main-sec:predictor}. The SiT-B/2 predictor geometry is described below, and the matched ablation settings are reported in \Cref{tab:appendix_common_ablation_setting}. The transition target and EMA composition path are defined in Main \Cref{main-eq:align_loss,main-eq:consistency_loss}.
-
-\begin{table*}[!t]
-    \centering
-    \caption{\textbf{LARA ImageNet configuration summary.} Main-run budgets and the shared predictor interface on SiT-B/2, SiT-L/2, and SiT-XL/2. The SiT-B/2 predictor uses a $768\to384\to768$ channel path and ten conditioned blocks. ImageNet training and evaluation protocols are in \Cref{tab:appendix_imagenet_protocol}.}
-    \label{tab:appendix_realign_hparams}
-    \footnotesize
-    \setlength{\tabcolsep}{3pt}
-    \renewcommand{\arraystretch}{1.08}
-        \begin{tabularx}{\textwidth}{@{}lXXX@{}}
-        \toprule
-        Setting & \texttt{SiT-B/2} & \texttt{SiT-L/2} & \texttt{SiT-XL/2} \\
-        \midrule
-        Training budget & $400\mathrm{K}$ & $400\mathrm{K}$ & $2\mathrm{M}$ \\
-        Batch size & 256 & 256 & 256 \\
-        Predictor input/output width & 768 & 1024 & 1152 \\
-        Spatial token grid & $16\times16$ & $16\times16$ & $16\times16$ \\
-        Predictor family & \multicolumn{3}{c@{}}{Conditioned ConvNeXt-style spatial blocks with periodic attention} \\
-        Conditioning inputs & \multicolumn{3}{c@{}}{Timestep, source depth, target depth} \\
-        Conditioning injection & \multicolumn{3}{c@{}}{FiLM/AdaLN-style channel-wise scale and shift} \\
-        Transition target & \multicolumn{3}{c@{}}{Stopped-gradient target-layer activation} \\
-        Checkpoints in Main Table~\ref{main-tab:imagenet_no_cfg} & 400K & 400K & 400K, 1M, 2M \\
-        \bottomrule
-    \end{tabularx}
-\end{table*}
+The redundancy regularizer is computed directly from the hidden-state cache $\mathcal{H}$ and does not require an additional backbone forward pass.
 
 \section{Transition Predictor Configuration and Capacity}
 \label{app:predictor_architecture_capacity}
@@ -134,7 +103,7 @@ We first specify how the transition predictor is attached to the SiT backbones, 
 \label{app:image_generation_details}
 
 \paragraph{Compute}
-We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_realign_hparams,tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
+We thank the TPU Research Cloud (TRC) program for providing TPU access. Main image-generation experiments and ablation studies are run on TPU v4-16. The details of hyperparameters and sampler are provided in \Cref{tab:appendix_imagenet_protocol,tab:appendix_ablation_protocol}.
 
 \paragraph{Existing assets}
 Our experiments use public research assets, including ImageNet, Tiny ImageNet, PASCAL VOC, HumanML3D and its MDM motion-processing pipeline, the Stable Diffusion VAE, DINOv2, and SiT~\citep{deng2009imagenet,everingham2010pascal,guo2022generating,tevet2022mdm,rombach2022ldm,oquab2023dinov2,ma2024sit}. The cited dataset and model papers document their sources and processing pipelines. We do not redistribute datasets or pretrained weights; use follows the official research terms and licenses of the corresponding assets.
@@ -142,70 +111,7 @@ Our experiments use public research assets, including ImageNet, Tiny ImageNet, P
 \subsubsection{Baseline Reporting Protocol}
 \label{app:baseline_protocol}
 
-The ImageNet comparisons include the controlled SiT results in Main \Cref{main-tab:imagenet_no_cfg}, the latent diffusion transformers in Main \Cref{main-tab:imagenet_cfg}, and the full set of image generators in \Cref{tab:imagenet_cfg_full}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. Baselines in \Cref{tab:imagenet_cfg_full} use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
-
-\begin{table*}[!t]
-\centering
-\caption{\textbf{Full comparison with existing image generators on ImageNet $256\times256$.} The latent diffusion transformer FID results are summarized in Main \Cref{main-tab:imagenet_cfg}. Model sizes and training budgets vary across methods. Parameter counts refer to the generative backbone; training-time auxiliary modules and external encoders are excluded. Best results for each metric are bold.}
-\label{tab:imagenet_cfg_full}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{0.95}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccccc@{}}
-            \toprule
-            Model & \#Params & Iter. & FID$\downarrow$ & IS$\uparrow$ & Pre.$\uparrow$ & Rec.$\uparrow$ \\
-            \midrule
-            \multicolumn{7}{@{}l}{\textit{Pixel diffusion}} \\
-            ADM-U & 554M & 2.00M & 3.94 & 186.7 & 0.82 & 0.52 \\
-            VDM++ & 2.0B & 2.80M & 2.40 & 225.3 & -- & -- \\
-            Simple diffusion & 2.0B & 4.00M & 2.77 & 211.8 & -- & -- \\
-            CDM & -- & 10.80M & 4.88 & 158.7 & -- & -- \\
-            \midrule
-            \multicolumn{7}{@{}l}{\textit{Autoregressive image generation}} \\
-            VAR-d20 & 600M & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 687M & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
-            \midrule
-            \multicolumn{7}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 400M & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
-            \midrule
-            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer + U-Net hybrid}} \\
-            U-ViT-H/2 & 501M & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
-            DiffiT & 561M & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2 & 676M & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
-            \midrule
-            \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
-            SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
-            \quad + REPA & 675M & 2.00M & 1.86 & 284.0 & 0.81 & 0.61 \\
-            \midrule
-            \quad + SRA & 675M & 2.00M & 2.01 & 311.4 & 0.80 & 0.63 \\
-            \quad + Dispersive & 675M & 2.00M & 2.04 & -- & -- & -- \\
-            \quad + LayerSync & 675M & 2.00M & 1.93 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.80 & 276.48 & 0.81 & 0.61 \\
-            \bottomrule
-        \end{tabular*}
-\end{table*}
-
-\paragraph{Training cost relative to external alignment}
-\Cref{tab:appendix_repa_profile} shows that LARA reduces per-step training time by 35.8\% and peak training-memory overhead by 24.1\% relative to REPA under matched conditions. Eliminating the external encoder more than offsets the cost of LARA's larger trainable predictor. Together with the improved FID in Main \Cref{main-tab:imagenet_cfg}, these results show that internal transition learning improves both generation quality and training efficiency.
-
-\begin{table}[!htbp]
-\centering
-\caption{\textbf{Matched REPA--LARA training profile on SiT-XL/2.} The same hardware, batch size, precision, data pipeline, and training budget are used.}
-\label{tab:appendix_repa_profile}
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Metric & REPA & LARA \\
-\midrule
-Wall-clock time per step & 0.467 s & 0.300 s \\
-Peak training-memory overhead & 21.97 GiB & 16.68 GiB \\
-External frozen parameters & 86.1M & 0 \\
-Trainable auxiliary parameters & 8.1M & 31.43M \\
-\bottomrule
-\end{tabular}
-\end{table}
+The ImageNet comparisons include the controlled SiT results in Main \Cref{main-tab:imagenet_no_cfg}, and the comparison with existing image generators in Main \Cref{main-tab:imagenet_cfg}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. Baselines in Main \Cref{main-tab:imagenet_cfg} use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
 
 \paragraph{Classification}
 We use the Tiny ImageNet dataset~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
@@ -287,8 +193,7 @@ We use CKA~\citep{kornblith2019similarity} to compare intermediate representatio
         Sampling steps / guidance & 250 / -- \\
         \midrule
         \multicolumn{2}{@{}l}{\textbf{LARA recipe}} \\
-        Timestep sampler & logitN$(-0.2,1.0)$ \\
-        Loss weights & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ unless varied \\
+        Loss weights & $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{red}})=(1.0,0.25,0.40)$ unless varied \\
         Predictor & Conditioned transition predictor; see Main \Cref{main-sec:predictor,main-sec:predictor_ablation} \\
         Consistency path & cached online $a\to b$; EMA $b\to c$ target \\
         Target detach & target $A_b^t$ is detached for $\mathcal{L}_{\mathrm{pred}}$ \\
@@ -389,14 +294,14 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \toprule
         Artifact & Quantity & Protocol & Citation \\
         \midrule
-        Main \Cref{main-tab:imagenet_no_cfg,main-tab:imagenet_cfg}; \Cref{tab:imagenet_cfg_full} & FID; full comparison also includes IS, precision, recall & Use matched sampling and evaluator settings for controlled SiT comparisons; literature baselines retain the configurations and metrics reported by their original papers. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
-        Main \Cref{main-tab:internal_alignment_profile} & Time/step & Profile training time per step with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware. & \citep{jiang2025sra,haghighi2026layersync} \\
+        Main \Cref{main-tab:imagenet_no_cfg,main-tab:imagenet_cfg} & FID; full comparison also includes IS, precision, recall & Use matched sampling and evaluator settings for controlled SiT comparisons; literature baselines retain the configurations and metrics reported by their original papers. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
+        Main \Cref{main-tab:internal_alignment_profile} & Time/step, peak memory, auxiliary parameters & Profile training time per step with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware; average wall-clock time per step after a 100K-iteration warmup, excluding one-time startup costs. & \citep{jiang2025sra,haghighi2026layersync} \\
         Main \Cref{main-tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         Main \Cref{main-tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
         Main \Cref{main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility}; \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{main-fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         Main \Cref{main-fig:projection_layout_observation}(b,c) & Pairwise direction error & Evaluate eight prespecified layer pairs with EMA LARA-B at 400K steps on all 49,920 held-out validation latents; average tokenwise $1-\cos$ over images. & This work \\
-        Main \Cref{main-fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three diversity weights shown in the main figure and discussed in the main text. & \citep{klabunde2025similarity,li2026diverseditpp} \\
+        Main \Cref{main-fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three redundancy weights shown in the main figure and discussed in the main text. & \citep{klabunde2025similarity,li2026diverseditpp} \\
         Main \Cref{main-fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
@@ -447,7 +352,7 @@ The main ablation tables isolate the components needed for LARA. The depth-condi
 \subsection{Loss-Weight Sensitivity}
 \label{app:loss_weight_sensitivity}
 
-\Cref{tab:appendix_loss_weight_sensitivity} varies the prediction and consistency weights one at a time around the default configuration $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{div}})=(1.0,0.25,0.40)$ under the common setting in \Cref{tab:appendix_common_ablation_setting}. Both sweeps yield similar FID across the tested values. The redundancy-weight sweep is reported in Main \Cref{main-tab:redundancy_weight_sensitivity} and supports the use of a moderate redundancy weight.
+\Cref{tab:appendix_loss_weight_sensitivity} varies the prediction and consistency weights one at a time around the default configuration $(\lambda_{\mathrm{pred}},\lambda_{\mathrm{cons}},\lambda_{\mathrm{red}})=(1.0,0.25,0.40)$ under the common setting in \Cref{tab:appendix_common_ablation_setting}. Both sweeps yield similar FID across the tested values. The redundancy-weight sweep is reported in Main \Cref{main-tab:redundancy_weight_sensitivity} and supports the use of a moderate redundancy weight.
 
 \begin{table*}[!t]
     \centering
@@ -533,7 +438,7 @@ Each diagnostic must report the skip rate, chosen layer jumps, and whether the s
 \subsection{Transition Difficulty by Gap and Source Depth}
 \label{app:transition_difficulty}
 
-\Cref{tab:appendix_transition_difficulty} reports eight prespecified source--target pairs from the 400K-step LARA-B checkpoint. We use the EMA backbone and EMA predictor in deterministic mode and evaluate all 49,920 held-out ImageNet validation latents. For each image, we draw one Gaussian noise sample and one discrete timestep from the run's 50-bin logit-normal law, then reuse that perturbed input for every pair. The score is the image-and-token mean of $1-\cos(\widehat A_{a\to b},A_b)$, matching Algorithm~\ref{alg:lara_transition_distance}. A fixed seed (20261005) controls record order, noise, and timesteps. Source and target indices refer to outputs after the numbered transformer blocks. Normal-approximation 95\% confidence-interval half-widths over images are at most 0.00021.
+\Cref{tab:appendix_transition_difficulty} reports eight prespecified source--target pairs from the 400K-step LARA-B checkpoint. We use the EMA backbone and EMA predictor in deterministic mode and evaluate all 49,920 held-out ImageNet validation latents. For each image, we draw one Gaussian noise sample and one discrete timestep from a 50-bin logit-normal distribution, then reuse that perturbed input for every pair. The score is the image-and-token mean of $1-\cos(\widehat A_{a\to b},A_b)$, matching Algorithm~\ref{alg:lara_transition_distance}. A fixed seed (20261005) controls record order, noise, and timesteps. Source and target indices refer to outputs after the numbered transformer blocks. Normal-approximation 95\% confidence-interval half-widths over images are at most 0.00021.
 
 \begin{table}[!htbp]
     \centering

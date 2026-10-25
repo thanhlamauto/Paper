@@ -1,16 +1,28 @@
 \section{Preliminaries}
 \label{sec:preliminaries}
 
-We build on the stochastic-interpolant formulation used by SiT~\citep{ma2024sit}. Given a data latent $x_0\sim p_{\mathrm{data}}$, Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$, and timestep $t\in[0,1]$, the interpolation path is
+We briefly review flow- and diffusion-based generative models through the unified view of stochastic interpolants~\citep{albergo2023building,albergo2023stochastic,ma2024sit}. Consider a continuous time-dependent process that mixes a data sample $x_0\sim p_{\mathrm{data}}$ with Gaussian noise $\epsilon\sim\mathcal{N}(0,I)$:
 \begin{equation}
-x_t=\alpha_t x_0+\sigma_t\epsilon ,
+x_t=\alpha_t x_0+\sigma_t\epsilon,\qquad t\in[0,1],
 \label{eq:stochastic_interpolant}
 \end{equation}
-with the target velocity
-\[
-u_t=\dot{\alpha}_t x_0+\dot{\sigma}_t\epsilon .
-\]
-A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by minimizing
+where $\alpha_t$ is increasing and $\sigma_t$ is decreasing in $t$, with $\alpha_0=\sigma_1=0$ and $\alpha_1=\sigma_0=1$. The process therefore moves from pure noise at $t=0$ to data at $t=1$. Following SiT~\citep{ma2024sit}, we use the linear interpolant $\alpha_t=t$ and $\sigma_t=1-t$.
+
+\noindent\textbf{Velocity and the probability flow ODE.}
+The interpolant induces a probability flow ordinary differential equation (PF ODE)
+\begin{equation}
+\mathrm{d}x_t=v(x_t,t)\,\mathrm{d}t,
+\label{eq:pf_ode}
+\end{equation}
+whose marginal at each $t$ matches the distribution of $x_t$ in \Cref{eq:stochastic_interpolant}. Its velocity field is the conditional expectation of the time derivative of the interpolant,
+\begin{equation}
+v(x,t)=\dot\alpha_t\,\mathbb{E}[x_0\mid x_t=x]+\dot\sigma_t\,\mathbb{E}[\epsilon\mid x_t=x].
+\label{eq:velocity_field}
+\end{equation}
+Samples are drawn by integrating \Cref{eq:pf_ode} from Gaussian noise at $t=0$ to $t=1$ with a standard ODE solver.
+
+\noindent\textbf{Training objective.}
+The expectations in \Cref{eq:velocity_field} are intractable, but $v$ is the minimizer of a simple regression onto the conditional velocity $u_t=\dot\alpha_t x_0+\dot\sigma_t\epsilon$~\citep{lipman2022flow,albergo2023stochastic}. A diffusion transformer $v_\theta$ therefore predicts the velocity from $(x_t,t,c)$, where $c$ is the class condition, by minimizing
 \begin{equation}
 \mathcal{L}_{\mathrm{FM}}(\theta)
 =
@@ -20,3 +32,16 @@ A diffusion transformer $v_\theta$ predicts this velocity from $(x_t,t,c)$ by mi
 \right].
 \label{eq:flow_matching_loss}
 \end{equation}
+
+\noindent\textbf{Score and stochastic sampling.}
+The same velocity also determines the score $s(x,t)=\nabla_x\log p_t(x)$~\citep{song2021score,ma2024sit}:
+\begin{equation}
+s(x,t)=\frac{\alpha_t v(x,t)-\dot\alpha_t x}{\sigma_t\left(\dot\alpha_t\sigma_t-\alpha_t\dot\sigma_t\right)},
+\label{eq:score_from_velocity}
+\end{equation}
+so estimating either quantity suffices. The score yields a stochastic differential equation (SDE) with the same marginals as \Cref{eq:pf_ode},
+\begin{equation}
+\mathrm{d}x_t=\left[v(x_t,t)+\tfrac{1}{2}w_t\,s(x_t,t)\right]\mathrm{d}t+\sqrt{w_t}\,\mathrm{d}W_t,
+\label{eq:sampling_sde}
+\end{equation}
+where $W_t$ is a Wiener process and $w_t\ge0$ is a diffusion coefficient that can be chosen freely at sampling time. We use the Heun ODE solver for results without classifier-free guidance and the Euler--Maruyama SDE solver with guidance~\citep{ho2022classifier}, as listed in Supplementary \Cref{supp-tab:appendix_imagenet_protocol}.
