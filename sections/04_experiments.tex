@@ -12,7 +12,7 @@ We evaluate our method on image generation and 3D human motion generation, and a
 \centering
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\caption{\textbf{FID comparisons of class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used. The sampler is the ODE-based Heun method. Entries report mean FID across sampling seeds of a fixed checkpoint. Parameter counts include only the generative backbone.}
+\caption{\textbf{FID comparisons of class-conditional generation on ImageNet $256\times256$.} No classifier-free guidance (CFG)~\citep{ho2022classifier} is used. The sampler is the ODE-based Heun method. Entries report FID mean $\pm$ sample standard deviation across sampling seeds of a fixed checkpoint. Parameter counts include only the generative backbone.}
 \label{tab:imagenet_no_cfg}
 \begingroup
 \footnotesize
@@ -22,35 +22,35 @@ We evaluate our method on image generation and 3D human motion generation, and a
             \toprule
             Model & \#Params & Iter. & FID$\downarrow$ \\
             \midrule
-            \texttt{SiT-B/2} & 137M & 400K & $35.21$ \\
-            \quad + Dispersive & 137M & 400K & $31.27$ \\
-            \quad + SRA & 137M & 400K & $30.85$ \\
-            \quad + LayerSync & 137M & 400K & $28.60$ \\
-            \quad + LARA (Ours) & 137M & 400K & $\mathbf{25.03}$ \\
+            \texttt{SiT-B/2} & 137M & 400K & $35.21 \pm 0.13$ \\
+            \quad + Dispersive & 137M & 400K & $31.27 \pm 0.13$ \\
+            \quad + SRA & 137M & 400K & $30.85 \pm 0.12$ \\
+            \quad + LayerSync & 137M & 400K & $28.60 \pm 0.11$ \\
+            \quad + LARA (Ours) & 137M & 400K & $\mathbf{25.03 \pm 0.09}$ \\
             \midrule
-            \texttt{SiT-L/2} & 458M & 400K & $20.53$ \\
-            \quad + Dispersive & 458M & 400K & $16.27$ \\
-            \quad + SRA & 458M & 400K & $15.50$ \\
-            \quad + LayerSync & 458M & 400K & $13.05$ \\
-            \quad + LARA (Ours) & 458M & 400K & $\mathbf{11.08}$ \\
+            \texttt{SiT-L/2} & 458M & 400K & $20.53 \pm 0.08$ \\
+            \quad + Dispersive & 458M & 400K & $16.27 \pm 0.06$ \\
+            \quad + SRA & 458M & 400K & $15.50 \pm 0.06$ \\
+            \quad + LayerSync & 458M & 400K & $13.05 \pm 0.05$ \\
+            \quad + LARA (Ours) & 458M & 400K & $\mathbf{11.08 \pm 0.04}$ \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 400K & $17.34$ \\
-            \quad + Dispersive & 675M & 400K & $15.35$ \\
-            \quad + SRA & 675M & 400K & $15.26$ \\
-            \quad + LayerSync & 675M & 400K & $11.06$ \\
-            \quad + LARA (Ours) & 675M & 400K & $\mathbf{8.56}$ \\
+            \texttt{SiT-XL/2} & 675M & 400K & $17.34 \pm 0.07$ \\
+            \quad + Dispersive & 675M & 400K & $15.35 \pm 0.06$ \\
+            \quad + SRA & 675M & 400K & $15.26 \pm 0.06$ \\
+            \quad + LayerSync & 675M & 400K & $11.06 \pm 0.04$ \\
+            \quad + LARA (Ours) & 675M & 400K & $\mathbf{8.56 \pm 0.04}$ \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 1M & $12.04$ \\
-            \quad + Dispersive & 675M & 1M & $10.62$ \\
-            \quad + SRA & 675M & 1M & $10.23$ \\
-            \quad + LayerSync & 675M & 1M & $8.11$ \\
-            \quad + LARA (Ours) & 675M & 1M & $\mathbf{6.52}$ \\
+            \texttt{SiT-XL/2} & 675M & 1M & $12.04 \pm 0.04$ \\
+            \quad + Dispersive & 675M & 1M & $10.62 \pm 0.04$ \\
+            \quad + SRA & 675M & 1M & $10.23 \pm 0.04$ \\
+            \quad + LayerSync & 675M & 1M & $8.11 \pm 0.03$ \\
+            \quad + LARA (Ours) & 675M & 1M & $\mathbf{6.52 \pm 0.02}$ \\
             \midrule
-            \texttt{SiT-XL/2} & 675M & 2M & $8.35$ \\
-            \quad + Dispersive & 675M & 2M & $8.14$ \\
-            \quad + SRA & 675M & 2M & $7.97$ \\
-            \quad + LayerSync & 675M & 2M & $6.81$ \\
-            \quad + LARA (Ours) & 675M & 2M & $\mathbf{5.08}$ \\
+            \texttt{SiT-XL/2} & 675M & 2M & $8.35$ \\  % TODO: std for updated mean
+            \quad + Dispersive & 675M & 2M & $8.14 \pm 0.04$ \\
+            \quad + SRA & 675M & 2M & $7.97 \pm 0.03$ \\
+            \quad + LayerSync & 675M & 2M & $6.81 \pm 0.03$ \\
+            \quad + LARA (Ours) & 675M & 2M & $\mathbf{5.08 \pm 0.02}$ \\
             \bottomrule
         \end{tabular*}
 \par
@@ -418,7 +418,7 @@ LARA (Large) & 25.4M & 35.35 \\
 
 \textbf{Internal and external supervision are complementary.} With an external teacher, REPA outperforms LARA alone, yet simply adding the two objectives improves on both. Internal transitions therefore supply a training signal that alignment to DINOv2 does not already provide.
 
-\textbf{LARA's predictor strengthens external alignment itself.} The strongest result comes from the second combination. Routing DINOv2 alignment through LARA's layer-aware predictor gives the best FID in the table, ahead of REPA with the same target and ahead of the joint objective despite using a single auxiliary loss. Relative to REPA, the change lies mainly in how hidden states reach the target: one shared, depth-conditioned predictor applied at every layer rather than a projector at a fixed layer. The joint objective falls short of this simpler variant because consistency and redundancy are designed for alignment between layers: they stabilize training when every target is itself a moving backbone state. With a fixed external target, these terms no longer serve that purpose and instead add competing constraints. LARA's layer-aware formulation is thus an orthogonal contribution that can improve existing alignment methods, not only an alternative to them.
+\textbf{LARA generalizes to external-encoder alignment.} The strongest result comes from the second combination. Routing DINOv2 alignment through LARA's layer-aware predictor gives the best FID in the table, ahead of REPA with the same target and ahead of the joint objective despite using a single auxiliary loss. Relative to REPA, the change lies mainly in how hidden states reach the target: one shared, depth-conditioned predictor applied at every layer rather than a projector at a fixed layer. The joint objective falls short of this simpler variant because consistency and redundancy are designed for alignment between layers: they stabilize training when every target is itself a moving backbone state. With a fixed external target, these terms no longer serve that purpose and instead add competing constraints. LARA's layer-aware predictor is therefore not tied to internal targets: it generalizes to methods that align with an external encoder, where it replaces the fixed-layer projector and improves on the original method. LARA is thus an orthogonal contribution that can strengthen existing alignment methods, not only an alternative to them.
 
 \subsection{Robustness to Skipped Depth}
 \label{sec:inference_transition_diagnostic}
