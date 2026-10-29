@@ -99,30 +99,6 @@ We evaluate our method on image generation and 3D human motion generation, and a
 \end{minipage}
 \end{table*}
 
-\begin{table}[!t]
-\centering
-\caption{\textbf{Training cost on SiT-XL/2.} All methods are profiled on the same TPU v4-16 setup with the same resolution, batch size, and precision. The first 100K iterations are treated as warmup and excluded, and time per step is averaged over subsequent iterations.}
-\label{tab:internal_alignment_profile}
-\begingroup
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{0.95}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
-\toprule
-Method & \begin{tabular}[b]{@{}c@{}}Time/\\step $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}Peak\\memory $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}External\\frozen\end{tabular} & \begin{tabular}[b]{@{}c@{}}Trainable\\auxiliary\end{tabular} \\
-\midrule
-REPA & 0.47~s & 21.97~GiB & 86.1M & 8.1M \\
-\midrule
-SRA & 0.42~s & 17.29~GiB & 0M & 5.1M \\
-LayerSync & 0.25~s & 16.21~GiB & 0M & 0M \\
-LARA (Ours) & 0.30~s & 16.68~GiB & 0M & 31.43M \\
-\bottomrule
-\end{tabular*}
-\par
-\endgroup
-\par\kern0pt
-\end{table}
-
 \noindent\textbf{Implementation details.}
 Unless otherwise stated, we follow the class-conditional ImageNet training setup of SiT~\citep{ma2024sit}. We train on ImageNet~\citep{deng2009imagenet} at $256\times256$ resolution using the preprocessing protocol of ADM~\citep{dhariwal2021diffusion}. Each image is encoded by the Stable Diffusion VAE from LDM~\citep{rombach2022ldm} into a latent tensor $z\in\mathbb{R}^{32\times32\times4}$. We evaluate the \texttt{B/2}, \texttt{L/2}, and \texttt{XL/2} SiT configurations with patch size $2$. LARA trains the transition predictor jointly with the backbone using \Cref{eq:total_loss}. Unless specified, we use AdamW with learning rate $10^{-4}$ and batch size $256$. We sample source--target layer pairs uniformly from all valid pairs $(a,b)$ with $a<b$. Additional details on architecture, loss weights, cached-transition composition with an EMA target, training length, hardware, and compute budget are organized in Supplementary Sec.~\ref{supp-app:experimental_details}.
 
@@ -153,7 +129,7 @@ For the controlled comparisons in \Cref{tab:imagenet_no_cfg}, we train all basel
 For completeness, \Cref{tab:imagenet_cfg} also compares LARA with recent image generators under CFG, which affects the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}. These include pixel diffusion models (ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, simple diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}), autoregressive models (VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}), and latent diffusion models (LDM~\citep{rombach2022ldm}, U-ViT~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2~\citep{gao2023mdtv2}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}). We also include REPA~\citep{yu2024repa}, which aligns hidden states with an external pretrained encoder. Baseline descriptions and the reporting protocol are in Supplementary Secs.~\ref{supp-app:baseline_descriptions} and \ref{supp-app:baseline_protocol}.
 
 \noindent\textbf{Results.}
-As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M. This reduction more than offsets LARA's modest per-step overhead over LayerSync (\Cref{tab:internal_alignment_profile}). Relative to REPA, which runs an external encoder at every step, LARA lowers time per step by 35.8\% and peak training-memory overhead by 24.1\%. With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance. Learning transitions between arbitrary layer pairs, rather than one hand-selected pair, thus lets LARA exploit the full representation hierarchy.
+As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M, a saving that more than offsets LARA's modest per-step overhead (\Cref{tab:internal_alignment_profile}, \Cref{sec:training_cost}). With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance. Learning transitions between arbitrary layer pairs, rather than one hand-selected pair, thus lets LARA exploit the full representation hierarchy.
 
 \Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{supp-app:qualitative_examples}.
 
@@ -272,7 +248,7 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
     \label{fig:representation_analysis}
 \end{figure*}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
     \centering
     \includegraphics[width=0.92\textwidth]{figures/predictor_output_behavior.pdf}
     \caption{\textbf{Predictor-output visualization.} SiT-B/2 + LARA at 400K iterations. PCA maps for the long-range transition from layer 1 to layer 11 at all five timesteps in the diagnostic grid, ordered from $t=0.1$ (noise side) to $t=0.9$ (image side).}
@@ -281,6 +257,19 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
 
 \textbf{Predictor-output behavior.}
 \Cref{fig:predictor_output_behavior} compares the source, predicted, and actual target states for the layer-1-to-layer-11 transition. The target maps have distinct color regions across the five sampled timesteps, and the prediction follows their broad spatial layout more closely than the source. The panels are ordered with increasing $t$, from the noise side toward the image side. This qualitative diagnostic illustrates target-depth transition learning while also showing that the predicted boundaries are not exact.
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/diversity_ablation.pdf}
+
+    \caption{\textbf{Redundancy regularization balances cross-layer correlation and generation quality.}
+    Trained for 100K iterations. Layerwise correlation heatmaps are shown for
+    $\lambda_{\mathrm{red}}=0$, $0.4$, and $0.8$.
+    The $0.4$ setting gives the best FID among these weights, whereas $0.8$ gives the lowest
+    cross-layer correlation. This diagnostic uses a different training budget from the
+    objective decomposition in \Cref{tab:realign_ablation}.}
+    \label{fig:cosine_squared_heatmap}
+\end{figure*}
 
 \section{Ablation Study}
 \label{sec:ablation_study}
@@ -315,19 +304,6 @@ As shown in \Cref{fig:representation_analysis}, LARA at $500\mathrm{K}$ iteratio
 \end{table}
 
 \textbf{LARA components.} \Cref{tab:realign_ablation} shows that transition prediction alone already outperforms LayerSync. Within this prediction-only setting, removing depth conditioning or restricting training to a fixed layer pair worsens FID, demonstrating the benefit of learning depth-conditioned transitions across multiple pairs. Consistency and redundancy regularization each provide further gains, and combining them achieves the best FID-50K of 34.43, compared with 39.48 for prediction alone. Redundancy regularization alone is less effective, supporting prediction as the core training signal. The consistency-target ablation is reported in Supplementary \Cref{supp-tab:appendix_consistency_target}.
-
-\begin{figure*}[!t]
-    \centering
-    \includegraphics[width=\textwidth]{figures/diversity_ablation.pdf}
-
-    \caption{\textbf{Redundancy regularization balances cross-layer correlation and generation quality.}
-    Trained for 100K iterations. Layerwise correlation heatmaps are shown for
-    $\lambda_{\mathrm{red}}=0$, $0.4$, and $0.8$.
-    The $0.4$ setting gives the best FID among these weights, whereas $0.8$ gives the lowest
-    cross-layer correlation. This diagnostic uses a different training budget from the
-    objective decomposition in \Cref{tab:realign_ablation}.}
-    \label{fig:cosine_squared_heatmap}
-\end{figure*}
 
 \textbf{Loss weights.} We use simple loss weights without extensive tuning; default values are listed in Supplementary \Cref{supp-tab:appendix_common_ablation_setting}. The redundancy regularizer counteracts the homogenizing pressure of the prediction objective, preserving distinct representations across layers. These objectives must remain balanced: excessive redundancy regularization prioritizes decorrelation over learning useful cross-layer transitions. \Cref{tab:redundancy_weight_sensitivity} shows similar FID for nearby moderate weights, followed by degradation as the redundancy weight increases beyond this range. The separate 100K-step diagnostic in \Cref{fig:cosine_squared_heatmap} shows the same trade-off: stronger regularization further lowers cross-layer correlation but worsens generation quality. We therefore use a moderate redundancy weight to prevent homogenization while retaining useful shared structure. Prediction- and consistency-weight sweeps are reported in Supplementary \Cref{supp-tab:appendix_loss_weight_sensitivity}.
 
@@ -390,6 +366,35 @@ LARA (Base) & 13.0M & \textbf{35.12} \\
 LARA (Large) & 25.4M & 35.35 \\
 \bottomrule
 \end{tabular}
+\end{table}
+
+\subsection{Training Cost}
+\label{sec:training_cost}
+
+\Cref{tab:internal_alignment_profile} compares the per-step training cost of LARA with internal and external alignment methods on SiT-XL/2. Relative to LayerSync, which needs no auxiliary network, LARA's predictor adds a modest overhead in time per step and peak memory. Faster convergence more than recovers this cost: in \Cref{tab:imagenet_no_cfg}, LARA at 1M iterations already surpasses LayerSync at 2M, so it reaches a better FID with less total training time. LARA is also cheaper than the other alternatives. Relative to REPA, which runs an external encoder at every step, it lowers time per step by 35.8\% and peak training-memory overhead by 24.1\%, and it is faster and lighter than SRA, whose EMA teacher requires an additional forward pass.
+
+\begin{table}[!t]
+\centering
+\caption{\textbf{Training cost on SiT-XL/2.} All methods are profiled on the same TPU v4-16 setup with the same resolution, batch size, and precision. The first 100K iterations are treated as warmup and excluded, and time per step is averaged over subsequent iterations.}
+\label{tab:internal_alignment_profile}
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.95}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+Method & \begin{tabular}[b]{@{}c@{}}Time/\\step $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}Peak\\memory $\downarrow$\end{tabular} & \begin{tabular}[b]{@{}c@{}}External\\frozen\end{tabular} & \begin{tabular}[b]{@{}c@{}}Trainable\\auxiliary\end{tabular} \\
+\midrule
+REPA & 0.47~s & 21.97~GiB & 86.1M & 8.1M \\
+\midrule
+SRA & 0.42~s & 17.29~GiB & 0M & 5.1M \\
+LayerSync & 0.25~s & 16.21~GiB & 0M & 0M \\
+LARA (Ours) & 0.30~s & 16.68~GiB & 0M & 31.43M \\
+\bottomrule
+\end{tabular*}
+\par
+\endgroup
+\par\kern0pt
 \end{table}
 
 \subsection{Compatibility with External Alignment}
