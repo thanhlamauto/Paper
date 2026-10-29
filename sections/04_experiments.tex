@@ -58,7 +58,7 @@ We evaluate our method on image generation and 3D human motion generation, and a
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\textwidth}
 \centering
-\caption{\textbf{System-level comparison on ImageNet $256\times256$ with CFG.} LARA uses SiT-XL/2 with the SDE Euler--Maruyama sampler, 250 sampling steps, and guidance scale 1.37; other entries are taken from the original papers. Parameter counts refer to the generative backbone. Best results for each metric are bold.}
+\caption{\textbf{System-level comparison on ImageNet $256\times256$ with CFG.} LARA uses SiT-XL/2 with the SDE Euler--Maruyama sampler, 250 sampling steps, and guidance scale 1.37; other entries are taken from the original papers. Parameter counts refer to the generative backbone. Best results among latent diffusion transformers are bold for each metric.}
 \label{tab:imagenet_cfg}
 \scriptsize
 \setlength{\tabcolsep}{1.5pt}
@@ -75,25 +75,25 @@ We evaluate our method on image generation and 3D human motion generation, and a
             \midrule
             \multicolumn{7}{@{}l}{\textit{Autoregressive}} \\
             VAR-d20 & 600M & 1.75M & 2.57 & 302.6 & 0.83 & 0.56 \\
-            D-JEPA-L & 687M & 2.40M & \textbf{1.58} & 303.1 & 0.80 & 0.61 \\
+            D-JEPA-L & 687M & 2.40M & 1.58 & 303.1 & 0.80 & 0.61 \\
             \midrule
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, U-Net}} \\
-            LDM-4 & 400M & 1.00M & 3.60 & 247.7 & \textbf{0.87} & 0.48 \\
+            LDM-4 & 400M & 1.00M & 3.60 & 247.7 & 0.87 & 0.48 \\
             \midrule
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer--U-Net hybrid}} \\
             U-ViT-H/2 & 501M & 1.20M & 2.29 & 263.9 & 0.82 & 0.57 \\
             DiffiT & 561M & -- & 1.73 & 276.5 & 0.80 & 0.62 \\
-            MDTv2-XL/2 & 676M & 5.40M & \textbf{1.58} & \textbf{314.7} & 0.79 & \textbf{0.65} \\
+            MDTv2-XL/2 & 676M & 5.40M & 1.58 & 314.7 & 0.79 & 0.65 \\
             \midrule
             \multicolumn{7}{@{}l}{\textit{Latent diffusion, Transformer}} \\
-            DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & 0.83 & 0.57 \\
+            DiT-XL/2 & 675M & 7.00M & 2.58 & 278.2 & \textbf{0.83} & 0.57 \\
             SiT-XL/2 & 675M & 7.00M & 2.26 & 270.3 & 0.82 & 0.59 \\
             \quad + REPA & 675M & 2.00M & 1.86 & 284.0 & 0.81 & 0.61 \\
             \midrule
-            \quad + SRA & 675M & 2.00M & 2.01 & 311.4 & 0.80 & 0.63 \\
+            \quad + SRA & 675M & 2.00M & 2.01 & \textbf{311.4} & 0.80 & \textbf{0.63} \\
             \quad + Dispersive & 675M & 2.00M & 2.04 & -- & -- & -- \\
             \quad + LayerSync & 675M & 2.00M & 1.93 & 265.34 & 0.81 & 0.60 \\
-            \quad + LARA (Ours) & 675M & 2.00M & 1.80 & 276.48 & 0.81 & 0.61 \\
+            \quad + LARA (Ours) & 675M & 2.00M & \textbf{1.80} & 276.48 & 0.81 & 0.61 \\
             \bottomrule
         \end{tabular*}
 \end{minipage}
@@ -153,7 +153,7 @@ For the controlled comparisons in \Cref{tab:imagenet_no_cfg}, we train all basel
 For completeness, \Cref{tab:imagenet_cfg} also compares LARA with recent image generators under CFG, which affects the quality--diversity trade-off~\citep{kynkaanniemi2024guidance}. These include pixel diffusion models (ADM~\citep{dhariwal2021diffusion}, VDM++~\citep{kingma2023understanding}, simple diffusion~\citep{hoogeboom2023simple}, and CDM~\citep{ho2022cascaded}), autoregressive models (VAR~\citep{tian2024visual} and D-JEPA~\citep{chen2024jepa}), and latent diffusion models (LDM~\citep{rombach2022ldm}, U-ViT~\citep{bao2023all}, DiffiT~\citep{hatamizadeh2024diffit}, MDTv2~\citep{gao2023mdtv2}, DiT~\citep{peebles2023scalable}, and SiT~\citep{ma2024sit}). We also include REPA~\citep{yu2024repa}, which aligns hidden states with an external pretrained encoder. Baseline descriptions and the reporting protocol are in Supplementary Secs.~\ref{supp-app:baseline_descriptions} and \ref{supp-app:baseline_protocol}.
 
 \noindent\textbf{Results.}
-As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M. This reduction more than offsets LARA's modest per-step overhead over LayerSync (\Cref{tab:internal_alignment_profile}). Relative to REPA, which runs an external encoder at every step, LARA lowers time per step by 35.8\% and peak training-memory overhead by 24.1\%. With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance.
+As shown in \Cref{tab:imagenet_no_cfg}, LARA consistently outperforms the SiT baseline and existing internal-alignment methods across model sizes and training budgets. On SiT-XL/2, it achieves $14\times$ faster convergence than standard SiT (\Cref{fig:training_curve}) and $2\times$ faster convergence than LayerSync, the strongest internal baseline, measured in training iterations: LARA at 1M iterations already surpasses LayerSync at 2M. This reduction more than offsets LARA's modest per-step overhead over LayerSync (\Cref{tab:internal_alignment_profile}). Relative to REPA, which runs an external encoder at every step, LARA lowers time per step by 35.8\% and peak training-memory overhead by 24.1\%. With CFG, LARA reaches 1.80 FID at 2M iterations, outperforming REPA and LayerSync in \Cref{tab:imagenet_cfg} without external representation guidance. Learning transitions between arbitrary layer pairs, rather than one hand-selected pair, thus lets LARA exploit the full representation hierarchy.
 
 \Cref{fig:imagenet_qualitative_samples} shows a compact gallery spanning the 16 ImageNet classes illustrated in Supplementary Sec.~\ref{supp-app:qualitative_examples}.
 
@@ -452,9 +452,9 @@ LARA (Large) & 25.4M & 35.35 \\
     \end{tabular*}
 \end{table}
 
-\textbf{Skipping depth breaks every backbone.} Removing blocks outright collapses generation in every model and at every interval, so the skipped blocks perform work the rest of the network cannot do without. LARA's backbone is nonetheless the most tolerant, giving the lowest naive-skip FID for every interval tested, consistent with training that ties representations across depth. Without a predictor, however, no model approaches its full-backbone quality. This matches the observation in \Cref{fig:projection_layout_observation}(a): layers share structure, but they are not interchangeable.
+\textbf{Skipping depth degrades every backbone.} Removing blocks outright collapses generation in every model and at every interval, so the skipped blocks perform work the rest of the network cannot do without. LARA's backbone is nonetheless the most tolerant, giving the lowest naive-skip FID for every interval tested, consistent with training that ties representations across depth. Without a predictor, however, no model approaches its full-backbone quality. This matches the observation in \Cref{fig:projection_layout_observation}(a): layers share structure, but they are not interchangeable.
 
-\textbf{The predictor recovers most of the skipped computation.} With the learned transition, the picture changes qualitatively. Bypassing the shortest interval through the predictor already matches the full vanilla backbone, and even the longest predicted jump outperforms every naive skip in the table, including the shortest. Because both routes skip exactly the same blocks, this gap can only come from what the predictor contributes. This is notable because the downstream blocks never receive predictor outputs during training: the predictor is supervised only to match backbone states, yet its outputs are already in a form the backbone can consume.
+\textbf{The predictor recovers most of the skipped computation.} With the learned transition, the outcome changes qualitatively. Bypassing the shortest interval through the predictor already matches the full vanilla backbone, and even the longest predicted jump outperforms every naive skip in the table, including the shortest. Because both routes skip exactly the same blocks, this difference can only be attributed to the predictor. This is notable because the downstream blocks never receive predictor outputs during training: the predictor is supervised only to match backbone states, yet its outputs are already in a form the backbone can consume.
 
 \textbf{Learned transitions are robust across depth.} Naive skipping is strongly position-dependent: removing the same number of blocks is far more damaging near the input than deeper in the network. The predictor largely removes this sensitivity, keeping FID nearly constant across source depths. A single depth-conditioned predictor thus serves every interval, supporting a shared family of transitions over supervision tied to one fixed layer pair. Its FID also grows much more slowly with the gap than naive skipping does, mirroring the gap-dependent transition difficulty in \Cref{fig:projection_layout_observation}(b); that the longest jumps remain usable is consistent with compositional consistency, which supervises long-range transitions through shorter ones.
 
