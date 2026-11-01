@@ -1,7 +1,7 @@
 \section{LARA Method Details}
 \label{app:realign_algorithm_compute}
 
-This supplementary material keeps the main paper compact while making the implementation easy to audit. We organize the details into four groups: LARA method details, experimental protocols, additional ablations, and representation diagnostics. Cross-references from the main text point to the specific subsection needed for each result.
+This supplementary material keeps the main paper compact while making the implementation easy to audit. We organize the details into LARA method details, the transition predictor configuration, experimental protocols, additional ablations, layer-skip inference, representation and transition diagnostics, and qualitative examples. Cross-references from the main text point to the specific subsection needed for each result.
 
 \subsection{Training Algorithm and Compute}
 
@@ -57,7 +57,7 @@ LARA adds a lightweight training-time predictor to the diffusion transformer. Th
 \end{algorithm}
 
 \paragraph{Predictor-induced transition distance}
-The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch.
+The distance term is evaluated on the transition produced by LARA, not on the two raw hidden states. Given a source--target pair $(a,b)$, the source activation is first passed through the layer-aware predictor so that the comparison is made in the target-layer coordinate system. The target activation is used only as a fixed reference, and the final score averages the tokenwise directional mismatch. In implementation, the predictor output is formed before token normalization: $\widehat A_{a\to b}^{\,t}$ is the raw predictor output, and each token is normalized only inside the cosine similarity.
 
 \begin{algorithm}[!htbp]
 \caption{\textbf{Predictor-induced transition distance in LARA.}}
@@ -65,10 +65,10 @@ The distance term is evaluated on the transition produced by LARA, not on the tw
 \small
 \begin{algorithmic}[1]
 \Require source state $A_a^t$; target state $A_b^t$; transition predictor $G_\psi$; embeddings $e_a,e_b,e_t$.
-\State $\widehat A_{a\to b}^{\,t}\gets G_\psi(A_a^t,e_a,e_b,e_t)$
+\State $\widehat A_{a\to b}^{\,t}\gets G_\psi(A_a^t,e_a,e_b,e_t)$ \Comment{formed before token normalization}
 \State $R_b^t\gets \operatorname{sg}(A_b^t)$
 \For{$n=1,\ldots,N$}
-    \State $s_n\gets \operatorname{cos\_sim}(\widehat A_{a\to b,n}^{\,t},R_{b,n}^{t})$
+    \State $s_n\gets \operatorname{cos\_sim}(\widehat A_{a\to b,n}^{\,t},R_{b,n}^{t})$ \Comment{per-token normalization}
     \State $\delta_n\gets 1-s_n$
 \EndFor
 \State $d\gets \frac{1}{N}\sum_{n=1}^{N}\delta_n$
@@ -111,7 +111,7 @@ Our experiments use public research assets, including ImageNet, Tiny ImageNet, P
 \subsubsection{Baseline Reporting Protocol}
 \label{app:baseline_protocol}
 
-The ImageNet comparisons include the controlled SiT results in Main \Cref{main-tab:imagenet_no_cfg}, and the comparison with existing image generators in Main \Cref{main-tab:imagenet_cfg}. For controlled SiT rows, the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. Baselines in Main \Cref{main-tab:imagenet_cfg} use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
+The ImageNet comparisons include the controlled SiT results in Main \Cref{main-tab:imagenet_no_cfg}, and the comparison with existing image generators in Main \Cref{main-tab:imagenet_cfg}. For controlled SiT rows, we train all baselines ourselves; the backbone size, training iterations, sampler family, VAE, and evaluator are matched, and only the auxiliary representation objective changes. Baselines in Main \Cref{main-tab:imagenet_cfg} use the parameter counts, training iterations, and ImageNet $256{\times}256$ metrics reported by the original papers; when several variants are available, we select the model closest in scale to \texttt{SiT-XL/2}. REPA is listed as an external-representation baseline, while Dispersive, SRA, LayerSync, and LARA are self-contained internal objectives.
 
 \paragraph{Classification}
 We use the Tiny ImageNet dataset~\citep{le2015tiny}, a subset of ImageNet~\citep{deng2009imagenet}, upsample the images to $256\times256$, and train linear classification heads for 50 epochs. Performance is evaluated on the validation set.
@@ -120,7 +120,7 @@ We use the Tiny ImageNet dataset~\citep{le2015tiny}, a subset of ImageNet~\citep
 For segmentation, we use the PASCAL VOC dataset~\citep{everingham2010pascal} and train linear heads for 25 epochs.
 
 \paragraph{CKA}
-We use CKA~\citep{kornblith2019similarity} to compare intermediate representations; a recent survey reviews this measure and its properties~\citep{klabunde2025similarity}. Evaluations use 4,000 samples from ImageNet $256\times256$.
+We use CKA~\citep{kornblith2019similarity} to compare intermediate representations with DINOv2-g features~\citep{oquab2023dinov2}; a recent survey reviews this measure and its properties~\citep{klabunde2025similarity}. Evaluations use 4,000 samples from ImageNet $256\times256$.
 
 \begin{table*}[!t]
     \centering
@@ -143,6 +143,11 @@ We use CKA~\citep{kornblith2019similarity} to compare intermediate representatio
         Syncing layers & (4,7) & (8,18) & (8,16) & (8,16) \\
         $\operatorname{sim}(\cdot,\cdot)$ & cos. sim. & cos. sim. & cos. sim. & cos. sim. \\
         \midrule
+        \multicolumn{5}{l}{\textbf{LARA}} \\
+        $\lambda_{\mathrm{pred}}$ & 1.0 & 1.0 & 1.0 & 1.0 \\
+        $\lambda_{\mathrm{cons}}$ & 0.25 & 0.25 & 0.25 & 0.25 \\
+        $\lambda_{\mathrm{red}}$ & 0.40 & 0.40 & 0.40 & 0.40 \\
+        \midrule
         \multicolumn{5}{l}{\textbf{Optimization}} \\
         Hardware & TPU v4-16 & TPU v4-16 & TPU v4-16 & TPU v4-16 \\
         Batch size & 256 & 256 & 256 & 256 \\
@@ -162,7 +167,7 @@ We use CKA~\citep{kornblith2019similarity} to compare intermediate representatio
 
 \begin{table}[!htbp]
     \centering
-    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{main-tab:realign_ablation,main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility} and \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity}; each ablation changes only the factor shown in its own table.}
+    \caption{\textbf{Common SiT-B ablation setup.} Shared setting for Main \Cref{main-tab:realign_ablation,main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility,main-tab:transition_diagnostic} and \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity}; each ablation changes only the factor shown in its own table.}
     \label{tab:appendix_ablation_protocol}
     \label{tab:appendix_common_ablation_setting}
     \scriptsize
@@ -184,7 +189,7 @@ We use CKA~\citep{kornblith2019similarity} to compare intermediate representatio
         Training budget & $300\mathrm{K}$ iterations \\
         Batch size & 128 \\
         Optimizer / lr & AdamW / $10^{-4}$ \\
-        Metric & FID-10K for consistency-target, sensitivity, predictor, and compatibility sweeps; FID-50K for Main \Cref{main-tab:realign_ablation} \\
+        Metric & FID-10K for consistency-target, sensitivity, predictor, compatibility, and layer-skip experiments; FID-50K for Main \Cref{main-tab:realign_ablation} \\
         \midrule
         \multicolumn{2}{@{}l}{\textbf{Sampling and interpolation}} \\
         $\alpha_t,\sigma_t$ & $t,1-t$ \\
@@ -294,15 +299,16 @@ We follow the common appendix convention of recent internal-alignment work: the 
         \toprule
         Artifact & Quantity & Protocol & Citation \\
         \midrule
-        Main \Cref{main-tab:imagenet_no_cfg,main-tab:imagenet_cfg} & FID; full comparison also includes IS, precision, recall & Use matched sampling and evaluator settings for controlled SiT comparisons; literature baselines retain the configurations and metrics reported by their original papers. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
-        Main \Cref{main-tab:internal_alignment_profile} & Time/step, peak memory, auxiliary parameters & Profile training time per step with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware; average wall-clock time per step after a 100K-iteration warmup, excluding one-time startup costs. & \citep{jiang2025sra,haghighi2026layersync} \\
+        Main \Cref{main-tab:imagenet_no_cfg,main-tab:imagenet_cfg} & FID; Main \Cref{main-tab:imagenet_cfg} also reports IS, precision, recall & Use matched sampling and evaluator settings for controlled SiT comparisons; literature baselines retain the configurations and metrics reported by their original papers. & \citep{heusel2017gans,salimans2016improved,kynkaanniemi2019precision} \\
+        Main \Cref{main-tab:internal_alignment_profile} & Time/step, peak memory, auxiliary parameters & Profile training time per step with matched SiT-XL/2 input resolution, precision, batch size, and TPU v4-16 hardware; exclude the first 100K iterations as warmup and average wall-clock time per step over subsequent iterations. & \citep{jiang2025sra,haghighi2026layersync} \\
+        Main \Cref{main-tab:cross_architecture} & FID-10K & DiT-B and JiT-B with batch size 128, 300K iterations, AdamW at learning rate $10^{-4}$, and no CFG; one training and one sampling seed per setting. & \citep{heusel2017gans,peebles2023scalable,li2025jit} \\
         Main \Cref{main-tab:humanml3d_results} & FID, R-Precision & Use the standard HumanML3D evaluator, split, text encoder, and motion representation for baseline, LayerSync, and LARA. & \citep{guo2022generating,tevet2022mdm} \\
         Main \Cref{main-tab:realign_ablation} & FID-50K & Follow the common ablation setting in \Cref{tab:appendix_common_ablation_setting}; only the factor specified by each ablation table changes. & \citep{heusel2017gans,yu2024repa,oquab2023dinov2} \\
-        Main \Cref{main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility}; \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
+        Main \Cref{main-tab:redundancy_weight_sensitivity,main-tab:predictor_architecture_ablation,main-tab:main_predictor_size_ablation,main-tab:external_alignment_compatibility,main-tab:transition_diagnostic}; \Cref{tab:appendix_consistency_target,tab:appendix_loss_weight_sensitivity} & FID-10K & Use the SiT-B/2 ablation setting; change the factor identified in each table. & \citep{heusel2017gans} \\
         Main \Cref{main-fig:projection_layout_observation}(a) & PCA maps & Use frozen SiT-XL/2 hidden states for the same image over sampled timesteps; PCA is computed from channel-normalized token activations and visualized across representative layers and timesteps. & \citep{jiang2025sra,yu2024repa,singh2025irepa,wang2025haste,leng2025repae,chen2025sara,wang2025flexible,wang2026vaerepa,sun2026selftranscendence} \\
         Main \Cref{main-fig:projection_layout_observation}(b,c) & Pairwise direction error & Evaluate eight prespecified layer pairs with EMA LARA-B at 400K steps on all 49,920 held-out validation latents; average tokenwise $1-\cos$ over images. & This work \\
         Main \Cref{main-fig:cosine_squared_heatmap} & Layer correlation, FID-10K & SiT-B, 100K iterations, batch size 128; compare the three redundancy weights shown in the main figure and discussed in the main text. & \citep{klabunde2025similarity,li2026diverseditpp} \\
-        Main \Cref{main-fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2 features on matched images and timesteps. & \citep{deng2009imagenet,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
+        Main \Cref{main-fig:representation_analysis} & Linear probes, segmentation probe, DINOv2 CKA & Freeze backbone features, train lightweight probes per layer, and compute CKA to DINOv2-g features on matched images and timesteps. & \citep{le2015tiny,everingham2010pascal,oquab2023dinov2,kornblith2019similarity} \\
         \bottomrule
     \end{tabular*}
 \end{table*}
@@ -405,32 +411,34 @@ The capacity results appear beside the architecture comparison in Main \Cref{mai
 \subsection{Optional Transition-Interface Inference}
 \label{app:optional_transition_inference}
 
-The main paper uses the standard full-backbone sampler. The transition interface is evaluated only as an appendix diagnostic: at each Euler step, a route policy $\pi(k)$ either keeps the full backbone or replaces a block range $(a,b)$ with the predictor followed by the suffix blocks. Setting $\pi(k)=\mathrm{full}$ for all $k$ recovers standard Euler exactly.
+All generation results in the main paper use the standard full-backbone sampler. The transition interface is used only for the layer-skip diagnostic in Main \Cref{main-sec:inference_transition_diagnostic}: at each sampling step, a route policy $\pi(k)$ either keeps the full backbone or replaces the computation from layer $a$ to layer $b$ with the predictor followed by the suffix blocks. The predictor rows of Main \Cref{main-tab:transition_diagnostic} use the same route $(a,b)$ at every step. Setting $\pi(k)=\mathrm{full}$ for all $k$ recovers the standard sampler exactly.
 
 \begin{algorithm}[!htbp]
-\caption{\textbf{Optional transition-interface Euler sampler.}}
+\caption{\textbf{Optional transition-interface Heun sampler.}}
 \label{alg:realign_inference}
 \small
 \begin{algorithmic}[1]
-\Require schedule $1=t_K>\cdots>t_0=0$; condition $y$; backbone $v_\theta$ with prefix/suffix maps $F_{\theta,1:a},F_{\theta,b:L}$; predictor $G_\psi$; route policy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
-\State Sample $z_K\sim\mathcal{N}(0,I)$.
-\For{$k=K,\ldots,1$}
-    \State $r_k\gets\pi(k)$.
-    \If{$r_k=\mathrm{full}$}
-        \State $\hat v_k\gets v_\theta(z_k,t_k,y)$.
-    \Else
-        \State $(a,b)\gets r_k$.
-        \State $A_a^{t_k}\gets F_{\theta,1:a}(z_k,t_k,y)$.
-        \State $\widehat A_b^{t_k}\gets G_\psi(A_a^{t_k},e_a,e_b,e_{t_k})$.
-        \State $\hat v_k\gets F_{\theta,b:L}(\widehat A_b^{t_k},t_k,y)$.
+\Require schedule $0=t_0<\cdots<t_K=1$ ($t=0$ is noise, $t=1$ is data); condition $y$; backbone $v_\theta$ with prefix/suffix maps $F_{\theta,1:a},F_{\theta,b:L}$; predictor $G_\psi$; route policy $\pi(k)\in\{\mathrm{full}\}\cup\{(a,b):a<b\}$.
+\Function{Vel}{$z,t,r$}
+    \If{$r=\mathrm{full}$}
+        \State \Return $v_\theta(z,t,y)$
     \EndIf
-    \State $z_{k-1}\gets z_k+(t_{k-1}-t_k)\hat v_k$.
+    \State $(a,b)\gets r$; \ $A_a^{t}\gets F_{\theta,1:a}(z,t,y)$
+    \State $\widehat A_b^{t}\gets G_\psi(A_a^{t},e_a,e_b,e_t)$
+    \State \Return $F_{\theta,b:L}(\widehat A_b^{t},t,y)$
+\EndFunction
+\State Sample $z_0\sim\mathcal{N}(0,I)$.
+\For{$k=0,\ldots,K-1$}
+    \State $r_k\gets\pi(k)$; \ $h\gets t_{k+1}-t_k$.
+    \State $\hat v\gets\Call{Vel}{z_k,t_k,r_k}$; \ $\tilde z\gets z_k+h\,\hat v$.
+    \State $\hat v'\gets\Call{Vel}{\tilde z,t_{k+1},r_k}$.
+    \State $z_{k+1}\gets z_k+\tfrac{h}{2}\left(\hat v+\hat v'\right)$.
 \EndFor
-\State \Return $z_0$
+\State \Return $z_K$
 \end{algorithmic}
 \end{algorithm}
 
-Each diagnostic must report the skip rate, chosen layer jumps, and whether the same route is used at all timesteps or only at selected Euler steps. The comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
+The sampler follows the ODE Heun setting in \Cref{tab:appendix_common_ablation_setting} with 250 steps, and the route is applied to both velocity evaluations of each step. The layer-skip comparison uses the same initial noise, class labels, schedule, and checkpoint as the full-backbone sampler.
 
 \section{Representation and Transition Diagnostics}
 \label{app:layer_statistics_projection}
